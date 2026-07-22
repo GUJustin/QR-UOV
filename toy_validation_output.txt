@@ -1,0 +1,30 @@
+Exact V=2 projective-slice validation
+field=F_5, O=2, m=4, keys=20
+slice/output trials: 240
+rank-deficient plane-oil intersections: 9
+geometrically smooth full cores: 139
+successful derivative-kernel recoveries: 139
+PASS: every smooth core recovered the exact planted oil space
+
+Exact V=2 projective-slice validation
+field=F_7, O=3, m=4, keys=15
+slice/output trials: 150
+rank-deficient plane-oil intersections: 3
+geometrically smooth full cores: 109
+successful derivative-kernel recoveries: 109
+PASS: every smooth core recovered the exact planted oil space
+
+Exact V=2 projective-slice validation
+field=F_11, O=2, m=3, keys=12
+slice/output trials: 120
+rank-deficient plane-oil intersections: 0
+geometrically smooth full cores: 99
+successful derivative-kernel recoveries: 99
+PASS: every smooth core recovered the exact planted oil space
+
+Frozen suite aggregate
+keys: 47
+slice/output trials: 510
+geometrically smooth full cores: 347
+successful derivative-kernel recoveries: 347
+PASS: all suite checks succeeded

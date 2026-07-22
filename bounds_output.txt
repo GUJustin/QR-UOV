@@ -1,0 +1,33 @@
+Q = 2048383
+log2(Q) = 20.966054060316
+fast-solver epsilon = 0.2
+
+KEY-LEVEL BAD-SET BOUNDS
+level  c_off  log2(degree factor)  log2 eta_off  log2 eta_oil  log2 eta_dep  log2 total
+    I     39              453.112      -364.564     -1132.167    -47404.248    -364.564
+  III     55              695.213      -457.920     -1635.352   -101161.211    -457.920
+    V    109             1247.233     -1038.067     -2935.248   -182803.025   -1038.067
+
+JOINT SLICE/OUTPUT REGULARIZATION
+level  [L:K]  log2 degree  log2 |L|  log2 delta  two trials
+    I     10       64.013   209.661    -145.647    -291.294
+  III     13       89.100   272.559    -183.459    -366.918
+    V     16      115.944   335.457    -219.513    -439.026
+
+FAST COST LEDGER
+level  direct  uniform TlogT  uniform margin  target
+    I  117.59         124.47           18.53     143
+  III  170.39         177.80           29.20     207
+    V  227.59         235.42           36.58     272
+
+ARBITRARY-CORE FALLBACK LEDGER
+level  [K':K]  Strassen direct/uniform  cubic uniform  target
+    I       6    131.79/138.83           139.91     143
+  III       8    182.26/189.77           190.96     207
+    V      10    236.18/244.06           245.34     272
+
+PSEUDO-OIL TERMINAL-SOLVE LEDGER
+level  residual  [K':F_127]  Strassen direct/uniform  target
+    I        51          16    129.52/136.53       143
+  III        75          22    180.06/187.55       207
+    V       102          30    236.18/244.06       272

@@ -1,0 +1,1 @@
+PASS: manuscript numbers, labels, citations, and stale-claim checks agree.
