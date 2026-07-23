@@ -6,7 +6,7 @@
 \usepackage{booktabs,array,tabularx,longtable,multirow,float}
 \usepackage{enumitem,xcolor,url,listings}
 \usepackage[hidelinks]{hyperref}
-\usepackage[nameinlink,noabbrev]{cleveref}
+\usepackage[nameinlink,noabbrev,capitalise]{cleveref}
 \usepackage{fancyhdr}
 
 \definecolor{deepblue}{RGB}{28,69,125}
@@ -63,10 +63,8 @@
 \raggedbottom
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[L]{\small Faster attacks on \QRUOV{} signatures}
-\fancyhead[R]{\small Thaler, Zhang, Kominers, Dao}
 \fancyfoot[C]{\thepage}
-\renewcommand{\headrulewidth}{0.25pt}
+\renewcommand{\headrulewidth}{0pt}
 
 \title{\bfseries Faster Attacks on \QRUOV{} Signatures}
 \author{Justin Thaler\thanks{Georgetown University and a16z crypto research.}
@@ -83,9 +81,9 @@ We give faster attacks on the \QRUOV{} signature scheme, a third-round candidate
 \[
 2^{124.5},\qquad 2^{177.8},\qquad 2^{235.4},
 \]
-Boolean gate operations---a conservative $T\log T$ circuit estimate, in the same unit as the security targets---against targets $2^{143}$, $2^{207}$, and $2^{272}$ and the submitters' reported 150, 211, and 277 bits.
+Boolean gate operations---the same unit in which the security targets are stated, under a conversion that deliberately overcounts---against targets $2^{143}$, $2^{207}$, and $2^{272}$ and the submitters' reported 150, 211, and 277 bits.
 
-The attack restricts the public quadratic forms to a random low-dimensional linear slice and solves the resulting square system.  A well-behaved solution set contains exactly one point lying on the hidden oil space, and the derivatives of the equations at that point recover the entire oil space---enough to forge signatures.  Where earlier work assumed the secret key avoided an exceptional set of unknown size, we prove that the attack succeeds for all but a negligible fraction of keys, below $2^{-364.5}$, $2^{-457.9}$, and $2^{-1038.0}$.  All estimates use the specification's asymptotic cost model; no full-parameter attack was executed.
+The attack restricts the public quadratic forms to a random low-dimensional linear slice and solves the resulting square system.  A well-behaved solution set contains exactly one point lying on the hidden oil space, and the derivatives of the equations at that point recover the entire oil space---enough to forge signatures.  Where earlier work assumed the secret key avoided an exceptional set of unknown size, we prove that the attack succeeds for all but a negligible fraction of keys.  All estimates use the specification's asymptotic cost model.
 \end{abstract}
 
 \section{Introduction}\label{sec:intro}
@@ -110,7 +108,7 @@ The public key is a list of $m$ symmetric matrices $P_1,\ldots,P_m$ over $K$, ac
 
 Restricting the $m$ public forms to this slice and taking $V$ random linear combinations gives a square system of $V$ quadratic equations. When it is nondegenerate (a smooth complete intersection), it has exactly $2^V$ solutions. Exactly one of them lies on the oil space, because the slice meets the oil space in a single point; any larger overlap would produce a whole line of shared solutions. At that one solution, the derivatives of the equations vanish precisely along the oil directions, so the kernel of the Jacobian there is exactly the oil space $\cO_L$. The attacker reads it off by row reduction, checks that it is defined over the base field $K$ (Frobenius descent) and satisfies the public identities, and maps it back to an ordinary base-field signing key through the specification's inverse pull-back.
 
-An earlier version of this idea used a \emph{fixed} slice. There one could only show the solve was fast for keys outside some exceptional set, with no control on how large that set was; for a fixed slice this gap is real, because the bad set is large (it has low codimension). Randomizing the slice removes the problem: we prove the attack succeeds unless the key falls into one of three degenerate cases---no usable oil direction, an unwanted extra solution lying off the oil space, or a linear dependence among the forms. The dominant case has codimension
+A more naive version of this idea uses a single \emph{fixed} slice. There one can only show the solve is fast for keys outside some exceptional set, with no control on how large that set is; for a fixed slice this gap is real, because the bad set is large (it has low codimension), as we quantify in \cref{app:negative}. Randomizing the slice removes the problem: we prove the attack succeeds unless the key falls into one of three degenerate cases---no usable oil direction, an unwanted extra solution lying off the oil space, or a linear dependence among the forms. The dominant case has codimension
 \[
 e(O+1)+1,\qquad e=m-V,
 \]
@@ -137,11 +135,7 @@ The complete procedure is the following.
 Verification makes both procedures one-sided: random choices affect termination, never acceptance of a false key or signature.
 
 \begin{theorem}[Fast almost-all-key recovery, informal]\label{thm:intro}
-For Levels~I, III, and V, the fast projective-slice attack has expected \emph{direct}/\emph{uniform} cost indicators---soft bit-operations, then a more conservative Boolean-circuit ($T\log T$) conversion into the unit in which the security targets are stated---of
-\[
-117.59/124.47,\qquad170.39/177.80,\qquad227.59/235.42.
-\]
-Its ideal-field key-bad probability is below $2^{-364.56},2^{-457.92},2^{-1038.06}$. For a key outside that bad set, a single attempt---one random slice $M$ and one random recombination $R$, over the solver fields already in use---fails the smoothness test with probability at most $2^{-145.65},2^{-183.46},2^{-219.51}$.
+For Levels~I, III, and V, the fast projective-slice attack performs about $2^{117.59},2^{170.39},2^{227.59}$ bit operations, equivalently a Boolean circuit of about $2^{124.47},2^{177.80},2^{235.42}$ gates---the unit in which the security targets are stated. Its ideal-field key-bad probability is below $2^{-364.56},2^{-457.92},2^{-1038.06}$. For a key outside that bad set, a single attempt---one random slice $M$ and one random recombination $R$, over the solver fields already in use---fails the smoothness test with probability at most $2^{-145.65},2^{-183.46},2^{-219.51}$.
 \end{theorem}
 
 \begin{table}[t]
@@ -164,7 +158,7 @@ Nominal target & --- & 143 & 207 & 272\\
 \end{tabularx}
 \end{table}
 
-\paragraph{Scope.}
+\paragraph{Rigor and cost model.}
 The algebraic reductions and probability bounds are exact where stated.  Key-density calculations use the ideal-field experiment; fixed-budget verified-success probabilities transfer computationally to SHAKE/AES expansion.  All costs are asymptotic bounds with large hidden constants and memory, not implementation forecasts.  Pseudo-oil existence, extraction, and branch behavior use the cited average-case heuristic.
 
 \subsection{Related work}\label{sec:related}
@@ -175,7 +169,7 @@ Beullens' intersection attack and subsequent UOV cryptanalysis recover hidden oi
 
 Van der Hoeven and Lecerf give the nearly quadratic finite-field Kronecker solver used by the main attack~\cite{vdHL}.  Benoist computes the complete-intersection discriminant degrees used in the regularization analysis~\cite{Benoist}.  The robustness appendix draws on geometric resolutions and symbolic homotopy due to Schost, Safey El Din--Schost, and Vu~\cite{Schost,SafeyElDinSchost,Vu}, with a finite-characteristic start system, separator, and dense-quadratic batching supplied here.  Its field-uniform matrix-algebra ledger uses Strassen~\cite{Strassen}, and a separate cubic line verifies that the below-target conclusion does not rely on fast matrix multiplication.
 
-May, Ostuzzi, and Ressler's \emph{Just Guess} and Ostuzzi's enriched pseudo-oil framework give improved algorithms for underdetermined MQ~\cite{JustGuess,Ostuzzi}.  Our direct-forgery contribution is the post-slice feasibility obstruction, the reverse composition in which subspace extraction precedes geometric resolution, and the QR-UOV parameter audit.  Jin et al.\ study odd-characteristic UOV families through symmetric algebra but report no stronger QR-UOV figures in that line~\cite{Jin}.  Side-channel and vinegar-reuse issues are orthogonal and are surveyed by Aulbach, Campos, and Kr\"amer~\cite{Aulbach}.
+May, Ostuzzi, and Ressler's \emph{Just Guess} and Ostuzzi's enriched pseudo-oil framework give improved algorithms for underdetermined MQ~\cite{JustGuess,Ostuzzi}.  Relative to those algorithms, the new parts of our direct-forgery path are the feasibility obstruction that remains after slicing, the reversed order in which subspace extraction precedes geometric resolution, and the parameter audit specialized to QR-UOV.  Jin et al.\ study odd-characteristic UOV families through symmetric algebra but report no stronger QR-UOV figures in that line~\cite{Jin}.  Side-channel and vinegar-reuse issues are orthogonal and are surveyed by Aulbach, Campos, and Kr\"amer~\cite{Aulbach}.
 
 \paragraph{Concurrent structural cryptanalysis.}
 This paper is one of three concurrent studies by the same authors in a common program of structural cryptanalysis of UOV-derived signatures.  The other works analyze \MAYO{}/UOV using polar-flag quotients and Hodge-contraction acceleration, and odd-characteristic \SNOVA{} using a symmetric-square quotient of the ordered power-pair feature space~\cite{ConcurrentMAYO,ConcurrentSNOVA}.  None of the three papers is needed for the correctness of either of the others.  They share a broader lesson: the public algebra used to compress or structure a UOV-derived construction must be incorporated explicitly into its security analysis rather than erased by modeling the resulting system as generic MQ.
@@ -481,7 +475,7 @@ If $\Theta_F(M,R)\ne0$, then $\rank M=V+1$ and $\rank R=V$.
 If $\rank M<V+1$, then $\PP(\ker M)$ is nonempty and every pull-back $F_i(Mt)$, together with all of its first derivatives, vanishes there; the core is singular.  If $\rank R<V$, the output equations are linearly dependent and cannot cut a smooth codimension-$V$ complete intersection.  In either case the full discriminant vanishes.
 \end{proof}
 
-\subsection{Geometric nonvanishing of the joint slice/output discriminant}
+\subsection{Geometric nonvanishing of the joint slice-and-output discriminant}
 
 For $x\in X_F$, let
 \[
@@ -652,7 +646,7 @@ If $Y_j$ is the Zariski closure of its projection to key space, then
 \begin{proof}
 On the chart $v_j=1$, the fixed monomials $v_j^2$, $v_jv_k$ for $k\ne j$, and $v_jo_a$ restrict to the affine functions $1$, the remaining vinegar coordinates, and the oil coordinates.  They therefore give a polynomial splitting of the value-and-first-jet evaluation map.  After a triangular polynomial change of coefficient coordinates, the incidence is the product of an affine space, the equations setting $m$ value coordinates to zero, and the determinantal variety of $m\times(N-1)$ matrices of rank at most $V-1$.  It is consequently pure of the stated codimension.
 
-In the original joint coefficient/point coordinates, each value equation has total degree at most three, each derivative entry has degree at most two, and every $V\times V$ minor has degree at most $2V$.  The splitting above shows that $Z_j$ is irreducible and that the value equations and determinantal conditions have the asserted total codimension.  Over the algebraic closure, choose $c_{\det}$ generic linear combinations of the maximal minors so that, after the $m$ value equations, they cut properly and retain $Z_j$ as an irreducible component.  Cumulative B\'ezout therefore gives
+In the original joint coefficient and point coordinates, each value equation has total degree at most three, each derivative entry has degree at most two, and every $V\times V$ minor has degree at most $2V$.  The splitting above shows that $Z_j$ is irreducible and that the value equations and determinantal conditions have the asserted total codimension.  Over the algebraic closure, choose $c_{\det}$ generic linear combinations of the maximal minors so that, after the $m$ value equations, they cut properly and retain $Z_j$ as an irreducible component.  Cumulative B\'ezout therefore gives
 \[
 \cdeg(Z_j)\le 3^m(2V)^{c_{\det}}
 \]
@@ -740,7 +734,7 @@ Let $d_V$ be as in \eqref{eq:dpartial}.  A coefficient of $F_i(Mt)$ is quadratic
 \end{equation}
 Thus Schwartz--Zippel gives:
 
-\begin{corollary}[Joint slice/output failure]\label{cor:joint-sz}
+\begin{corollary}[Joint slice-and-output failure]\label{cor:joint-sz}
 For every key outside the bad set of \cref{thm:key-density}, if $M$ and $R$ are uniform over a finite extension $L/K$, then
 \begin{equation}\label{eq:delta}
 \Pr[\Theta_F(M,R)=0]
@@ -766,7 +760,7 @@ V   & 16 & $115.944$ & $-219.513$ & $-439.026$\\
 For a nonexceptional key, $\Theta_F$ is a nonzero polynomial by \cref{thm:key-density}.  Its total degree is bounded by \eqref{eq:joint-degrees}, so Schwartz--Zippel gives \eqref{eq:delta}.  Rank-deficient $M$ or $R$ already lie in its zero set by \cref{lem:theta-ranks}; no separate rejection term is needed.
 \end{proof}
 
-A smooth full core has all $2^V$ roots distinct and regular, so \cref{lem:full-implies-prefix} supplies the solver's regularity hypotheses.  The displayed probabilities concern only the public slice/output regularization; the solver's own random choices retain the independently verifiable fixed-failure or Las Vegas guarantees of van der Hoeven--Lecerf.  The two-trial column is not needed for expected-time complexity; it is useful when one wants the algebraic regularization failure of a fixed bounded-trial experiment to be far below every category target.  Including the key-bad probability of \cref{thm:key-density} does not change any displayed exponent.
+A smooth full core has all $2^V$ roots distinct and regular, so \cref{lem:full-implies-prefix} supplies the solver's regularity hypotheses.  The displayed probabilities concern only the public slice-and-output regularization; the solver's own random choices retain the independently verifiable fixed-failure or Las Vegas guarantees of van der Hoeven--Lecerf.  The two-trial column is not needed for expected-time complexity; it is useful when one wants the algebraic regularization failure of a fixed bounded-trial experiment to be far below every category target.  Including the key-bad probability of \cref{thm:key-density} does not change any displayed exponent.
 
 \subsubsection{Fast-solver cost specialization}
 
@@ -774,10 +768,7 @@ For quadrics, the B\'ezout number is $D=2^V$.  Specializing the finite-field bou
 \begin{equation}\label{eq:fast-cost}
 C_\varepsilon(V)=V+(1+\varepsilon)(V-1)+\log_2(3\log_2 127).
 \end{equation}
-The finite-field extension construction is already included in this bound; sampling $M$ and $R$ in that same field adds only polynomially many field operations.  The uniform $T\log T$ indicator is $C_\varepsilon(V)+\log_2 C_\varepsilon(V)$.  At $\varepsilon=0.2$ these are
-\[
-117.59/124.47,\qquad170.39/177.80,\qquad227.59/235.42.
-\]
+The finite-field extension construction is already included in this bound; sampling $M$ and $R$ in that same field adds only polynomially many field operations.  The direct bit-operation indicator is $C_\varepsilon(V)$; the uniform Boolean-circuit indicator adds a $\log T$ factor, $C_\varepsilon(V)+\log_2 C_\varepsilon(V)$.  At $\varepsilon=0.2$ the direct values are $117.59,170.39,227.59$ and the uniform values $124.47,177.80,235.42$.
 Because $\delta_V(L)$ is negligible, the expected number of public regularization trials on every nonexceptional key is $(1-\delta_V(L))^{-1}=1+o(1)$; the solver's independently verifiable internal random choices contribute only another constant factor.
 
 \subsection{End-to-end recovery from an extension-field projective slice}
@@ -832,15 +823,15 @@ In the ideal-field experiment, the set of keys on which no pair $(M,R)$ gives a 
 \[
 2^{-364.56},\quad2^{-457.92},\quad2^{-1038.06}.
 \]
-For every key outside that set, the public slice/output regularization part of one trial fails with probability at most
+For every key outside that set, the public slice-and-output regularization part of one trial fails with probability at most
 \[
 2^{-145.65},\quad2^{-183.46},\quad2^{-219.51}.
 \]
 Because every public trial uses a bounded solver invocation and aborts on a missing certificate, repeated verified trials are Las Vegas on every such key: they eventually return an equivalent signing key with probability one and never return a false key.  On an arbitrary key, any fixed-budget version is one-sided and may report failure.
 
-The restriction, rational-root filtering, derivative-kernel recovery, and descent are lower order than the fast solve.  The expected direct/uniform indicators on every nonexceptional key are therefore
+The restriction, rational-root filtering, derivative-kernel recovery, and descent are lower order than the fast solve.  The expected direct indicators (with uniform indicators in parentheses) on every nonexceptional key are therefore
 \[
-117.59/124.47,\qquad170.39/177.80,\qquad227.59/235.42.
+117.59\ (124.47),\qquad170.39\ (177.80),\qquad227.59\ (235.42).
 \]
 Two independent public regularization trials have the squared algebraic failure bounds in \cref{cor:joint-sz}; solver-internal failure is separately amplified and verified at constant-factor cost.
 \end{theorem}
@@ -852,7 +843,7 @@ The restriction and verification stages use only polynomially many operations be
 \end{proof}
 
 \begin{corollary}[Fixed-budget concrete success]\label{cor:concrete-budget}
-Let $t\ge1$, and run $t$ independent public slice/output trials.  Amplify the verified internal solver so that the probability that all otherwise-good trials fail internally is at most $\beta_t$.  In the ideal-field experiment, the probability of no verified equivalent key is at most
+Let $t\ge1$, and run $t$ independent public slice-and-output trials.  Amplify the verified internal solver so that the probability that all otherwise-good trials fail internally is at most $\beta_t$.  In the ideal-field experiment, the probability of no verified equivalent key is at most
 \[
 \eta_{\off}+\eta_{\oil}+\eta_{\dep}+\delta_V(L)^t+\beta_t.
 \]
@@ -871,12 +862,12 @@ Split on the event $\Theta_F\equiv0$.  Its probability is bounded by \cref{thm:k
 
 The accompanying script \texttt{qruov\_projective\_slice\_toy\_validation.py} implements the new slice and recovery chain over small odd prime fields at $V=2$.  For each sampled core it checks geometric smoothness exactly over the algebraic closure: on every affine chart of $\PP^2$, it computes a Gr\"obner basis of the two restricted conics together with their affine Jacobian determinant.  A unit ideal on every chart certifies that the projective core has no geometric singular root.  It then computes the linear plane--oil intersection and verifies that the ambient derivative kernel equals the entire planted oil space.
 
-The frozen audit suite covers shapes $(O,m)=(2,4),(3,4),(2,3)$ over $\F_5,\F_7,\F_{11}$.  Across $47$ keys and $510$ slice/output trials, $347$ cores were geometrically smooth; every one of those $347$ recovered the exact planted oil space.  This is an identity/control test, not an extrapolation to production dimensions, but it exercises precisely the projective-intersection and derivative-kernel steps newly introduced here.
+The frozen audit suite covers shapes $(O,m)=(2,4),(3,4),(2,3)$ over $\F_5,\F_7,\F_{11}$.  Across $47$ keys and $510$ slice-and-output trials, $347$ cores were geometrically smooth; every one of those $347$ recovered the exact planted oil space.  This is a controlled identity test, not an extrapolation to production dimensions, but it exercises precisely the projective-intersection and derivative-kernel steps newly introduced here.
 
 \paragraph{Concrete seed expansion.}
 The fixed-budget statement is formalized in \cref{cor:concrete-budget}.  The rejection-term logarithms are $-121.23,-184.71,-248.28$; this term exceeds the one-trial geometric bound only at Level~I.  It is a coupling loss in the ideal-to-concrete reduction and is therefore displayed separately from the geometric failure probabilities.
 
-\section{A pseudo-oil/geometric-resolution direct-forgery path}\label{sec:pseudo-oil}
+\section{A pseudo-oil and geometric-resolution direct-forgery path}\label{sec:pseudo-oil}
 
 The projective-slice attack recovers an equivalent key from the public extension-field tuple.  A logically independent attack acts on the full base-field verification map
 \[
@@ -970,15 +961,15 @@ The primary pseudo-oil line uses the field-uniform arbitrary-core solver from \c
 \centering
 \small
 \setlength{\tabcolsep}{3pt}
-\caption{Pseudo-oil direct forgery.  Entries are direct/uniform $T\log T$ indicators.}
+\caption{Pseudo-oil direct forgery.  Entries are direct indicators, with uniform indicators in parentheses.}
 \label{tab:pseudo-oil}
 \begin{tabular}{@{}lrrr@{}}
 \toprule
 Level & Final & Field-uniform Strassen & Target\\
 \midrule
-I   & 51  & $129.52/136.53$ & 143\\
-III & 75  & $180.06/187.55$ & 207\\
-V   & 102 & $236.18/244.06$ & 272\\
+I   & 51  & $129.52\ (136.53)$ & 143\\
+III & 75  & $180.06\ (187.55)$ & 207\\
+V   & 102 & $236.18\ (244.06)$ & 272\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -987,7 +978,7 @@ V   & 102 & $236.18/244.06$ & 272\\
 
 \subsection{Cost conventions}
 
-The QR-UOV specification assigns categories from asymptotic Boolean-gate estimates~\cite{QRUOVSpec}.  Our \emph{direct} columns are the soft bit-operation indicators obtained by specializing the cited solver theorems and charging quasi-linear arithmetic in the relevant finite field.  The \emph{uniform} columns additionally display a generic $O(T\log T)$ Boolean-circuit simulation of a $T$-step bit algorithm~\cite{PippengerFischer}.  These are two asymptotic conversions; the larger uniform values carry the main comparison.
+The QR-UOV specification assigns security categories by counting the Boolean gates in a circuit that carries out the attack~\cite{QRUOVSpec}, so all comparisons must ultimately be in that unit.  Our \emph{direct} column is the number of bit operations the attack performs, read off from the cited solver theorems with quasi-linear arithmetic in the relevant finite field.  Our \emph{uniform} column converts that into a gate count: a $T$-step bit algorithm compiles into a Boolean circuit of size $O(T\log T)$~\cite{PippengerFischer}, so the uniform value is the direct value plus a $\log_2$ term.  The uniform column is the one that matches the specification's unit, and it carries the main comparison.
 
 Random choices are circuit inputs.  A constant number of attempts can be run in parallel, every candidate can be checked publicly, and a selector can return the first valid output.  Every cost is asymptotic and omits hidden constants, memory traffic, and wall-clock engineering.
 
@@ -1028,6 +1019,140 @@ One degree-$2^V$ quotient vector over the relevant auxiliary field already occup
 A public random projective $V$-plane necessarily contains an oil point.  When a random square core on that plane is smooth, the point is unique and its ambient derivative kernel is the full hidden oil space.  The full discriminant and the off-oil incidence bound make this an explicit almost-all-key theorem, with ideal-field bad-key probabilities below $2^{-364.5}$, $2^{-457.9}$, and $2^{-1038.0}$ and expected uniform indicators $124.5,177.8,235.4$.
 
 The arbitrary-core method remains only as an incomparable-coverage robustness result, while the independent pseudo-oil path is conditional on its published extraction heuristic.  No full-parameter computation is claimed; the conclusion is a substantial parameter shortfall in the asymptotic algebraic cost model used by the specification.
+
+\begin{thebibliography}{99}
+
+\bibitem{QRUOVSpec}
+H.~Furue, Y.~Ikematsu, F.~Hoshino, T.~Takagi, H.~Kosuge, K.~Yamakoshi, R.~Akiyama, S.~Nakamura, S.~Orihara, and K.~Kinjo.
+\newblock \emph{QR-UOV Specification Document (Round 2 submission)}.
+\newblock NIST Additional Digital Signatures Project, 5 February 2025.
+
+\bibitem{QRUOVRef}
+QR-UOV team.
+\newblock \emph{Round 2 Reference Implementation of QR-UOV}.
+\newblock Public source repository, December 2024.
+
+\bibitem{KPG1999}
+A.~Kipnis, J.~Patarin, and L.~Goubin.
+\newblock Unbalanced Oil and Vinegar signature schemes.
+\newblock In \emph{EUROCRYPT 1999}, pp.~206--222, 1999.
+
+\bibitem{QRUOV2021}
+H.~Furue, Y.~Ikematsu, Y.~Kiyomura, and T.~Takagi.
+\newblock A new variant of unbalanced oil and vinegar using quotient ring: QR-UOV.
+\newblock In \emph{ASIACRYPT 2021, Part IV}, pp.~187--217, 2021.
+
+\bibitem{NISTRound3}
+National Institute of Standards and Technology.
+\newblock Nine candidates advance to the third round of the Additional Digital Signatures for the PQC standardization process.
+\newblock NIST CSRC, 14 May 2026.
+
+\bibitem{NISTIR8610}
+G.~Alagic, M.~Bros, P.~Ciadoux, et al.
+\newblock \emph{Status Report on the Second Round of the Additional Digital Signature Schemes for the NIST Post-Quantum Cryptography Standardization Process}.
+\newblock NISTIR~8610, May 2026.
+
+\bibitem{Benoist}
+O.~Benoist.
+\newblock Degr\'es d'homog\'en\'eit\'e de l'ensemble des intersections compl\`etes singuli\`eres.
+\newblock \emph{Annales de l'Institut Fourier}, 62(3):1189--1214, 2012.
+
+\bibitem{vdHL}
+J.~van der Hoeven and G.~Lecerf.
+\newblock On the complexity exponent of polynomial system solving.
+\newblock \emph{Foundations of Computational Mathematics}, 21(1):1--57, 2021.
+
+\bibitem{SafeyElDinSchost}
+M.~Safey El Din and E.~Schost.
+\newblock Bit complexity for multi-homogeneous polynomial system solving---application to polynomial minimization.
+\newblock \emph{Journal of Symbolic Computation}, 87:176--206, 2018.
+
+\bibitem{Schost}
+E.~Schost.
+\newblock Computing parametric geometric resolutions.
+\newblock \emph{Applicable Algebra in Engineering, Communication and Computing}, 13(5):349--393, 2003.
+
+\bibitem{Vu}
+T.~X.~Vu.
+\newblock A symbolic homotopy algorithm for solving composable polynomial systems.
+\newblock In \emph{ISSAC 2026}, ACM, 2026; arXiv:2605.22514.
+
+\bibitem{Harvey}
+D.~Harvey, J.~van der Hoeven, and G.~Lecerf.
+\newblock Faster polynomial multiplication over finite fields.
+\newblock \emph{Journal of the ACM}, 63(6):52:1--52:23, 2017.
+
+\bibitem{PippengerFischer}
+N.~Pippenger and M.~J.~Fischer.
+\newblock Relations among complexity measures.
+\newblock \emph{Journal of the ACM}, 26(2):361--381, 1979.
+
+\bibitem{Strassen}
+V.~Strassen.
+\newblock Gaussian elimination is not optimal.
+\newblock \emph{Numerische Mathematik}, 13:354--356, 1969.
+
+\bibitem{Beullens}
+W.~Beullens.
+\newblock Improved cryptanalysis of UOV and Rainbow.
+\newblock In \emph{EUROCRYPT 2021, Part I}, pp.~348--373, 2021.
+
+\bibitem{FurueIkematsu}
+H.~Furue and Y.~Ikematsu.
+\newblock A new security analysis against MAYO and QR-UOV using rectangular MinRank attack.
+\newblock In \emph{IWSEC 2023}, pp.~101--116, 2023.
+
+\bibitem{Suzuki}
+T.~Suzuki, H.~Furue, T.~Ito, S.~Nakamura, and S.~Uchiyama.
+\newblock An extended rectangular MinRank attack against UOV and its variants.
+\newblock Cryptology ePrint Archive, Report 2025/739, 2025.
+
+\bibitem{Pebereau}
+P.~P\'ebereau.
+\newblock One vector to rule them all: Key recovery from one vector in UOV schemes.
+\newblock In \emph{PQCrypto 2024}, pp.~92--108, 2024; ePrint 2023/1131.
+
+\bibitem{JustGuess}
+A.~May, M.~Ostuzzi, and H.~Ressler.
+\newblock Just Guess: Improved (quantum) algorithm for the underdetermined MQ problem.
+\newblock In \emph{EUROCRYPT 2026, Part IV}, pp.~334--362, 2026; ePrint 2025/1788.
+
+\bibitem{Ostuzzi}
+M.~Ostuzzi.
+\newblock Pseudo-oil subspaces and the geometry of underdetermined MQ problems.
+\newblock Cryptology ePrint Archive, Report 2026/1122, 2026.
+
+\bibitem{Jin}
+Y.~Jin, Y.~Pan, X.~He, B.~Gong, and J.~Ding.
+\newblock Security analysis on UOV families with odd characteristics: Using symmetric algebra.
+\newblock In \emph{PKC 2026, Part I}, pp.~428--454, 2026; ePrint 2025/1137.
+
+\bibitem{ConcurrentMAYO}
+J.~Thaler, K.~Zhang, S.~Kominers, and Q.~Dao.
+\newblock \emph{\MAYOPaperTitle}.
+\newblock Concurrent manuscript, 2026.
+
+\bibitem{ConcurrentSNOVA}
+J.~Thaler, K.~Zhang, S.~Kominers, and Q.~Dao.
+\newblock \emph{\SNOVAPaperTitle}.
+\newblock Concurrent manuscript, 2026.
+
+\bibitem{Aulbach}
+T.~Aulbach, F.~Campos, and J.~Kr\"amer.
+\newblock SoK: On the physical security of UOV-based signature schemes.
+\newblock In \emph{PQCrypto 2025}, pp.~199--231, 2025; ePrint 2024/1818.
+
+\bibitem{Heintz}
+J.~Heintz.
+\newblock Definability and fast quantifier elimination in algebraically closed fields.
+\newblock \emph{Theoretical Computer Science}, 24:239--277, 1983.
+
+\bibitem{LachaudRolland}
+G.~Lachaud and R.~Rolland.
+\newblock On the number of points of algebraic sets over finite fields.
+\newblock \emph{Journal of Pure and Applied Algebra}, 219(11):5117--5136, 2015.
+
+\end{thebibliography}
 
 \appendix
 
@@ -1194,15 +1319,15 @@ Combining this solver with the coordinate batch in \cref{thm:coordinate-batch} g
 \centering
 \small
 \setlength{\tabcolsep}{4pt}
-\caption{Arbitrary-core fallback.  The Strassen entry is direct/uniform; the cubic entry is the uniform indicator obtained from the same formula with $\omega=3$.}
+\caption{Arbitrary-core fallback.  The Strassen entry is the direct indicator with the uniform indicator in parentheses; the cubic entry is the uniform indicator obtained from the same formula with $\omega=3$.}
 \label{tab:fallback-costs}
 \begin{tabular}{@{}lrrr@{}}
 \toprule
 Level & Field-uniform Strassen & Cubic uniform & Target\\
 \midrule
-I   & $131.79/138.83$ & 139.91 & 143\\
-III & $182.26/189.77$ & 190.96 & 207\\
-V   & $236.18/244.06$ & 245.34 & 272\\
+I   & $131.79\ (138.83)$ & 139.91 & 143\\
+III & $182.26\ (189.77)$ & 190.96 & 207\\
+V   & $236.18\ (244.06)$ & 245.34 & 272\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1265,12 +1390,12 @@ Every corank-at-least-two member is automatically critical and creates a large e
 
 \section{Reproducibility and scope}\label{app:reproducibility}
 
-The source bundle contains the manuscript, the exact parameter/probability-and-cost script, and the exact small-field validation.  The numerical script regenerates the key-bad, one-trial, two-trial, fast, fallback-Strassen, fallback-cubic, and pseudo-oil-Strassen entries retained in this version.  The validation script checks geometric smoothness chart by chart and verifies derivative-kernel oil recovery on every smooth toy core.
+The source bundle contains the manuscript, the exact parameter, probability, and cost script, and the exact small-field validation.  The numerical script regenerates the key-bad, one-trial, two-trial, fast, fallback-Strassen, fallback-cubic, and pseudo-oil-Strassen entries retained in this version.  The validation script checks geometric smoothness chart by chart and verifies derivative-kernel oil recovery on every smooth toy core.
 
 Experimental results support only the algebraic identities they test; they are not extrapolated into production runtimes.
 
 \paragraph{Exact results.}
-The public extension-field reduction; ideal-field distribution; projective-oil intersection; joint-discriminant nonvanishing outside the three explicit loci; finite-field incidence/degree bound; full-core solver regularity; derivative-kernel recovery and descent; one-column completion; oil-space uniqueness codimension; multihomogeneous path floor; finite-characteristic fallback specialization; and the pseudo-oil residual reduction after a valid decomposition.
+The public extension-field reduction; ideal-field distribution; projective-oil intersection; joint-discriminant nonvanishing outside the three explicit loci; finite-field incidence and degree bound; full-core solver regularity; derivative-kernel recovery and descent; one-column completion; oil-space uniqueness codimension; multihomogeneous path floor; finite-characteristic fallback specialization; and the pseudo-oil residual reduction after a valid decomposition.
 
 \paragraph{Distributional or computational-transfer results.}
 The key-density and coordinate-batch probabilities use the ideal-field experiment.  Concrete fixed-budget verified-success experiments transfer through \cref{prop:transfer}.  The fast theorem excludes a bounded ideal-field set.
@@ -1281,138 +1406,5 @@ Pseudo-oil existence, extraction, and branch behavior; soft-$O$ polynomial and m
 \paragraph{Outside scope.}
 The artifact does not provide a byte-exact official compressed-key KAT attack, a full-parameter execution, a manageable-memory geometric-resolution implementation, calibrated constants for fast matrix multiplication, or a theorem for malformed public keys.
 
-\begin{thebibliography}{99}
-
-\bibitem{QRUOVSpec}
-H.~Furue, Y.~Ikematsu, F.~Hoshino, T.~Takagi, H.~Kosuge, K.~Yamakoshi, R.~Akiyama, S.~Nakamura, S.~Orihara, and K.~Kinjo.
-\newblock \emph{QR-UOV Specification Document (Round 2 submission)}.
-\newblock NIST Additional Digital Signatures Project, 5 February 2025.
-
-\bibitem{QRUOVRef}
-QR-UOV team.
-\newblock \emph{Round 2 Reference Implementation of QR-UOV}.
-\newblock Public source repository, December 2024.
-
-\bibitem{KPG1999}
-A.~Kipnis, J.~Patarin, and L.~Goubin.
-\newblock Unbalanced Oil and Vinegar signature schemes.
-\newblock In \emph{EUROCRYPT 1999}, pp.~206--222, 1999.
-
-\bibitem{QRUOV2021}
-H.~Furue, Y.~Ikematsu, Y.~Kiyomura, and T.~Takagi.
-\newblock A new variant of unbalanced oil and vinegar using quotient ring: QR-UOV.
-\newblock In \emph{ASIACRYPT 2021, Part IV}, pp.~187--217, 2021.
-
-\bibitem{NISTRound3}
-National Institute of Standards and Technology.
-\newblock Nine candidates advance to the third round of the Additional Digital Signatures for the PQC standardization process.
-\newblock NIST CSRC, 14 May 2026.
-
-\bibitem{NISTIR8610}
-G.~Alagic, M.~Bros, P.~Ciadoux, et al.
-\newblock \emph{Status Report on the Second Round of the Additional Digital Signature Schemes for the NIST Post-Quantum Cryptography Standardization Process}.
-\newblock NISTIR~8610, May 2026.
-
-\bibitem{Benoist}
-O.~Benoist.
-\newblock Degr\'es d'homog\'en\'eit\'e de l'ensemble des intersections compl\`etes singuli\`eres.
-\newblock \emph{Annales de l'Institut Fourier}, 62(3):1189--1214, 2012.
-
-\bibitem{vdHL}
-J.~van der Hoeven and G.~Lecerf.
-\newblock On the complexity exponent of polynomial system solving.
-\newblock \emph{Foundations of Computational Mathematics}, 21(1):1--57, 2021.
-
-\bibitem{SafeyElDinSchost}
-M.~Safey El Din and E.~Schost.
-\newblock Bit complexity for multi-homogeneous polynomial system solving---application to polynomial minimization.
-\newblock \emph{Journal of Symbolic Computation}, 87:176--206, 2018.
-
-\bibitem{Schost}
-E.~Schost.
-\newblock Computing parametric geometric resolutions.
-\newblock \emph{Applicable Algebra in Engineering, Communication and Computing}, 13(5):349--393, 2003.
-
-\bibitem{Vu}
-T.~X.~Vu.
-\newblock A symbolic homotopy algorithm for solving composable polynomial systems.
-\newblock In \emph{ISSAC 2026}, ACM, 2026; arXiv:2605.22514.
-
-\bibitem{Harvey}
-D.~Harvey, J.~van der Hoeven, and G.~Lecerf.
-\newblock Faster polynomial multiplication over finite fields.
-\newblock \emph{Journal of the ACM}, 63(6):52:1--52:23, 2017.
-
-\bibitem{PippengerFischer}
-N.~Pippenger and M.~J.~Fischer.
-\newblock Relations among complexity measures.
-\newblock \emph{Journal of the ACM}, 26(2):361--381, 1979.
-
-\bibitem{Strassen}
-V.~Strassen.
-\newblock Gaussian elimination is not optimal.
-\newblock \emph{Numerische Mathematik}, 13:354--356, 1969.
-
-\bibitem{Beullens}
-W.~Beullens.
-\newblock Improved cryptanalysis of UOV and Rainbow.
-\newblock In \emph{EUROCRYPT 2021, Part I}, pp.~348--373, 2021.
-
-\bibitem{FurueIkematsu}
-H.~Furue and Y.~Ikematsu.
-\newblock A new security analysis against MAYO and QR-UOV using rectangular MinRank attack.
-\newblock In \emph{IWSEC 2023}, pp.~101--116, 2023.
-
-\bibitem{Suzuki}
-T.~Suzuki, H.~Furue, T.~Ito, S.~Nakamura, and S.~Uchiyama.
-\newblock An extended rectangular MinRank attack against UOV and its variants.
-\newblock Cryptology ePrint Archive, Report 2025/739, 2025.
-
-\bibitem{Pebereau}
-P.~P\'ebereau.
-\newblock One vector to rule them all: Key recovery from one vector in UOV schemes.
-\newblock In \emph{PQCrypto 2024}, pp.~92--108, 2024; ePrint 2023/1131.
-
-\bibitem{JustGuess}
-A.~May, M.~Ostuzzi, and H.~Ressler.
-\newblock Just Guess: Improved (quantum) algorithm for the underdetermined MQ problem.
-\newblock In \emph{EUROCRYPT 2026, Part IV}, pp.~334--362, 2026; ePrint 2025/1788.
-
-\bibitem{Ostuzzi}
-M.~Ostuzzi.
-\newblock Pseudo-oil subspaces and the geometry of underdetermined MQ problems.
-\newblock Cryptology ePrint Archive, Report 2026/1122, 2026.
-
-\bibitem{Jin}
-Y.~Jin, Y.~Pan, X.~He, B.~Gong, and J.~Ding.
-\newblock Security analysis on UOV families with odd characteristics: Using symmetric algebra.
-\newblock In \emph{PKC 2026, Part I}, pp.~428--454, 2026; ePrint 2025/1137.
-
-\bibitem{ConcurrentMAYO}
-J.~Thaler, K.~Zhang, S.~Kominers, and Q.~Dao.
-\newblock \emph{\MAYOPaperTitle}.
-\newblock Concurrent manuscript, 2026.
-
-\bibitem{ConcurrentSNOVA}
-J.~Thaler, K.~Zhang, S.~Kominers, and Q.~Dao.
-\newblock \emph{\SNOVAPaperTitle}.
-\newblock Concurrent manuscript, 2026.
-
-\bibitem{Aulbach}
-T.~Aulbach, F.~Campos, and J.~Kr\"amer.
-\newblock SoK: On the physical security of UOV-based signature schemes.
-\newblock In \emph{PQCrypto 2025}, pp.~199--231, 2025; ePrint 2024/1818.
-
-\bibitem{Heintz}
-J.~Heintz.
-\newblock Definability and fast quantifier elimination in algebraically closed fields.
-\newblock \emph{Theoretical Computer Science}, 24:239--277, 1983.
-
-\bibitem{LachaudRolland}
-G.~Lachaud and R.~Rolland.
-\newblock On the number of points of algebraic sets over finite fields.
-\newblock \emph{Journal of Pure and Applied Algebra}, 219(11):5117--5136, 2015.
-
-\end{thebibliography}
 
 \end{document}
