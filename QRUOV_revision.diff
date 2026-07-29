@@ -1,0 +1,1760 @@
+--- "/mnt/data/main(4) (1).tex"	2026-07-28 23:33:55.114025439 +0000
++++ /mnt/data/QRUOV_strengthened.tex	2026-07-29 00:34:22.941910454 +0000
+@@ -11,10 +11,10 @@
+ 
+ \definecolor{deepblue}{RGB}{28,69,125}
+ \hypersetup{colorlinks=true,linkcolor=deepblue,citecolor=deepblue,urlcolor=deepblue,
+- pdftitle={Functional Key Recovery and Universal Forgery for QR-UOV via Graph Directions and Projective Slices},
++ pdftitle={Equivalent-Key Recovery and Universal Forgery for QR-UOV: One Regular Direction Determines the Hidden Oil Space},
+  pdfauthor={Justin Thaler, Kai Zhang, Scott Kominers, Quang Dao},
+- pdfsubject={Functional key recovery, universal forgery, fixed-budget algebraic attacks, and parameter consequences for QR-UOV},
+- pdfkeywords={QR-UOV,UOV,equivalent-key recovery,universal forgery,structural cryptanalysis,graph direction,Jacobian localization,projective slicing,geometric resolution,straight-line program,exact verification,parameter security}}
++ pdfsubject={Equivalent-key recovery, universal forgery, algebraic attacks, and parameter implications for QR-UOV},
++ pdfkeywords={QR-UOV,UOV,equivalent-key recovery,universal forgery,structural cryptanalysis,graph direction,Jacobian localization,projective slicing,geometric resolution,exact verification}}
+ 
+ \theoremstyle{definition}
+ \newtheorem{theorem}{Theorem}[section]
+@@ -67,7 +67,7 @@
+ \fancyfoot[C]{\thepage}
+ \renewcommand{\headrulewidth}{0pt}
+ 
+-\title{\bfseries Functional Key Recovery and Universal Forgery for \QRUOV{}\\ via Graph Directions and Projective Slices}
++\title{\bfseries Equivalent-Key Recovery and Universal Forgery for \QRUOV{}\\ One Regular Direction Determines the Hidden Oil Space}
+ \author{Justin Thaler\thanks{Georgetown University and a16z crypto research.}
+ \and Kai Zhang\thanks{MIT.}
+ \and Scott Kominers\thanks{Harvard University and a16z crypto research.}
+@@ -78,154 +78,158 @@
+ \maketitle
+ 
+ \begin{abstract}
+-We give two geometrically independent routes from the public \QRUOV{} key to a functionally equivalent expanded signing key.  The first is a graph-direction attack that avoids global projective geometry.  For a public oil-coordinate direction $c$, the hidden graph $G$ creates a planted root $x_c=Gc$ of $m$ affine quadrics in only $V$ variables.  If the $m\times V$ contraction matrix $\mathcal B(c)$ has full column rank, that one root determines every column of $G$ through public linear systems.  Localization at a nonsingular planted Jacobian makes every equation prefix reduced and regular, so the locally closed Kronecker algorithm of Gim\'enez et al. applies without assumptions on the other roots or components.  Exact graph, pull-back, public-map, and oil-matrix checks make acceptance zero-error.
++Unbalanced Oil and Vinegar (UOV) hides a linear ``oil'' subspace on which every public quadratic form has no oil--oil term.  Knowing any valid hidden subspace is enough to sign: after fixing the remaining ``vinegar'' variables, the public equations become linear in the oil variables.  \QRUOV{} compresses this structure by working over a small extension field.
+ 
+-The second route uses a minimal projective slice and a smooth complete intersection of degree $D=2^V$.  We cost it through three published interfaces.  The modern finite-field theorem of van der Hoeven and Lecerf gives, for every fixed rational $\varepsilon>0$, expected bit complexity
++We give a direct equivalent-key attack.  Write the hidden oil space as the graph of an unknown matrix $G$.  For any public oil-coordinate direction $c$, the public equations
+ \[
+- \widetilde O\!\left(2^V2^{(1+\varepsilon)(V-1)}3\log_2 127\right).
++P_i(-x,c)=0\qquad(1\le i\le m)
+ \]
+-At $\varepsilon=0.3$, uniform $T\log T$ indicators are $129.63,185.36,245.58$ bits.  An independent, epsilon-free cross-check uses the classical division-free straight-line-program Kronecker bound $L\widetilde O(D^2)$.  A conservative shared-monomial circuit has
+-\[
+- L=\binom{V+2}{2}+V\!\left(2\binom{V+2}{2}-1\right).
+-\]
+-Choosing just one working-field degree beyond the minimum in the published randomization audit gives a \emph{single-pass} attack whose failure probability is below $2^{-24.75}$ at every level.  Its direct / one-log / two-log indicators are
++have the planted solution $x=Gc$.  If the derivative matrix at that solution has full column rank, then $x$ determines every column of $G$ through public linear systems.  The recovered graph is checked against every public quadratic form, pulled back to the official base-field representation, and tested for an invertible signing system.  An accepted certificate therefore signs every verification target and gives a key-only universal chosen-message forgery; the original secret seed is never needed.
++
++The reduction is both strong and easy to derandomize.  In the public-random expanded-key model, one fixed coordinate direction is regular except with probability about $2^{-62.90}$ at Levels I and III and $2^{-83.86}$ at Level V.  Testing only the first $3,4,4$ coordinate directions, together with an explicit Wronskian rank condenser, gives deterministic lists of just $315,612,1228$ square systems whose rank-exception probabilities are below $2^{-188.69},2^{-251.59},2^{-335.46}$.  For signing, testing $22,31,40$ fixed basis vinegar assignments already gives failure probabilities below $2^{-153.50},2^{-216.30},2^{-279.09}$; a projective-line fallback makes them much smaller.  The basis-first scan uses fewer than $1.008$ tests on average, and its all-basis failure probability is negligible.
++
++We also analyze a faster projective route.  A smallest possible projective slice meets the hidden oil space in one point.  Outside explicit algebraic bad-key sets, a public recombination produces a smooth complete intersection of $V$ quadrics with $2^V$ solutions.  The finite-field Kronecker algorithm of van der Hoeven and Lecerf then gives expected bit complexity
+ \[
+-(128.76,135.76,142.77),\quad
+-(178.90,186.38,193.87),\quad
+-(232.46,240.32,248.18),
++\widetilde O\!\left(2^V2^{(1+\varepsilon)(V-1)}\,3\log_2 127\right)
+ \]
+-for Levels I, III, and V.  Even the two-log fixed-budget sensitivity is below all three category targets.  A third specialization, from the Gim\'enez et al. theorem, supplies a different polynomial-prefactor cross-check.
++for every fixed rational $\varepsilon>0$.  We give explicit admissible fields, one-invocation failure bounds, exact output checks, and independent solver cross-checks.
+ 
+-A verified signing certificate inverts every target of the unchanged public map and therefore gives key-only universal chosen-message forgery under the official verifier; recovery of the secret seed is unnecessary.  In the public-random model, one SLP pass therefore yields a universal forger with success at least $0.9999999647$ at every recommended level, up to much smaller key-generation exceptions.  Public-random and ideal-primitive models give overwhelming key density, while no density theorem is claimed for the fixed SHAKE/AES functions.  The full representations remain astronomically large, and the normalized indicators are not measured complete circuits.  Nevertheless, the evidence no longer depends on one geometric lemma, one solver theorem, expected-time accounting, a free choice of $\varepsilon$, or identification with the serialized private key.  We recommend reoptimizing all three parameter levels.
++The algebraic recovery and forgery claims are exact.  The key-density statements are exact in the stated public-random and ideal-primitive models.  The normalized asymptotic exponents lie below the three Round-2 category targets, with the most robust margins at Levels III and V.  These are not measured gate counts, and the direct degree-$2^V$ representations require enormous memory.  The paper therefore establishes a structural universal-forgery route and a concrete parameter-review obligation, while leaving implementation-level cost as the main unresolved question.
+ \end{abstract}
+ 
+ \section{Introduction}\label{sec:intro}
+ 
+-Unbalanced Oil and Vinegar (UOV) signatures hide an oil subspace on which every public quadratic form is totally isotropic.  Signing fixes the vinegar variables and solves a linear system in the oil variables~\cite{KPG1999}.  \QRUOV{} compresses this structure through a quotient-ring representation~\cite{QRUOV2021,QRUOVSpec}.  NIST advanced \QRUOV{} to the third round of its Additional Digital Signature process in May 2026~\cite{NISTRound3}.
++\subsection*{Why recovering an equivalent key is enough}
++A multivariate signature scheme publishes a quadratic map
++\[
++P: x\longmapsto \bigl(P_1(x),\ldots,P_m(x)\bigr)
++\]
++and keeps a trapdoor for solving $P(x)=y$.  UOV divides the secret coordinates into \emph{vinegar} and \emph{oil} variables.  Its defining feature is that no public equation has a term involving two oil variables.  Once the vinegar variables are fixed, all equations are therefore linear in the oil variables, and signing is one linear-system solve~\cite{KPG1999}.
+ 
+-This paper gives two routes from one public root associated with the hidden oil space to a complete expanded signing decomposition.  They share the same exact endpoint but deliberately use different geometric and algorithmic interfaces.
++The public key hides which directions are oil directions.  Cryptanalysis does not have to recover the original seed or the exact serialized private key.  Any hidden oil space that reproduces the public map and admits one invertible oil system is an \emph{equivalent signing key}.  Such a key can be verified directly and can invert every target used by the official verifier.
+ 
+-\paragraph{Route A: one graph direction, no global geometry.}
+-Write the hidden oil space in normalized public coordinates as
++\QRUOV{} compresses UOV by grouping base-field coordinates into elements of
+ \[
+- \mathcal O=\{(-Gc,c):c\in K^O\}.
++K=\F_{127^3}.
+ \]
+-For a chosen public direction $c$, substitute the public oil coordinate $c$ and negate the unknown vinegar coordinate.  The resulting $m$ affine quadrics in $x\in K^V$ have planted root $x=Gc$.  Their planted derivative rows are the contractions $-2(B_i c)^{\mathsf T}$.  If these rows span $K^V$, then one recovered root determines $Gd$ for every oil direction $d$ by a public overdetermined linear system.  Exact graph identities certify the answer.
++For the parameter sets studied here, the expanded public key has $m$ quadratic forms in $V+O$ extension-field variables, and the hidden oil space has dimension $O$~\cite{QRUOV2021,QRUOVSpec}.  NIST advanced \QRUOV{} to the third round of the Additional Digital Signatures process in May 2026~\cite{NISTRound3,NISTIR8610}.
+ 
+-The same rank condition makes the planted root nonsingular for a random square output recombination.  Let $h$ be that square core's Jacobian determinant.  On the open set $h\ne0$, every prefix of the square system is automatically smooth, radical, and of the expected codimension.  Thus the reduced-regular-sequence hypotheses of the locally closed Kronecker algorithm of Gim\'enez et al.~\cite{Gimenez2026} follow from one local Jacobian condition; no statement is needed about singular or positive-dimensional components on $h=0$.  This route removes the off-oil incidence, cumulative-degree, and global smoothness arguments as prerequisites for structural recovery.
++\subsection*{The main identity}
++After a public normalization, write the hidden oil space as
++\begin{equation}\label{eq:intro-graph}
++ \cO=\{(-Gc,c):c\in K^O\},
++\end{equation}
++where $G\in K^{V\times O}$ is unknown.  Choose any public direction $c\in K^O$ and form
++\begin{equation}\label{eq:intro-direction}
++ q_{i,c}(x):=P_i(-x,c)=0,
++ \qquad 1\le i\le m.
++\end{equation}
++The point $x=Gc$ is automatically a solution.  More importantly, translating by that solution gives the exact formula
++\begin{equation}\label{eq:intro-translation}
++ q_{i,c}(Gc+z)=z^{\mathsf T}A_i z-2(B_i c)^{\mathsf T}z.
++\end{equation}
++Thus the derivative matrix at the planted solution is simply the $m\times V$ matrix with rows $(B_i c)^{\mathsf T}$.
+ 
+-\paragraph{Route B: a fast projective slice.}
+-A projective $V$-plane generically meets the oil space in one point.  Public output recombination can turn the restricted equations into a smooth complete intersection of $V$ quadrics in $\PP^V$.  The public derivative kernel at the planted point is the full oil space.  Applying the published finite-field Kronecker theorem of van der Hoeven and Lecerf gives a running time arbitrarily close to quadratic in the $2^V$ solutions~\cite{vdHL}.  This route provides the strongest all-level indicators, while Route A ensures that a challenge to the global projective-density proof does not erase the basic key-recovery theorem.
++If this matrix has full column rank, one recovered root $x=Gc$ reveals the \emph{entire} graph $G$.  For every direction $d\in K^O$, the unknown vector $Gd$ is the unique solution of a public overdetermined linear system.  Taking $d$ to be the $O$ coordinate vectors recovers every column of $G$.  No other root and no global description of the solution set is needed.
+ 
+-\begin{center}
+-\small
+-\setlength{\tabcolsep}{4.0pt}
+-\renewcommand{\arraystretch}{1.13}
+-\begin{tabularx}{0.99\textwidth}{@{}>{\raggedright\arraybackslash\bfseries}p{0.17\textwidth}>{\raggedright\arraybackslash}p{0.24\textwidth}>{\raggedright\arraybackslash}p{0.27\textwidth}>{\raggedright\arraybackslash}X@{}}
+-\toprule
+-Route or cost line & Sufficient condition & Published interface & What it removes \\
+-\midrule
+-Graph direction & Some $c$ has $\rank\mathcal B(c)=V$; signability is separate & Locally closed Kronecker solving after localization at $\det J$ & Dependence on global projective geometry \\
+-Projective fast line & The joint slice-and-output discriminant is nonzero & van der Hoeven--Lecerf finite-field bit theorem & Gives the strongest modern asymptotic indicators \\
+-Projective SLP line & The same smooth core & Classical Giusti--Lecerf--Salvy SLP bound, with the randomization audit recorded by van der Hoeven--Lecerf & Removes the free solver exponent $\varepsilon$ \\
+-Projective explicit-prefactor line & The same smooth core & Gim\'enez et al. finite-field theorem & Supplies a different polynomial prefactor and solver family \\
+-\bottomrule
+-\end{tabularx}
+-\end{center}
++The resulting attack has four conceptually simple steps:
++\begin{enumerate}
++\item choose a public direction $c$ and solve the $m$ equations in \eqref{eq:intro-direction};
++\item retain a root whose derivative matrix has full column rank;
++\item recover $G$ from $O$ public linear systems; and
++\item verify every graph identity, pull the decomposition back to the official base field, and exhibit an invertible oil matrix.
++\end{enumerate}
++Every accepted output is checked against the unchanged public map.  A polynomial-system solver may fail, omit roots, or return malformed data; those outcomes cause a restart, not a false key.
+ 
+-\paragraph{Finite evidence from independent solver interfaces.}
+-The modern fast line is parameterized by a fixed solver exponent $\varepsilon$.  The new classical line is not obtained by setting $\varepsilon=0$: it uses the separate division-free straight-line-program bound $L\widetilde O(D^2)$ recorded in equation~(1.1) of van der Hoeven--Lecerf and inherited from Giusti--Lecerf--Salvy.  We instantiate its explicit finite-field randomization audit and charge a conservative shared-monomial circuit for all $V$ quadrics.
++\subsection*{Small deterministic lists}
++The direction system has $m>V$ equations.  A naive square reduction would try all $\binom mV$ row subsets.  We replace that enumeration by a one-parameter Wronskian condenser.  For every full-rank $m\times V$ derivative matrix, a public list of only
++\[
++V(m-V)+1
++\]
++linear recombinations contains an invertible $V\times V$ core.  The list lengths are $105,153,307$ at Levels I, III, and V.
+ 
+-\begin{table}[t]
+-\centering
+-\small
+-\setlength{\tabcolsep}{3.7pt}
+-\caption{Headline normalized indicators in base-two bits.  ``Fast'' is the modern $\varepsilon=0.3$ line after one generic $T\log T$ stress.  The SLP columns use one fixed solver pass over an extension one degree beyond the minimum, with failure below $2^{-24.75}$ at every level; the last two columns expose one or two generic logarithmic sensitivities.  None is a measured complete circuit.}
+-\label{tab:headline}
+-\begin{tabular}{@{}c r r r r r@{}}
+-\toprule
+-Level & Fast, one log & SLP direct & SLP + one log & SLP + two logs & Target \\
+-\midrule
+-I   & $129.629$ & $128.756$ & $135.765$ & $142.773$ & $143$ \\
+-III & $185.365$ & $178.900$ & $186.383$ & $193.866$ & $207$ \\
+-V   & $245.583$ & $232.456$ & $240.317$ & $248.178$ & $272$ \\
+-\bottomrule
+-\end{tabular}
+-\end{table}
++In the public-random expanded-key model, the coordinate-direction derivative matrices are independent and uniform.  Consequently, the first $3,4,4$ coordinate directions already give rank-exception probabilities below the corresponding NIST category scales.  Combining these directions with the condenser produces deterministic lists of only
++\[
++315,
++\qquad612,
++\qquad1228
++\]
++square systems.  Scanning every coordinate direction gives still smaller exceptional probabilities, but is not needed for a category-scale statement.
+ 
+-The epsilon-free SLP line remains below every category target after two generic logarithmic sensitivities; in the fixed one-pass presentation the Level-I margin is $0.227$ bits and the worst failure probability is below $2^{-24.75}$.  The modern line has much larger margins: at $\varepsilon=0.3$ they are $13.37,21.64,26.42$ bits, and even $\varepsilon=0.5$ remains below all targets.  A third, explicit-prefactor specialization of the Gim\'enez et al. theorem gives projective direct rows $141.12,192.37,246.80$ and supplies a different solver family.  The graph-local specialization is slower but preserves structural recovery if the global projective argument is challenged.
++The signing check can also be made shorter.  Certain fixed basis vinegar assignments produce independent uniform $m\times m$ oil matrices over $\F_{127}$.  Testing $22,31,40$ such assignments gives failure probabilities below $2^{-153.50},2^{-216.30},2^{-279.09}$.  Testing all basis assignments makes the failure much smaller, and a final projective-line scan supplies a deterministic fallback.
+ 
+-No displayed row is treated as a certified physical-gate count.  Their role is separation of failure modes: the all-level conclusion no longer depends on a favorable value of $\varepsilon$, while the recovery mechanism no longer depends on the off-oil incidence proof.
++\subsection*{A faster projective route}
++The graph-direction reduction is the cleanest structural result, but its most convenient published solver interface pays for a degree-$V$ localization polynomial.  We therefore also study a faster route.
+ 
+-\paragraph{What is proved.}
+-The graph-direction theorem is pointwise: every expanded key with some regular direction admits almost-sure verified decomposition recovery, independent of how the key was expanded.  Functional signing additionally requires a nonzero oil-determinant polynomial or the deterministic witness condition of \cref{prop:signing-search}.  In the public-random model, the chance that all coordinate directions are irregular is at most
++A projective $V$-plane in the $(V+O-1)$-dimensional ambient space necessarily meets the hidden projective oil space.  For a transverse plane, the intersection is one point.  We prove that, outside three explicit bad-key loci, some public slice and some public recombination of the equations produces a smooth zero-dimensional complete intersection of $V$ quadrics.  It has exactly
+ \[
+- 2^{-1132.166},\qquad2^{-1635.352},\qquad2^{-2935.247}.
++D=2^V
+ \]
+-The fast projective route has its separate explicit density theorem.  The official seeded construction satisfies corresponding information-theoretic statements in the SHAKE ideal-XOF and AES ideal-cipher models, including equal public and secret seeds.
++geometric solutions.  The planted oil point is one of them, and its common derivative kernel is the full hidden oil space.
+ 
+-\begin{center}
+-\small
+-\setlength{\tabcolsep}{5pt}
+-\renewcommand{\arraystretch}{1.12}
+-\begin{tabularx}{0.96\textwidth}{@{}>{\bfseries}p{0.18\textwidth}X@{}}
+-\toprule
+-Proved & Pointwise zero-error-on-acceptance decomposition recovery from one regular graph direction; pointwise functional recovery under a separate signability condition; key-only universal chosen-message forgery from any accepted signing certificate; overwhelming public-random density of regular coordinate directions; an independent projective recovery theorem; three published solver-cost interfaces from two algorithmic families; and exact norm-gradient and resultant-gradient root interfaces. \\
+-Not proved & A high-probability density theorem for the fixed SHAKE/AES functions; a calibrated full-parameter implementation; small hidden constants; manageable full-solver memory; recovery of the secret seed; or replacement parameters optimized against every known attack. \\
+-\bottomrule
+-\end{tabularx}
+-\end{center}
++The finite-field Kronecker algorithm of van der Hoeven and Lecerf~\cite{vdHL} computes a complete univariate description of such a core in expected bit complexity arbitrarily close to $D^2$.  We state the exact field-size requirement, keep its exponent parameter and field extension linked correctly, bound the failure probability of one finite invocation, and verify the returned representation before using it.  The older straight-line-program bound and the independent locally closed-set theorem of Gim\'enez et al.~\cite{GiustiLecerfSalvy2001,Gimenez2026} provide separate growth-rate checks.
+ 
+-\paragraph{Separation of possible objections.}
+-The following implications are intentionally independent; rejecting one does not dispose of the others.
++\subsection*{What is proved, and what the cost tables mean}
++The paper separates exact algebra from asymptotic cost interpretation.
+ \begin{center}
+ \small
+ \setlength{\tabcolsep}{4.5pt}
+-\renewcommand{\arraystretch}{1.12}
+-\begin{tabularx}{0.97\textwidth}{@{}>{\raggedright\arraybackslash\bfseries}p{0.30\textwidth}X@{}}
++\renewcommand{\arraystretch}{1.16}
++\begin{tabularx}{0.97\textwidth}{@{}>{\raggedright\arraybackslash\bfseries}p{0.23\textwidth}X@{}}
+ \toprule
+-Potential objection & What remains \\
++Statement & Meaning \\
+ \midrule
+-The off-oil incidence or projective-density proof is disputed. & Graph-direction recovery and one-root completion remain pointwise, with a separate locally closed solver interface. \\
+-The modern near-quadratic exponent is viewed as too asymptotic. & The epsilon-free classical SLP line and the Gim\'enez explicit-prefactor line remain. \\
+-The classical SLP line is disputed. & The modern finite-field theorem and the independent Gim\'enez specialization remain. \\
+-A solver can omit roots or return malformed data. & Exact equation, graph, pull-back, public-map, and oil-matrix checks make acceptance zero-error; failure causes retry only. \\
+-The output is an equivalent key rather than the secret seed. & The accepted certificate signs every chosen message under the official verifier, without a signing oracle. \\
+-The full computation uses impossible memory. & Practicality is lost, but the algebraic work estimate remains a parameter-selection obligation unless the scheme's security model explicitly excludes such algorithms. \\
+-The fixed SHAKE/AES density is unproved. & The pointwise theorem still covers every fixed expanded key satisfying the public algebraic conditions; the distributional limitation is stated separately. \\
++Recovery from a regular direction & Exact for each fixed expanded key satisfying the stated rank condition.  One suitable root determines a publicly verified equivalent decomposition. \\
++Universal forgery & Exact.  Once an invertible oil matrix is exhibited, the recovered key inverts every verification target and signs every chosen message without a signing-oracle query. \\
++Public-random key density & Exact in the stated expanded-key distribution.  The ideal-XOF and ideal-cipher appendices transfer these bounds with explicit statistical losses. \\
++Solver running time & A published asymptotic bit-complexity theorem, with explicit field and failure accounting. \\
++Displayed exponents & Normalized comparisons with the specification's gate-exponent rows.  They are not measurements of a full implementation. \\
++Memory & Astronomical for the direct degree-$2^V$ representations.  This is the main obstacle to a practical attack. \\
+ \bottomrule
+ \end{tabularx}
+ \end{center}
+ 
+-\paragraph{Verified acceptance.}
+-The locally closed solver is probabilistic and does not itself provide an efficient completeness certificate.  That is not required here.  On a successful invocation its representation contains the planted nonsingular root.  On any invocation, a returned candidate is accepted only after all original equations, the recovered graph identities, the inverse pull-back, the unchanged public map, and an invertible oil system have been checked exactly.  Solver failure can therefore cause only retry or omission, never a false accepted key.
+-
+-\paragraph{Security interpretation.}
+-The direct representation remains infeasible: one degree-$2^V$ vector already requires roughly $0.102$ EiB, $2.23\times10^6$ EiB, and $1.84\times10^{14}$ EiB at the three levels.  The contribution is not a practical break.  It is a structural attack whose modern and epsilon-free solver lines both lie below all category targets, now backed by an explicit-prefactor solver specialization and a separate local recovery theorem.  The epsilon-free line remains below Level I even after two generic logarithmic sensitivities.  In our assessment, all three levels should be reoptimized; retaining any level unchanged now requires a technical rebuttal to the relevant algebraic and solver interfaces, not merely an appeal to infeasible memory.
++The normalized rows are below all three category targets.  The conclusion is strongest at Levels III and V, where several independent solver specializations leave substantial margin.  Level I is more sensitive to hidden constants and representation choices.  Rather than repeating these qualifications throughout the paper, \cref{sec:security} collects them in one place.
+ 
+-\paragraph{Roadmap.}
+-\Cref{sec:model} fixes the expanded-key model, universal-forgery consequence, and exact signing certificate.  \Cref{sec:recovery} develops graph-direction completion and derivative-kernel recovery.  \Cref{sec:local-geometry} proves that Jacobian localization supplies the locally closed solver hypotheses.  \Cref{sec:projective} proves the fast projective regularization and density theorem.  \Cref{sec:solver-attack} gives the three projective cost interfaces, the graph-local interface, and verified-restart theorems.  \Cref{sec:security} compares their parameter implications.  The appendices treat seeded expansion, optional uniqueness, and executable checks.
++\subsection*{Main contributions}
++\begin{enumerate}
++\item We prove the graph-direction identity \eqref{eq:intro-translation} and show that one regular planted root determines the entire hidden graph through public linear algebra.
++\item We give an explicit Wronskian rank condenser, prove its optimal list length, and obtain deterministic category-scale lists of $315,612,1228$ square systems.
++\item We give a basis-first signing search using fewer than $1.008$ tests on average, short category-scale deterministic signing lists, and a stronger projective-line fallback.
++\item We prove that localizing at one nonzero derivative determinant supplies the regularity and radicality required by a locally closed Kronecker solver.  No assumption is made about singular components outside that open set.
++\item We prove a separate projective regularization theorem and explicit public-random bounds for all associated bad-key loci.
++\item We give finite-invocation solver failure bounds, verified restart, exact resolution checks, exact graph and pull-back checks, and a one-invocation universal-forgery statement.
++\item We distinguish theorem-backed asymptotic costs from diagnostic normalizations, and we quantify the otherwise hidden memory cost.
++\end{enumerate}
+ 
+-\section{Related work}\label{sec:related}
++\paragraph{Terminology.}
++A \emph{regular root} is a root whose derivative matrix has full rank.  A \emph{projective slice} is a linear subspace used to reduce the hidden oil space to one point.  A \emph{geometric} or \emph{Kronecker resolution} is a univariate encoding of all roots.  A theorem described as \emph{key by key} applies to every fixed expanded key satisfying its explicit algebraic conditions; it does not assume a key distribution.  The notation $\widetilde O(\cdot)$ suppresses logarithmic factors and constants.
+ 
+-\paragraph{QR-UOV and its attack estimates.}
+-\QRUOV{} compresses UOV through a quotient-ring representation~\cite{QRUOV2021}.  The Round-2 specification analyzes direct MQ, reconciliation, intersection, PXL, and rectangular-MinRank attacks~\cite{QRUOVSpec}.  A July 2026 journal treatment by the \QRUOV{} team consolidates the scheme's security arguments, parameter choices, and implementations~\cite{FurueEtAl2026}.  Rectangular-MinRank analyses by Furue--Ikematsu and Suzuki et al.~\cite{FurueIkematsu,Suzuki} report key-recovery costs; Suzuki et al.\ use the specification's Boolean-gate conversion and give $160,219,277$ for the Round-2 $q=127$ sets.  These do not improve the specification's $158,219,277$ key-recovery rows.  Truncated-polynomial-ring work improves several UOV parameter sets but reports no improvement for the \QRUOV{} sets analyzed here~\cite{FurueIkematsu2026}.
++\paragraph{Organization.}
++\Cref{sec:model} fixes the expanded-key model and exact signing certificate.  \Cref{sec:recovery} gives graph-direction completion and the short deterministic lists.  \Cref{sec:local-geometry} proves the localization lemma.  \Cref{sec:projective} develops the faster projective route.  \Cref{sec:solver-attack} states the solver interfaces and recovery theorems.  \Cref{sec:security} gives the cost and parameter analysis.  The appendices treat seeded expansion, optional uniqueness, alternative elimination ideas, and reproducibility.
+ 
+-Post-specification work also revisits generic underdetermined-MQ \emph{forgery}.  \emph{Just Guess} gives new classical and quantum estimates for \QRUOV{} and related schemes~\cite{JustGuess}; for the main $q=127$ sets, the \QRUOV{} team reports classical exponents $256,398,560$, including polynomial overhead~\cite{QRUOVJustGuess}.  These are forgery estimates, not direct comparators for equivalent-key recovery.  A generalized variable-partitioning preprint likewise studies underdetermined MQ~\cite{Asanuma2026}.  NIST IR~8610 concluded after Round 2 that subsequent cryptanalysis had not diminished \QRUOV{}'s security profile~\cite{NISTIR8610}.  Because estimates continue to evolve, our tables identify the Round-2 specification rows rather than claiming a timeless best known attack.
++\section{Related work}\label{sec:related}
+ 
+-\paragraph{Geometric recovery and polynomial solving.}
+-Beullens' intersection attack and subsequent UOV cryptanalysis recover hidden oil geometry by structured linear algebra~\cite{Beullens}.  P\'ebereau proved that one suitable oil vector suffices for polynomial-time expanded-key recovery~\cite{Pebereau}.  Our projective slice produces such a vector, while the public derivative kernel recovers the full oil space.
++\paragraph{QR-UOV and generic forgery attacks.}
++\QRUOV{} compresses UOV through a quotient-ring representation~\cite{QRUOV2021}.  Its Round-2 specification analyzes direct MQ, reconciliation, intersection, PXL, and rectangular-MinRank attacks~\cite{QRUOVSpec}.  Later work by the \QRUOV{} team consolidates the scheme's security arguments, parameters, and implementations~\cite{FurueEtAl2026}; rectangular-MinRank and truncated-polynomial-ring analyses refine several UOV estimates~\cite{FurueIkematsu,Suzuki,FurueIkematsu2026}.  Generic underdetermined-MQ forgery has also been revisited in \emph{Just Guess} and in generalized variable-partitioning work~\cite{JustGuess,QRUOVJustGuess,Asanuma2026}.  Those attacks seek one signature.  Our endpoint is a publicly verifiable decomposition that signs every target.
+ 
+-The fast projective algorithm uses the published finite-field Kronecker solver of van der Hoeven and Lecerf~\cite{vdHL}.  For every fixed rational $\varepsilon>0$, its bit complexity is arbitrarily close to quadratic in the geometric degree, and its finite-field corollary constructs the working extension inside the stated expected-time bound.  The same paper records the earlier Giusti--Lecerf--Salvy division-free straight-line-program bound $L\widetilde O(D_n^2)$ and explains that it follows from their geometric-resolution algorithm~\cite{GiustiLecerfSalvy2001}.  We specialize that epsilon-free arithmetic-operation line separately and use the explicit finite-field bad-choice audit from the same Kronecker framework.
++\paragraph{Recovering hidden UOV structure.}
++Intersection attacks and later UOV cryptanalysis recover information about the hidden oil geometry through structured linear algebra~\cite{Beullens}.  P\'ebereau observed that a suitable oil vector can be enough for polynomial-time expanded-key recovery~\cite{Pebereau}.  Our graph-direction theorem gives a direct completion formula: one regular planted vector determines every column of the hidden graph.  The projective route instead recovers the oil space as a common derivative kernel.
+ 
+-Gim\'enez et al. give a different probabilistic Kronecker algorithm for locally closed sets over perfect fields~\cite{Gimenez2026}.  Their hypotheses are regularity and radicality after localization away from a prescribed polynomial.  We use that theorem twice: first to solve the graph-direction system on the nonsingular open set, and second as an independent explicit-prefactor cross-check for a smooth projective core.  Their algorithm is not claimed to be Las Vegas; our task-specific exact verification turns incompleteness or malformed output into retry rather than false acceptance.  The projective density analysis uses Benoist's complete-intersection discriminant degrees~\cite{Benoist}.
++\paragraph{Polynomial-system solving.}
++The fastest cost line uses the finite-field Kronecker solver of van der Hoeven and Lecerf~\cite{vdHL}.  Under regularity and geometric radicality of every prefix, it computes a complete resolution in expected time arbitrarily close to quadratic in the number of roots.  We use the older Giusti--Lecerf--Salvy straight-line-program bound as an arithmetic growth check, without importing failure constants that its statement does not provide~\cite{GiustiLecerfSalvy2001}.  Gim\'enez et al. give a probabilistic Kronecker algorithm for locally closed sets over perfect fields~\cite{Gimenez2026}; this is the natural interface for the graph-direction system after localization at a nonzero Jacobian determinant.  The projective density proof also uses Benoist's complete-intersection discriminant degrees~\cite{Benoist}.
+ 
+-\paragraph{Implicit elimination and differentiation.}
+-The norm and resultant gradients in \cref{subsec:implicit-extraction} are classical elimination objects used here as root extractors.  Baur--Strassen shows that first derivatives of an arithmetic circuit can be evaluated with constant-factor overhead~\cite{BaurStrassen}.  D'Andrea--Dickenstein give explicit multivariate-resultant formulas as quotients of determinants~\cite{DAndreaDickenstein}, while Jeronimo et al. give geometric-degree-polynomial algorithms for Chow forms and generic overdetermined solving~\cite{JeronimoEtAl}.  These results motivate a direct resultant-jet attack, but their published bounds do not yield an end-to-end exponent below $D^2$ for the present dense quadratic systems.  The 2026 modular-composition improvement of Neiger et al. reaches $\widetilde O(D^{(\omega+3)/4})$ for generic univariate composition~\cite{NeigerEtAl}; it applies after a univariate quotient representation is available and therefore does not remove the representation-construction bottleneck here.
++\paragraph{Low-space and alternative elimination ideas.}
++\Cref{app:alternatives} records exact norm-gradient and resultant-gradient formulas that extract an isolated root from a quotient representation, together with audits of overdetermined Macaulay solving, underslicing, degree smoothing, tracer-based F4, resultants, and Chow forms~\cite{BaurStrassen,DAndreaDickenstein,JeronimoEtAl,NeigerEtAl,DegreeSmoothing,F4Tracer}.  These ideas reduce the desired output but do not currently avoid construction of a degree-$2^V$ algebra.
+ 
+ \section{Expanded-key model and exact signing certificates}\label{sec:model}
+ 
+-This section fixes the extension-field and base-field coordinate systems and the exact acceptance criterion.  It shows that a verified oil graph, together with one invertible oil system, is a functionally equivalent expanded signing key.  \Cref{sec:recovery} gives two one-root interfaces for recovering the graph, and \cref{sec:local-geometry,sec:projective} provide the corresponding algebraic routes to such a root.
++This section connects the algebra used by the attack to the official verification map.  There are two coordinate systems:
++\begin{itemize}
++\item the official base-field system over $\F_{127}$, in which signatures are verified; and
++\item a smaller extension-field system over $K=\F_{127^3}$, in which the hidden oil space and the attack are easier to describe.
++\end{itemize}
++The specification gives an exact, invertible pull-back between them.  We first recover and verify the hidden structure over $K$, then pull it back and check the resulting base-field factorization against the unchanged public key.  One invertible oil system then certifies that the recovered decomposition can sign every target.
+ 
+ The Round-2 $q=127$ parameter sets use quotient-ring degree $\ell=3$.  The specification has $v=\ell V$ base-field vinegar variables and $m=\ell O$ base-field oil variables and output coordinates.  After quotient-ring expansion, the attacker works with the same $m$ outputs as quadratic forms in only $N=V+O$ variables over
+ \[
+@@ -305,7 +309,7 @@
+ is a translation of the additive space $K^{V\times O}$ and hence a bijection.  It sends the product-uniform law of $E$ to the product-uniform law of $B$, independently of $(a,g)$.  Thus $B$ is independent of $(A,G)$.  Since $A$ itself is product-uniform, $(A_i,B_i)_i$ has the claimed product law.  The formula for $C_i$ is the key-generation block identity \eqref{eq:graphid}.
+ \end{proof}
+ 
+-Every distributional calculation used to bound bad keys depends on the central pairs $(A_i,B_i)$ and on fresh public attack coins, not on an independent graph sample.  A secret coordinate change depending on $G$ maps a uniform public slice to a uniform central slice for every fixed key.  Thus arbitrary $G$--$A$ correlation does not change the public-random bad-key bounds.  \Cref{app:seeded-transfer} shows that the official seeded construction instantiates this model, up to explicit statistical losses, in the SHAKE ideal-XOF and AES ideal-cipher models.  The pointwise theorem applies to fixed-primitive keys as well; what remains unproved there is a high-probability key-generation bound.
++Every distributional calculation used to bound bad keys depends on the central pairs $(A_i,B_i)$ and on fresh public attack coins, not on an independent graph sample.  A secret coordinate change depending on $G$ maps a uniform public slice to a uniform central slice for every fixed key.  Thus arbitrary $G$--$A$ correlation does not change the public-random bad-key bounds.  \Cref{app:seeded-transfer} shows that the official seeded construction instantiates this model, up to explicit statistical losses, in the SHAKE ideal-XOF and AES ideal-cipher models.  The key-by-key theorem applies to fixed-primitive keys as well; what remains unproved there is a high-probability statement about fixed-function key generation.
+ 
+ \subsection{Central and public graph coordinates}
+ 
+@@ -421,7 +425,12 @@
+ \varrho_r:=\Pr_{M\leftarrow\F_q^{m\times m}}[\rank M=r]
+ =q^{-m^2}\prod_{i=0}^{r-1}\frac{(q^m-q^i)^2}{q^r-q^i}.
+ \end{equation}
+-Define
++In particular,
++\begin{equation}\label{eq:square-invertible}
++ \pi_m:=\varrho_m=\prod_{k=1}^m(1-q^{-k}),
++ \qquad \sigma_m:=1-\pi_m.
++\end{equation}
++For the stronger fallback, define
+ \begin{equation}\label{eq:pair-failure}
+ \chi_m:=q^{-(m-1)}+(1-q^{-(m-1)})q^{-1},
+ \qquad
+@@ -430,39 +439,62 @@
+ +(1-\varrho_m-\varrho_{m-1})(1-\varrho_m).
+ \end{equation}
+ 
+-\begin{proposition}[A deterministic signing witness for the planted decomposition]\label{prop:signing-search}
+-For the planted decomposition in the public-random expansion model, $M_1,\ldots,M_V$ are independent uniform matrices in $\F_q^{m\times m}$.  Pair them as
++\begin{proposition}[Basis-first deterministic signing search]\label{prop:signing-search}
++For the planted decomposition in the public-random expansion model, the matrices
++$M_1,\ldots,M_V$ are independent and uniform in $\F_q^{m\times m}$.
++Consequently:
++\begin{enumerate}
++\item Testing the basis assignments $a_1,a_2,\ldots$ in order uses fewer than
+ \[
+-(M_1,M_2),(M_3,M_4),\ldots,(M_{2\lfloor V/2\rfloor-1},M_{2\lfloor V/2\rfloor}).
++ \pi_m^{-1}<1.008
+ \]
+-Let $\cE_{\rm sign}$ be the event that every designated pair span contains only singular matrices.  Then
+-\begin{equation}\label{eq:eta-sign}
+-\Pr[\cE_{\rm sign}]
+-\le \eta_{\rm sign}:=\zeta_{\rm pair}^{\lfloor V/2\rfloor}.
++basis tests on average, stopping at the first success or after all $V$ tests.  It fails to find an invertible matrix exactly when all $V$ basis matrices are singular, an event of probability
++\begin{equation}\label{eq:basis-sign-failure}
++ \eta_{\rm basis}:=\sigma_m^V,
+ \end{equation}
+-Its base-two logarithms at Levels I, III, and V are below
++whose base-two logarithms at Levels I, III, and V are
+ \[
+--544.820,\qquad -796.276,\qquad -1068.687.
++-362.823,\qquad-530.280,\qquad-711.692.
+ \]
+-Outside $\cE_{\rm sign}$, a deterministic scan finds an invertible oil matrix after at most
++
++\item Much shorter fixed lists already suffice at the category scale.  Testing the first
+ \[
+-\lfloor V/2\rfloor(q+1)
++ b_{\rm sign}=22,\qquad31,\qquad40
+ \]
+-tests.  For each designated pair $(A,B)$, test $B$ and $A+tB$ for every $t\in\F_q$.  The corresponding vinegar assignments are public and explicit.
++basis assignments at Levels I, III, and V fails with probabilities $\sigma_m^{b_{\rm sign}}$, whose base-two logarithms are
++\begin{equation}\label{eq:compact-sign-logs}
++ -153.502,\qquad-216.298,\qquad-279.095.
++\end{equation}
+ 
+-More generally, for any fixed exact candidate whose oil-matrix determinant polynomial
++\item Pair the basis matrices as $(M_1,M_2),(M_3,M_4),\ldots$.  Let $\cE_{\rm sign}$ be the event that every designated pair span contains only singular matrices.  Then
++\begin{equation}\label{eq:eta-sign}
++ \Pr[\cE_{\rm sign}]
++ \le \eta_{\rm sign}:=\zeta_{\rm pair}^{\lfloor V/2\rfloor},
++\end{equation}
++with base-two logarithms below
+ \[
+-\Delta(c_1,\ldots,c_V):=\det\!\left(\sum_{j=1}^V c_jM_j\right)
++-544.820,\qquad-796.276,\qquad-1068.687.
+ \]
+-is nonzero, a uniform scalar-block vinegar assignment is invertible with probability at least $1-m/q$.  The expected numbers of assignments are at most
++Outside $\cE_{\rm sign}$, a deterministic fallback succeeds after at most
++\begin{equation}\label{eq:signing-scan-count}
++ V+\lfloor V/2\rfloor(q-1)
++\end{equation}
++oil-matrix tests: first test every $M_j$; if necessary, for each pair $(A,B)$ test $A+tB$ for all $t\in\F_q^\times$.  The basis tests already cover the two remaining projective points $A$ and $B$.
++\end{enumerate}
++
++For any fixed exact candidate, define its oil-matrix determinant polynomial
++\[
++\Delta(c_1,\ldots,c_V):=\det\!\left(\sum_{j=1}^V c_jM_j\right).
++\]
++Whenever $\Delta$ is nonzero, a uniform scalar-block vinegar assignment is invertible with probability at least $1-m/q$.  The corresponding expected numbers of assignments are at most
+ \[
+-\frac{q}{q-m}=1.740,\qquad 2.592,\qquad 5.773
++\frac{q}{q-m}=1.740,\qquad2.592,\qquad5.773
+ \]
+-at Levels I, III, and V.  This is a pointwise statement about a signable decomposition.  In the public-random model, the planted determinant is certainly nonzero outside $\cE_{\rm sign}$, so both the randomized and deterministic guarantees apply there.  For another exact candidate without a proof that $\Delta\not\equiv0$, uniform assignments remain an unquantified prepass; every successful inversion is still an exact certificate.
++at Levels I, III, and V.  This last statement is key by key.  For a recovered candidate not known to be planted, every successful determinant test is still an exact public signing certificate.
+ \end{proposition}
+ 
+ \begin{proof}
+-Write $b_{i,j,k}\in K=\F_{q^\ell}$ for entry $(j,k)$ of the planted extension-field block $B_i$.  Under the ideal experiment these elements are independent and uniform.  The $(i,k)$ block of the oil coefficient row produced by $a_j$ is
++Write $b_{i,j,k}\in K=\F_{q^\ell}$ for entry $(j,k)$ of the planted extension-field block $B_i$.  Under the public-random experiment these elements are independent and uniform.  The $(i,k)$ block of the oil coefficient row produced by $a_j$ is
+ \[
+ 2\xi^{\mathsf T}W_f\Phi_f(b_{i,j,k})\in\F_q^{1\times\ell}.
+ \]
+@@ -471,26 +503,22 @@
+ K\longrightarrow\F_q^{1\times\ell},
+ \qquad b\longmapsto \xi^{\mathsf T}W_f\Phi_f(b)
+ \]
+-is injective: if $b\ne0$, then $\Phi_f(b)$ is invertible, while $\xi^{\mathsf T}W_f\ne0$.  Equal dimensions make it an isomorphism.  Thus each $M_j$ is uniform, and distinct $j$ use disjoint rows of the random extension-field matrices $B_i$.  The matrices are independent.
++is injective: if $b\ne0$, then $\Phi_f(b)$ is invertible, while $\xi^{\mathsf T}W_f\ne0$.  Equal dimensions make it an isomorphism.  Thus each $M_j$ is uniform, and distinct $j$ use disjoint entries of the independent blocks $B_i$; hence the $M_j$ are independent.
+ 
+-It remains to bound one independent pair.  Let $A,B$ be uniform $m\times m$ matrices, and let $E_{A,B}$ be the event that their span contains no invertible matrix.  If $A$ is invertible, this event is impossible.  If $\rank A=m-1$, invertible left and right changes of basis reduce $A$ to $\operatorname{diag}(I_{m-1},0)$ without changing the distribution of $B$.  Write
++A basis test succeeds with probability $\pi_m$.  Truncating a geometric random variable at $V$ gives expected test count
+ \[
+-B=\begin{pmatrix}C&b\\ c^{\mathsf T}&d\end{pmatrix}.
++ \sum_{j=0}^{V-1}\sigma_m^j
++ =\frac{1-\sigma_m^V}{\pi_m}<\pi_m^{-1}.
+ \]
+-On $E_{A,B}$, the univariate polynomial $\det(A+tB)$ vanishes for every $t\in\F_q$.  Its degree is at most $m<q$, so it is the zero polynomial.  Its linear coefficient is $d$, and, after $d=0$, its quadratic coefficient is $-c^{\mathsf T}b$.  The first condition has probability $q^{-1}$.  Conditional on it, the second has probability
+-\[
+-\Pr[c^{\mathsf T}b=0]
+-=q^{-(m-1)}+(1-q^{-(m-1)})q^{-1}=\chi_m.
+-\]
+-If instead $\rank A\le m-2$, then $E_{A,B}$ implies that $B$ is singular, an event of probability $1-\varrho_m$.  Conditioning on the rank of $A$ gives
++Independence gives $\sigma_m^b$ for every fixed prefix of length $b$, yielding all displayed basis-list probabilities.
++
++It remains to bound one pair.  Let $A,B$ be independent uniform $m\times m$ matrices, and let $E_{A,B}$ be the event that their span contains no invertible matrix.  If $A$ is invertible, this event is impossible.  If $\rank A=m-1$, invertible left and right changes of basis reduce $A$ to $\operatorname{diag}(I_{m-1},0)$ without changing the distribution of $B$.  Write
+ \[
+-\Pr[E_{A,B}]\le\zeta_{\rm pair}.
++B=\begin{pmatrix}C&b\\ c^{\mathsf T}&d\end{pmatrix}.
+ \]
+-The designated pairs are independent, so the event that all of them are bad has probability at most $\zeta_{\rm pair}^{\lfloor V/2\rfloor}$.
+-
+-For one pair, the $q+1$ matrices $B$ and $A+tB$ with $t\in\F_q$ enumerate its projective line of nonzero coefficient vectors.  Hence the stated scan finds an invertible matrix whenever that pair span contains one.  Linearity of $a\mapsto\mathsf L_{\widehat F}(a)$ gives the corresponding vinegar assignment.
++On $E_{A,B}$, the polynomial $\det(A+tB)$ vanishes for every $t\in\F_q$.  Its degree is at most $m<q$, so it is the zero polynomial.  Its linear coefficient is $d$, and, after $d=0$, its quadratic coefficient is $-c^{\mathsf T}b$.  These conditions have probability at most $q^{-1}\chi_m$.  If $\rank A\le m-2$, then $E_{A,B}$ implies that $B$ is singular, an event of probability $1-\varrho_m$.  Conditioning on the rank of $A$ gives $\Pr[E_{A,B}]\le\zeta_{\rm pair}$.  The designated pairs are independent, proving \eqref{eq:eta-sign}.
+ 
+-For the randomized option, $\Delta$ has total degree $m$.  Whenever it is nonzero, Schwartz--Zippel gives success probability at least $1-m/q$ per uniform $c\in\F_q^V$, and the expected-assignment bound follows.  A designated pair containing an invertible matrix is one sufficient certificate that $\Delta$ is nonzero.
++The basis matrices and $A+tB$ for $t\in\F_q^\times$ enumerate every projective point on each designated pair line, so the deterministic scan succeeds whenever one pair span contains an invertible matrix.  Finally, $\Delta$ has total degree $m$.  If it is nonzero, Schwartz--Zippel gives success probability at least $1-m/q$ for a uniform coefficient vector.
+ \end{proof}
+ 
+ \section{Graph-direction and derivative-kernel recovery}\label{sec:recovery}
+@@ -564,11 +592,31 @@
+ which is exactly row $i$ of \eqref{eq:direction-completion-system}.  Hence $Gd$ is the unique solution.  The final identities are precisely the hypotheses of \cref{prop:verified-key}.
+ \end{proof}
+ 
++\begin{proposition}[Several partial-rank directions can be combined]\label{prop:multi-direction-completion}
++Let $c_1,\ldots,c_r\in K^O$ and suppose that roots $x_j=Gc_j$ of the corresponding public direction systems have been found.  Stack their public completion matrices and right-hand sides:
++\[
++ \mathcal D_{\boldsymbol c}(\boldsymbol x)
++ :=\begin{pmatrix}\mathcal D_{c_1}(x_1)\\ \vdots\\ \mathcal D_{c_r}(x_r)\end{pmatrix},
++ \qquad
++ b_{\boldsymbol c,d}(\boldsymbol x)
++ :=\begin{pmatrix}b_{c_1,d}(x_1)\\ \vdots\\ b_{c_r,d}(x_r)\end{pmatrix}.
++\]
++If the stacked matrix has column rank $V$, then for every $d\in K^O$ the public system
++\[
++ \mathcal D_{\boldsymbol c}(\boldsymbol x)y=b_{\boldsymbol c,d}(\boldsymbol x)
++\]
++has the unique solution $y=Gd$.  Thus no individual direction needs full rank: enough complementary derivative information across several recovered direction roots also determines the whole graph.
++\end{proposition}
++
++\begin{proof}
++For each $j$, the proof of \cref{prop:graph-direction-completion} shows that $Gd$ satisfies the $j$th block of equations.  It therefore satisfies the stacked system.  Full column rank gives uniqueness.
++\end{proof}
++
+ \begin{remark}[A compact attack certificate]\label{rem:graph-certificate}
+ A successful graph-direction branch can be certified by the tuple $(c,x,G)$ together with one full-rank minor of $\mathcal D_c(x)$.  A verifier checks the $m$ equations $q_{i,c}(x)=0$, the $O$ linear systems \eqref{eq:direction-completion-system}, all $m$ graph identities, the inverse pull-back, and the signing witness.  No claim about the other roots or about completeness of the solver output enters this certificate.
+ \end{remark}
+ 
+-\subsection{How often a direction is regular}
++\subsection{How often a direction is regular, and how to choose a square core}
+ 
+ Put
+ \begin{equation}\label{eq:rho-mv}
+@@ -578,41 +626,126 @@
+ \end{equation}
+ Thus $\rho_{m,V}(Q)$ is the full-column-rank probability of a uniform $m\times V$ matrix over $K$.
+ 
+-\begin{proposition}[Pointwise sampling and public-random density]\label{prop:graph-direction-density}
++The direction system has $m$ equations but only $V$ variables.  The obvious deterministic reduction to a square system tries all $\binom mV$ row subsets.  The next lemma replaces that list by an optimal-size family of public linear combinations.
++
++Index the $m$ equations by $r=0,\ldots,m-1$.  For $0\le a<V$, write
++$(r)_a=r(r-1)\cdots(r-a+1)$, with $(r)_0=1$, and define
++\begin{equation}\label{eq:wronskian-condenser}
++ \mathsf C(t)_{a+1,r+1}:=(r)_a t^{r-a}
++ \qquad(t\in K),
++\end{equation}
++where the entry is zero when $r<a$.  The first $V$ columns of $\mathsf C(t)$ are triangular with diagonal $0!,1!,\ldots,(V-1)!$.  They are therefore nonsingular because $V-1<127=\operatorname{char}K$.
++
++\begin{lemma}[A one-parameter rank condenser]\label{lem:wronskian-condenser}
++Let $B\in K^{m\times V}$ have column rank $V$, where $m\le127$.  Then
++\begin{equation}\label{eq:wronskian-polynomial}
++ W_B(T):=\det\bigl(\mathsf C(T)B\bigr)
++\end{equation}
++is a nonzero polynomial of degree at most $V(m-V)$.
++\end{lemma}
++
++\begin{proof}
++For column $j$ of $B$, form the polynomial
++$f_j(T)=\sum_{r=0}^{m-1}B_{r+1,j}T^r$.  The columns of $B$ are independent exactly when the polynomials $f_1,\ldots,f_V$ are independent, and $\mathsf C(T)B$ is their ordinary Wronskian matrix.
++
++Choose another basis $g_1,\ldots,g_V$ of their span with distinct increasing degrees
++$0\le d_1<\cdots<d_V<m$.  The leading coefficient of the Wronskian of the $g_j$ is, up to the nonzero product of their leading coefficients,
++\[
++ \det\bigl((d_j)_a\bigr)_{0\le a<V,\,1\le j\le V}
++ =\prod_{i<j}(d_j-d_i).
++\]
++This is nonzero in $K$ because all $d_j$ are distinct and below $127$.  A change of polynomial basis only multiplies the Wronskian by a nonzero scalar, so $W_B$ is nonzero.  Finally,
++\[
++ \deg W_B
++ \le \sum_{j=1}^V d_j-\frac{V(V-1)}2
++ \le V(m-V),
++\]
++where the last bound uses the $V$ largest possible distinct degrees below $m$.
++\end{proof}
++
++\begin{proposition}[Key-by-key sampling and public-random density]\label{prop:graph-direction-density}
+ For a fixed expanded key, suppose some $V\times V$ minor of $\mathcal B(c)$ is not the zero polynomial in $c$.  A fresh uniform $c\leftarrow K^O$ then satisfies $\rank\mathcal B(c)=V$ with probability at least
+ \begin{equation}\label{eq:random-direction-success}
+  1-\frac{V}{Q}.
+ \end{equation}
+-Conditional on this event, a uniform $R\leftarrow K^{V\times m}$ makes $R\mathcal B(c)$ invertible with probability
++Conditional on this event, a fresh uniform $t\leftarrow K$ makes
++$\mathsf C(t)\mathcal B(c)$ invertible with probability at least
+ \begin{equation}\label{eq:random-recombination-success}
+- \rho_{V,V}(Q)=\prod_{a=0}^{V-1}(1-Q^{a-V}).
++ 1-\frac{V(m-V)}{Q}.
+ \end{equation}
+ 
+-In the public-random model, the $O$ coordinate-direction matrices
+-$\mathcal B(e_1),\ldots,\mathcal B(e_O)$ are independent uniform $m\times V$ matrices.  Therefore
++In the public-random model, $\mathcal B(c)$ is a uniform $m\times V$ matrix for every fixed nonzero $c\in K^O$.  In particular, one preselected coordinate direction fails with probability $\tau_{m,V}(Q)$, whose base-two logarithm is
++\[
++ -62.898161,\qquad -62.898161,\qquad -83.864216
++\]
++at Levels I, III, and V.  More strongly, the $O$ coordinate-direction matrices
++$\mathcal B(e_1),\ldots,\mathcal B(e_O)$ are independent uniform matrices.  Therefore
+ \begin{equation}\label{eq:all-coordinate-directions-bad}
+  \Pr\bigl[\rank\mathcal B(e_j)<V\text{ for every }j\bigr]
+- =\tau_{m,V}(Q)^O.
++ =\tau_{m,V}(Q)^O,
+ \end{equation}
+-Its base-two logarithm is at most
++with base-two logarithms
+ \[
+- -1132.166907,\qquad-1635.352198,\qquad-2935.247544
++ -1132.166907,\qquad-1635.352198,\qquad-2935.247544.
+ \]
+-at Levels I, III, and V.
+ \end{proposition}
+ 
+ \begin{proof}
+-Every maximal minor is homogeneous of degree $V$ in $c$.  If one is nonzero, Schwartz--Zippel gives \eqref{eq:random-direction-success}.  For fixed full-rank $\mathcal B(c)$, the map from one row of $R$ to its product with $\mathcal B(c)$ is surjective onto $K^V$.  Hence $R\mathcal B(c)$ is a uniform $V\times V$ matrix, proving \eqref{eq:random-recombination-success}.
++Every maximal minor of $\mathcal B(c)$ is homogeneous of degree $V$ in $c$, so Schwartz--Zippel gives \eqref{eq:random-direction-success}.  Conditional on full rank, \cref{lem:wronskian-condenser} and the univariate root bound give \eqref{eq:random-recombination-success}.
++
++Under \cref{def:ideal}, each $B_i$ is an independent uniform linear map $K^O\to K^V$.  For fixed nonzero $c$, the vector $B_ic$ is uniform in $K^V$, independently across $i$.  For the coordinate directions, the vectors $B_ie_j$ use independent columns of the $B_i$, proving both the fixed-direction law and \eqref{eq:all-coordinate-directions-bad}.  The displayed values are exact evaluations of the rank formulas.
++\end{proof}
++
++\begin{corollary}[A short deterministic public list]\label{cor:deterministic-outer-list}
++Fix any public list of $V(m-V)+1$ distinct elements of $K$.  Whenever $\mathcal B(c)$ has column rank $V$, at least one $t$ on the list makes the square system
++\begin{equation}\label{eq:condensed-direction-system}
++ \mathsf C(t)\,(q_{1,c},\ldots,q_{m,c})^{\mathsf T}=0
++\end{equation}
++have the planted root as a nonsingular solution.
+ 
+-Under \cref{def:ideal}, the columns of the independent uniform matrices $B_i$ are mutually independent.  For fixed $j$, stacking the vectors $B_ie_j$ gives a uniform $m\times V$ matrix; different $j$ use disjoint random columns.  This proves independence and \eqref{eq:all-coordinate-directions-bad}.  The displayed values are exact evaluations reproduced by the accompanying audit.
++For one fixed coordinate direction, the list sizes at Levels I, III, and V are
++\[
++ 105,\qquad153,\qquad307.
++\]
++Scanning all coordinate directions uses respectively
++\[
++ 1{,}890,\qquad3{,}978,\qquad10{,}745
++\]
++square systems, and fails in the public-random model only with probability
++$\tau_{m,V}(Q)^O$.  Thus all outer choices can be deterministic; only the polynomial-system solver needs random coins.
++\end{corollary}
++
++\begin{proof}
++The determinant in \eqref{eq:wronskian-polynomial} has degree at most $V(m-V)$ and cannot vanish at every point of a longer distinct list.  At the planted root, the Jacobian of \eqref{eq:condensed-direction-system} is
++$-2\mathsf C(t)\mathcal B(c)$ by \cref{prop:graph-direction-identity}.  The numerical counts use $m-V\in\{2,2,3\}$.
+ \end{proof}
+ 
+-\paragraph{A deterministic outer fallback.}
+-If one coordinate direction is regular, the attacker may enumerate all $O$ coordinate directions and all $V$-row subsets of the $m$ equations.  Since $e=m-V\in\{2,2,3\}$,
++\begin{corollary}[Category-scale deterministic direction lists]\label{cor:compact-direction-list}
++Use the first
+ \[
+- O\binom mV=O\binom m e
++ r_{\rm dir}=3,\qquad4,\qquad4
+ \]
+-is polynomial in the parameters.  At least one enumerated square subsystem has the planted point as a nonsingular root.  The randomized $(c,R)$ formulation is faster and is used for the cost lines; the deterministic scan shows that the structural reduction is not tied to a lucky public recombination.
++coordinate directions at Levels I, III, and V, and for each direction use the condenser list from \cref{cor:deterministic-outer-list}.  The resulting fully public lists contain
++\[
++315,\qquad612,\qquad1228
++\]
++square systems.  In the public-random model, the probability that none has the planted point as a nonsingular root is exactly $\tau_{m,V}(Q)^{r_{\rm dir}}$, with base-two logarithms
++\begin{equation}\label{eq:compact-direction-logs}
++ -188.694,\qquad-251.593,\qquad-335.457.
++\end{equation}
++These bounds are already below the Level-I, Level-III, and Level-V category exponents $143,207,272$.  Scanning all $O$ coordinate directions gives the stronger probabilities in \eqref{eq:all-coordinate-directions-bad}.
++\end{corollary}
++
++\begin{proof}
++The coordinate-direction derivative matrices are independent by \cref{prop:graph-direction-density}.  If one of the first $r_{\rm dir}$ matrices has full column rank, \cref{cor:deterministic-outer-list} supplies a condenser value with nonsingular planted Jacobian.  Multiplying the one-direction failure logarithm by $r_{\rm dir}$ gives \eqref{eq:compact-direction-logs}; multiplying the per-direction list lengths $105,153,307$ gives the displayed system counts.
++\end{proof}
++
++\begin{remark}[The list length is geometrically optimal]\label{rem:condenser-optimal}
++The Grassmannian of $V$-subspaces of an $m$-dimensional space has dimension $V(m-V)$.  For any fixed full-rank linear map $R:K^m\to K^V$, the subspaces on which $R$ is singular form a hyperplane section in Pl\"ucker coordinates.  Over an algebraic closure, at most $V(m-V)$ such hyperplane sections always have a common point.  Hence no family of at most $V(m-V)$ linear recombinations can work for every full-rank $m\times V$ matrix after all field extensions.  The family in \cref{cor:deterministic-outer-list} meets this natural lower bound exactly.
++\end{remark}
++
++\paragraph{Randomized versus deterministic use.}
++Sampling one field element $t$ is convenient for the expected-cost theorem.  The short list in \cref{cor:deterministic-outer-list} removes that choice entirely and is far smaller than enumerating all $V$-row subsets.
+ 
+ \subsection{Derivative-kernel recovery for the projective route}
+ 
+@@ -674,7 +807,7 @@
+ Equation \eqref{eq:h-at-planted} puts the planted root in the open set.  \Cref{lem:jacobian-localization} is exactly the reduced-regular-sequence condition required after localization.
+ \end{proof}
+ 
+-\begin{remark}[Why this is a genuinely independent route]\label{rem:local-independent}
++\begin{remark}[Why this is a separate geometric route]\label{rem:local-independent}
+ The local theorem does not use the projective slice, the off-oil incidence, the cumulative-degree bound, the joint discriminant, smoothness of the full projective core, or radicality of components on $h=0$.  A failure in any of those arguments can affect the faster projective line without affecting graph-direction recovery.
+ \end{remark}
+ 
+@@ -712,8 +845,8 @@
+ \]
+ It contains the planted oil space $\PP(\cO_0)\simeq\PP^{O-1}$.
+ 
+-\begin{proposition}[Exact law on a transverse planted slice]\label{prop:planted-slice-law}
+-Fix a realization of the secret graph and a $K$-rational projective $V$-plane $\Lambda$ that meets $\PP(\cO_0)$ transversely in one point $p$.  Conditional on this graph and slice, the restrictions $F_1|_\Lambda,\ldots,F_m|_\Lambda$ are independent uniform elements of
++\begin{proposition}[Exact marginal law on a fixed transverse slice]\label{prop:planted-slice-law}
++Fix, independently of the sampled central forms, a $K$-rational projective $V$-plane $\Lambda$ that meets $\PP(\cO_0)$ transversely in one point $p$.  Under the marginal public-random law of the central pairs $(A_i,B_i)$, the restrictions $F_1|_\Lambda,\ldots,F_m|_\Lambda$ are independent uniform elements of
+ \[
+ H^0\!\left(\PP^V,\mathcal I_p(2)\right),
+ \]
+@@ -731,9 +864,13 @@
+  =2z\,t^{\mathsf T}B_ic
+   +t^{\mathsf T}\!\left(A_i+B_iL+L^{\mathsf T}B_i^{\mathsf T}\right)t.
+ \]
+-The map $B_i\mapsto B_ic$ is surjective onto $K^V$.  For every prescribed linear coefficient $\ell\in K^V$ and symmetric quadratic coefficient $H\in\Sym_V(K)$, the matrices $B_i$ satisfying $B_ic=\ell$ form an affine space of the same size, and then $A_i=H-B_iL-L^{\mathsf T}B_i^{\mathsf T}$ is forced.  Thus $(A_i,B_i)\mapsto F_i|_\Lambda$ is a surjective linear map with equal-size fibers.  Product-uniformity from \cref{prop:ideal-factorization} proves the claim.
++For every prescribed linear coefficient $\ell\in K^V$ and symmetric quadratic coefficient $H\in\Sym_V(K)$, the matrices $B_i$ satisfying $B_ic=\ell$ form an affine space of the same size, and then $A_i=H-B_iL-L^{\mathsf T}B_i^{\mathsf T}$ is forced.  Thus $(A_i,B_i)\mapsto F_i|_\Lambda$ is a surjective linear map with equal-size fibers.  The pairs $(A_i,B_i)$ are marginally independent and uniform by \cref{prop:ideal-factorization}, proving the claim.
+ \end{proof}
+ 
++\begin{remark}[Why the statement is marginal]\label{rem:slice-law-marginal}
++The model permits the secret graph $G$ to depend arbitrarily on $A$.  Conditioning on $G$ can therefore change the law of $A$, so no conditional-on-$G$ uniformity is asserted.  None is needed: the bad-key events in this section depend only on the marginal central tuple $(A_i,B_i)_i$, while a fresh public slice remains uniform after the fixed secret coordinate change for every individual key.
++\end{remark}
++
+ \begin{proposition}[Generic isolation by the spare equations]\label{prop:generic-full-isolation}
+ Fix $p\in\PP^V$ and let $m>V$.  A Zariski-generic $m$-tuple in $H^0(\PP^V,\mathcal I_p(2))^m$ has $p$ as its only common projective zero.  Generically its full Jacobian has rank $V$ at $p$.
+ \end{proposition}
+@@ -1144,8 +1281,8 @@
+ \Cref{cor:local-hypotheses} gives the localized regularity and radicality hypotheses and places $Gc$ in the open set.  B\'ezout bounds every intermediate degree by $2^s\le2^V$.  The maximum input degree is $V$ because $h$ has degree $V$.  The dense quadratic core has the shared-monomial circuit in \eqref{eq:local-slp}; Baur--Strassen differentiation followed by a division-free Samuelson--Berkowitz determinant circuit adds $O(V^4)$ operations.  Substitution into \eqref{eq:gimenez-field-condition}--\eqref{eq:gimenez-cost} proves the result.
+ \end{proof}
+ 
+-\begin{corollary}[Independent smooth-projective cross-check]\label{cor:gimenez-projective}
+-On a smooth projective core, choose an affine chart avoiding its $D=2^V$ points and apply \cref{prop:gimenez-theorem} with $H=1$.  Then
++\begin{corollary}[Smooth-projective Gim'enez cross-check]\label{cor:gimenez-projective}
++On a smooth projective core, choose a hyperplane at infinity and dehomogenize in the complementary affine chart.  Conditional on the hyperplane avoiding all $D=2^V$ projective roots, apply \cref{prop:gimenez-theorem} with $H=1$.  Then
+ \[
+  n=r=V,\qquad d=2,\qquad\delta\le D,
+ \]
+@@ -1157,89 +1294,129 @@
+ \begin{equation}\label{eq:projective-gimenez-cost}
+  \widetilde O\!\left(
+   2\bigl(V^4+V(L_{\rm core}+V^2+V^4)\bigr)4^V\log_2(Q^s)
+- \right),
++ \right).
++\end{equation}
++The conditional solver success probability is at least $1-2\epsilon$.  If the hyperplane is sampled uniformly over $\F_{Q^s}$, the unconditional success probability of the chart-plus-solver step is at least
++\begin{equation}\label{eq:projective-gimenez-success}
++ 1-2\epsilon-\frac{D}{Q^s}.
+ \end{equation}
+-with success probability at least $1-2\epsilon$.
+ \end{corollary}
+ 
+ \begin{proof}
+-Smoothness of the full projective zero scheme implies regularity and geometric radicality of every prefix by \cref{lem:full-implies-prefix}.  Dehomogenization in a chart avoiding the finite zero set preserves those properties.  Substitute $d=2$ and $\delta\le2^V$ into \cref{prop:gimenez-theorem}.  A random chart fails with probability at most $D/|L|$, which is absorbed by verified restart and is negligible under \eqref{eq:projective-gimenez-field}.
++Smoothness of the full projective zero scheme implies regularity and geometric radicality of every prefix by \cref{lem:full-implies-prefix}.  A hyperplane avoiding the finite zero set exists, and dehomogenization in its complementary affine chart preserves those properties.  Substitute $d=2$ and $\delta\le2^V$ into \cref{prop:gimenez-theorem}.  A uniformly random hyperplane contains any fixed projective point with probability at most $1/Q^s$; a union bound over the $D$ roots gives the additional $D/Q^s$ term in \eqref{eq:projective-gimenez-success}.
+ \end{proof}
+ 
+ \paragraph{Why Monte Carlo output is sufficient here.}
+ A successful call to \cref{prop:gimenez-theorem} contains the planted nonsingular root.  A failed call may omit it or return unusable data.  The attack parses every returned representation, retains only actual roots of all original equations, completes and verifies the graph, checks the inverse pull-back and public-map factorization, and finally checks an invertible oil system.  If no candidate passes, it retries with fresh coins.  Thus the external solver's lack of a completeness certificate can delay termination but cannot create a false accepted key.
+ 
+-\subsection{Fast projective route: the solver field supplies the public randomness}\label{subsec:field}
++\subsection{Fast projective route: field size, failure probability, and cost}\label{subsec:field}
+ 
+ Put
+ \[
+  D:=2^V,\qquad L_s:=\F_{Q^s},\qquad q_s:=|L_s|.
+ \]
+-The finite-field corollary of van der Hoeven and Lecerf constructs a working extension satisfying, among its explicit cardinality conditions,
+-\[
+- |L_s|>100D^3=100\cdot8^V
+-\]
+-and performs the casts and solver call inside its expected bit-complexity bound~\cite[Theorem~5.4 and Corollary~5.5]{vdHL}.  For the displayed finite indicators we use $s=10,13,16$ at Levels I, III, and V.  These choices satisfy the field condition and have $\log_2|L_s|=209.66,272.56,335.46$ bits.
++The finite-field theorem of van der Hoeven and Lecerf has an exponent parameter and a field-size requirement.  They must be chosen together.  We use $\varepsilon>0$ for the desired final exponent and set the theorem's internal parameter to $\eta=\varepsilon/3$.  For $V$ quadrics, its field-size threshold is
++\begin{equation}\label{eq:vdhl-field-bound}
++ B_V(\eta):=
++ \max\!\left\{
++ \max\!\left\{2,(1+\eta)(8/\eta+1)V2^{\eta/8}\right\}(2^V-1),
++ 100\,8^V
++ \right\}.
++\end{equation}
++Define the smallest admissible extension degree and a one-degree safety choice by
++\begin{equation}\label{eq:solver-extension-degree}
++ s_\varepsilon^0:=\min\{s\ge1:Q^s>B_V(\varepsilon/3)\},
++ \qquad
++ s_\varepsilon^+:=s_\varepsilon^0+1.
++\end{equation}
++The first choice minimizes field size.  The second divides all finite-invocation failure bounds by the large factor $Q=2{,}048{,}383$.
+ 
+-Sample both
++For any $s\ge s_\varepsilon^0$, sample
+ \[
+- M\leftarrow L_s^{(V+O)\times(V+1)},\qquad
++ M\leftarrow L_s^{(V+O)\times(V+1)},
++ \qquad
+  R\leftarrow L_s^{V\times m}
+ \]
+-from this same field.  Forming the restricted tuple and its $V$ output combinations uses only polynomially many operations in $L_s$.  The public joint discriminant has degree at most
+-\[
+- E_V^{\rm joint}:=3V(V+1)2^{V-1}
+-\]
+-by \eqref{eq:theta-degree}.  Hence, for every fixed expanded key with $\Theta_F\not\equiv0$,
++and form the restricted square core.  For every fixed key with $\Theta_F\not\equiv0$, Schwartz--Zippel gives
+ \begin{equation}\label{eq:fast-beta}
+- \beta_s:=\Pr[\Theta_F(M,R)=0]
+- \le \frac{E_V^{\rm joint}}{q_s}.
++ \beta_{V,s}:=\Pr[\Theta_F(M,R)=0]
++ \le \frac{E_V^{\rm joint}}{Q^s},
++ \qquad
++ E_V^{\rm joint}:=3V(V+1)2^{V-1}.
++\end{equation}
++The proof of the finite solver theorem bounds its three internal bad choices by
++\begin{equation}\label{eq:fast-alpha}
++ \alpha_{V,s}:=\frac{5D^2+26D^3}{Q^s}.
+ \end{equation}
+-The resulting logarithms are:
++These are bounds for one finite invocation.  A denominator failure, degree mismatch, or failed final check returns \textsf{fail}; the algorithm never runs an unproved internal restart loop on an irregular outer draw.
++
++For the primary choice $\varepsilon=0.3$, the field threshold is governed by $100\,8^V$.  The minimum and safety choices are:
+ \begin{center}
+ \small
+ \begin{tabular}{@{}lrrrr@{}}
+ \toprule
+-Level & $s$ & $\log_2|L_s|$ & $\log_2 E_V^{\rm joint}$ & $\log_2\beta_s$ \\
++Level & $s_{0.3}^0$ & success at $s_{0.3}^0$ & $s_{0.3}^+$ & success at $s_{0.3}^+$ \\
+ \midrule
+-I   &10&209.661&64.013&$-145.647$\\
+-III &13&272.559&89.100&$-183.459$\\
+-V   &16&335.457&115.944&$-219.513$\\
++I   &8  &$\ge0.992337625602$ &9  &$\ge0.999999996259$\\
++III &12 &$\ge0.999997944684$ &13 &$\ge0.999999999998$\\
++V   &15 &$\ge0.927725586161$ &16 &$\ge0.999999964716$\\
+ \bottomrule
+ \end{tabular}
+ \end{center}
+-Thus the expected number of outer regularization draws is at most $(1-\beta_s)^{-1}$, indistinguishable from one at the displayed precision.
++Here success means that the outer core is smooth and the solver's internal choices are good, conditional on $\Theta_F\not\equiv0$; it is at least
++$(1-\beta_{V,s})(1-\alpha_{V,s})$.  At the safety fields, the base-two logarithms of $(\alpha_{V,s},\beta_{V,s})$ are
++\[
++(-27.994,-124.681),\qquad
++(-39.858,-183.459),\qquad
++(-24.756,-219.513).
++\]
++Thus the minimum fields are adequate for expected-time verified restart, while the safety fields give a clean one-invocation theorem.  The dependence on $\varepsilon$ in \eqref{eq:solver-extension-degree} is essential: no fixed list of extension degrees works for every arbitrarily small fixed $\varepsilon>0$.
++
++\subsection{Published near-quadratic Kronecker solver}\label{subsec:solver}
+ 
+-\begin{proposition}[Solver-field absorption]\label{prop:field-absorption}
+-Fix a rational $\varepsilon>0$.  Construct the working extension as in the finite-field Kronecker corollary, cast the public tuple into that field, sample $(M,R)$ there, and only then invoke the solver on the restricted core.  The slice restriction, output recombination, and their field casts do not add a separate leading extension multiplier.  The expected bit complexity remains
++\begin{proposition}[Fast smooth-core specialization]\label{prop:finite-field-kronecker}
++Let $g_1,\ldots,g_V$ be homogeneous quadrics over a finite field $\F_{p^k}$.  Assume that they form a regular sequence and every projective prefix is geometrically radical.  Put $D_i=2^i$ and $D=D_V$.  Fix a rational $\varepsilon>0$, set $\eta=\varepsilon/3$, and assume
++\[
++ p^k>B_V(\eta).
++\]
++One finite invocation of Theorem~5.4 of van der Hoeven and Lecerf uses
++\begin{equation}\label{eq:fast-kronecker}
++ \widetilde O\!\left(D\,2^{(1+\varepsilon)(V-1)}k\log_2p\right)
++\end{equation}
++bit operations and fails because of its random coordinate, intersection, or evaluation choices with probability at most
++\begin{equation}\label{eq:vdhl-internal-failure}
++ \frac{5D^2+26D^3}{p^k}.
++\end{equation}
++Outside those bad choices it returns a complete Kronecker parametrization.  The checks in \cref{prop:resolution-checks}, including the requirement that the separator have degree $D$, certify completeness for this task.  Repeating checked finite invocations on an input satisfying the hypotheses gives the Las Vegas expected-time form of Corollary~5.5.
++
++For $K=\F_{127^3}$ and any $s\ge s_\varepsilon^0$, the explicit finite-invocation cost over $L_s$ is obtained from \eqref{eq:fast-kronecker} with $k=3s$ and $p=127$.  Since $s=O(V)=O(\log D)$ for the choices above, this field-degree factor is absorbed by soft-$O$ notation.  Including field construction, casting, public slicing, output recombination, solving, and verification, the full expected projective route has scale
+ \begin{equation}\label{eq:fast-solver-scale}
+- \widetilde O\!\left(D\,2^{(1+\varepsilon)(V-1)}\,3\log_2 127\right).
++ T_{\varepsilon,V}
++ :=\widetilde O\!\left(
++ 2^V2^{(1+\varepsilon)(V-1)}3\log_2 127
++ \right).
+ \end{equation}
+ \end{proposition}
+ 
+ \begin{proof}
+-The solver's finite-field corollary already constructs an extension of degree polynomial in $V$, casts the input, and absorbs that extension degree by the same $\varepsilon/3$ rescaling used in its proof.  Sampling $M$ and $R$, restricting $m$ dense quadrics, and forming $V$ public output combinations require only $\operatorname{poly}(V,O,m)$ operations in the same field.  For fixed $\varepsilon$, those operations are lower order than the degree-dependent term in \eqref{eq:fast-solver-scale}.  No second field is introduced.
+-\end{proof}
++The first statement is Theorem~5.4 specialized to the degree sequence $(2,\ldots,2)$, with internal parameter $\eta=\varepsilon/3$.  Its complete field condition is \eqref{eq:vdhl-field-bound}; its complexity exponent $1+3\eta$ becomes $1+\varepsilon$.  The three bad-choice bounds in the proof sum to \eqref{eq:vdhl-internal-failure}.
+ 
+-\subsection{Published near-quadratic Kronecker solver}\label{subsec:solver}
++A smooth zero-dimensional projective core satisfies the required regularity and prefix-radicality assumptions by \cref{lem:full-implies-prefix}.  Corollary~5.5 of the source constructs a suitable extension, casts the input, verifies the returned parametrization, and obtains the same expected soft-$O$ scale.  Sampling $M$ and $R$, restricting the dense quadrics, and forming the output combinations costs only polynomially many operations in the working field and is lower order than the degree-dependent term.
++\end{proof}
+ 
+-\begin{proposition}[Fast smooth-core specialization]\label{prop:finite-field-kronecker}
+-Let $g_1,\ldots,g_V$ be homogeneous quadrics over a finite field $\F_{p^k}$ such that the ordered sequence is regular and every projective prefix is geometrically radical.  Put $D_i=2^i$ and $D=D_V$.  For every fixed rational $\varepsilon>0$, the Las Vegas finite-field Kronecker algorithm of van der Hoeven and Lecerf computes a complete geometric resolution over a constructed finite extension in expected bit time
+-\begin{equation}\label{eq:fast-kronecker}
+- \widetilde O\!\left(D\,D_{V-1}^{1+\varepsilon}\,k\log_2 p\right).
++\begin{corollary}[One checked projective invocation]\label{cor:fast-single-invocation}
++Fix $\varepsilon>0$, choose any $s\ge s_\varepsilon^0$, and fix a key with $\Theta_F\not\equiv0$.  Run one outer draw over $L_s$, one finite invocation from \cref{prop:finite-field-kronecker}, and all checks from \cref{prop:resolution-checks}; return \textsf{fail} if any check rejects.  The invocation has soft-$O$ cost $T_{\varepsilon,V}$ and succeeds with probability at least
++\begin{equation}\label{eq:fast-single-invocation-success}
++ (1-\beta_{V,s})(1-\alpha_{V,s}).
+ \end{equation}
+-For $K=\F_{127^3}$ this becomes
+-\[
+- \widetilde O\!\left(2^V2^{(1+\varepsilon)(V-1)}3\log_2 127\right).
+-\]
+-The algorithm includes construction of a suitable working extension, input casting, internal random coordinate choices, and verification of the returned parametrization.
+-\end{proposition}
++For $\varepsilon=0.3$, the minimum-field and safety-field probabilities are those in the preceding table.
++\end{corollary}
+ 
+ \begin{proof}
+-The assumptions are exactly conditions R1--R3 in the cited solver theorem: regularity, geometric radicality of every prefix, and input degrees at least two.  \Cref{lem:full-implies-prefix} supplies them whenever the projective core is smooth.  Specializing Corollary~5.5 of van der Hoeven and Lecerf to the degree sequence $(2,\ldots,2)$ gives $D_i=2^i$ and \eqref{eq:fast-kronecker}.  Their construction produces the finite working extension and gives either arbitrarily small fixed failure probability or the displayed expected complexity in Las Vegas form.  \Cref{prop:field-absorption} accounts for sampling and forming the public restricted core in that already charged field.
++The outer discriminant fails with probability at most $\beta_{V,s}$.  Conditional on a smooth core, \cref{prop:finite-field-kronecker} fails internally with probability at most $\alpha_{V,s}$.  The two groups of coins are fresh.  Exact checking changes malformed or incomplete output into \textsf{fail}, never into a false accepted result.
+ \end{proof}
+ 
+-\subsection{Epsilon-free straight-line-program Kronecker cross-check}\label{subsec:slp-solver}
++\subsection{A classical arithmetic cross-check}\label{subsec:slp-solver}
+ 
+ Let
+ \begin{equation}\label{eq:slp-length}
+@@ -1247,67 +1424,13 @@
+  \qquad
+  L_{\rm quad}:=M_2+V(2M_2-1).
+ \end{equation}
+-The first term computes every degree-two monomial in the $V+1$ homogeneous variables once.  Each of the $V$ dense quadrics then uses $M_2$ scalar multiplications and $M_2-1$ additions.  Thus \eqref{eq:slp-length} is a conservative division-free straight-line program for the entire square core, not a unit-cost dense-input convention.
+-
+-\begin{proposition}[Classical SLP Kronecker specialization]\label{prop:slp-kronecker}
+-Assume the smooth projective core hypotheses of \cref{prop:finite-field-kronecker}, put $D=2^V$, and let $s$ be the least positive integer satisfying
+-\begin{equation}\label{eq:slp-field}
+- Q^s\ge100D^3.
+-\end{equation}
+-Then the classical Giusti--Lecerf--Salvy Kronecker solver, evaluated through the straight-line program \eqref{eq:slp-length}, admits a verified Las Vegas implementation with expected bit complexity
+-\begin{equation}\label{eq:slp-bit-cost}
+- \widetilde O\!\left(
+-  \frac{L_{\rm quad}D^2s\log_2 Q}{1-\pi_s-\beta_s}
+- \right),
+- \qquad
+- \pi_s:=\frac{5D^2+26D^3}{Q^s},
+-\end{equation}
+-where $\beta_s$ is the outer projective-regularization failure bound from \eqref{eq:fast-beta}.  At Levels I, III, and V, the least extension degrees are $s=8,12,15$, and
+-\[
+- \pi_s\le0.007663,\qquad2.056\times10^{-6},\qquad0.072275.
+-\]
+-The corresponding expected solver-retry factors are at most $1.007722,1.000003,1.077905$.
+-\end{proposition}
++The first term computes every degree-two monomial in the $V+1$ homogeneous variables once.  Each of the $V$ dense quadrics then uses $M_2$ scalar multiplications and $M_2-1$ additions.  Thus $L_{\rm quad}=\Theta(V^3)$ is an explicit division-free circuit for the full square core.
+ 
+-\begin{proof}
+-Van der Hoeven and Lecerf record the classical straight-line-program Kronecker bound
+-\[
+- L\widetilde O(D_n^2)
+-\]
+-field operations under R1 and R2, attributing it to Giusti--Lecerf--Salvy and noting that the bound is detailed by the same incremental Kronecker solver used in their Section~5~\cite[Eq.~(1.1)]{vdHL}.  \Cref{lem:full-implies-prefix} supplies R1 and R2, while \eqref{eq:slp-length} supplies $L=L_{\rm quad}$.
+-
+-The bad-choice estimates in the finite-field audit are geometric and do not depend on whether each polynomial is evaluated from a dense array or from a straight-line program.  The random projective-coordinate choice fails with probability at most $5D^2/Q^s$; the intersection parameters contribute at most $12D^3/Q^s$; and the common evaluation parameter contributes at most $14D^3/Q^s$~\cite[Theorem~5.4]{vdHL}.  Their union is $\pi_s$.  Sampling the public slice and output recombination in the same field adds only $\beta_s$, which is below $2^{-103}$ already at Level I for these values of $s$.
+-
+-One operation in $\F_{Q^s}$ costs $\widetilde O(s\log Q)$ bit operations.  Constructing the degree-$s$ field and casting the polynomial coefficients are polynomial in $V$ and therefore lower order than $L_{\rm quad}D^2$.  For this complete smooth-core line, the wrapper additionally requires $\deg m=D$; B\'ezout then makes the checked resolution complete.  The source solver is Las Vegas, the task-specific checks of \cref{prop:resolution-checks} reject malformed transcripts, and exact public verification detects every cryptanalytic false positive.  Repetition therefore gives the expected denominator in \eqref{eq:slp-bit-cost}.
+-\end{proof}
+-
+-\begin{corollary}[One-pass SLP recovery with explicit failure]\label{cor:slp-one-pass}
+-Let
+-\[
+- s^+:=1+\min\{s:Q^s\ge100D^3\}.
+-\]
+-Execute one complete randomization, Kronecker-solver, completeness-check, and public-verification pass over $\F_{Q^{s^+}}$, returning \textsf{fail} if any check rejects.  Conditional on a fixed expanded key with $\Theta_F\not\equiv0$, the pass has bit complexity
+-\[
+- \widetilde O\!\left(L_{\rm quad}D^2s^+\log_2Q\right)
+-\]
+-and succeeds with probability at least
+-\begin{equation}\label{eq:slp-one-pass-success}
+- 1-\pi_{s^+}-\beta_{s^+}.
++Giusti--Lecerf--Salvy give the older arithmetic bound
++\begin{equation}\label{eq:classical-slp-scale}
++ L_{\rm quad}\,\widetilde O(D^2)
+ \end{equation}
+-At Levels I, III, and V, $s^+=9,13,16$ and the respective failure probabilities are at most
+-\[
+- 3.741\times10^{-9},\qquad1.004\times10^{-12},\qquad3.529\times10^{-8}.
+-\]
+-Thus one pass succeeds with probability at least $0.9999999647$ at every recommended level.
+-\end{corollary}
+-
+-\begin{proof}
+-Use the same per-pass algorithm and checks as in \cref{prop:slp-kronecker}, but do not restart.  The three bad-choice contributions and the outer discriminant contribution are bounded by $\pi_{s^+}+\beta_{s^+}$.  Increasing the extension degree by one divides both bounds by $Q=2{,}048{,}383$, while increasing the displayed arithmetic factor only from $s$ to $s+1$.  The numerical values are exact evaluations reproduced by the audit.
+-\end{proof}
+-
+-\begin{remark}[What the SLP line does and does not claim]\label{rem:no-quadratic-shortcut}
+-The SLP line is a published arithmetic-operation bound plus an explicit field and retry audit.  It is not an exact low-level gate count.  The global solver still performs generic working-field arithmetic in product trees, quotient algebras, modular composition, intersection, and certification; none of those operations is replaced by table lookup or fixed linear maps.  The direct, one-log, and two-log columns in \cref{sec:security} are therefore sensitivity views of the soft-$O$ theorem, not claims that all hidden polylogarithms or constants have been measured.
+-\end{remark}
++field operations under the same regularity conditions~\cite{GiustiLecerfSalvy2001,vdHL}.  We retain \eqref{eq:classical-slp-scale} only as an epsilon-free growth-rate cross-check.  We do \emph{not} transfer the explicit finite-field failure constants of Theorem~5.4 to this older bound: the literature cited here does not state that combined theorem.  Accordingly, the SLP line below has no proved one-invocation failure probability and is not used for the universal-forgery corollary.
+ 
+ \Needspace{16\baselineskip}
+ \begin{proposition}[Task-specific resolution checks]\label{prop:resolution-checks}
+@@ -1379,90 +1502,6 @@
+ Thus $T-\tau$ divides \eqref{eq:all-equation-factor} exactly when every original restricted equation vanishes at the represented point.  The second claim follows from \cref{lem:separator-descent} and the identity $z^{q_s}=z$ for $z\in L_s$.  Dense quadratic evaluation in $L_s[T]/(m_u)$, modular exponentiation, and polynomial gcd computation at degree at most $D$ give the stated cost.  Since $\log|L_s|=O(V)$ for the selected fields, it is lower order than the degree-squared solver bound.
+ \end{proof}
+ 
+-\subsection{Implicit extraction of an isolated full-system root}\label{subsec:implicit-extraction}
+-
+-Let $A=L[y_1,\ldots,y_V]/I$ be the reduced affine coordinate algebra of a square core, of degree $d\le D$.  Write $Z$ for its geometric root set, and let $q_1,\ldots,q_m$ denote the original restricted equations in $A$.
+-
+-\begin{proposition}[Norm-gradient root formula]\label{prop:implicit-root}
+-Suppose $p\in L^V$ is the unique point of $Z$ satisfying all $m$ original equations.  Choose $\rho\leftarrow L^m$, put $h=\sum_i\rho_iq_i\in A$, and define
+-\begin{equation}\label{eq:norm-jet}
+-\mathcal N_h(z_0,\ldots,z_V)
+-:=\operatorname{Norm}_{A/L}\!\left(h+z_0+\sum_{j=1}^Vz_jy_j\right).
+-\end{equation}
+-With probability at least $1-(d-1)/|L|$, $h$ vanishes at $p$ and at no other geometric core point.  On that event,
+-\begin{equation}\label{eq:norm-gradient-root}
+-\partial_{z_0}\mathcal N_h(0)\ne0,
+-\qquad
+-p_j=
+-\frac{\partial_{z_j}\mathcal N_h(0)}
+-     {\partial_{z_0}\mathcal N_h(0)}
+-\quad(1\le j\le V).
+-\end{equation}
+-Equivalently, if $M_h$ and $M_{y_j}$ are the multiplication operators in $A$, then $\ker M_h$ is one-dimensional and every nonzero $w\in\ker M_h$ satisfies $M_{y_j}w=p_jw$.
+-\end{proposition}
+-
+-\begin{proof}
+-After scalar extension to an algebraic closure, reducedness gives
+-\[
+-A\otimes_L\overline L\cong\prod_{x\in Z}\overline L.
+-\]
+-At every $x\ne p$, the vector $(q_1(x),\ldots,q_m(x))$ is nonzero.  A uniform $\rho$ therefore makes $h(x)=0$ with probability $1/|L|$; a union bound over at most $d-1$ points proves the selector bound.  On the good event, the norm factors as
+-\[
+-\mathcal N_h(z)=
+-\prod_{x\in Z}\left(h(x)+z_0+\sum_{j=1}^Vz_jx_j\right).
+-\]
+-Differentiating at the origin gives
+-\[
+-\partial_{z_0}\mathcal N_h(0)=\prod_{x\ne p}h(x),
+-\qquad
+-\partial_{z_j}\mathcal N_h(0)=p_j\prod_{x\ne p}h(x),
+-\]
+-which proves \eqref{eq:norm-gradient-root}.  In the same product decomposition, $M_h$ is diagonal with a unique zero eigenvalue and the coordinate operators act on its kernel by the scalars $p_j$.
+-\end{proof}
+-
+-\begin{remark}[Several surviving roots]\label{rem:norm-multiple}
+-For an arbitrary selector $h$, let $S=\{x\in Z:h(x)=0\}$.  The lowest nonzero homogeneous part of \eqref{eq:norm-jet} at the origin is
+-\[
+-\left(\prod_{x\notin S}h(x)\right)
+-\prod_{x\in S}\left(z_0+\sum_{j=1}^Vz_jx_j\right).
+-\]
+-Thus the first nonzero norm jet is the Chow product of all selected roots.  The linear formula \eqref{eq:norm-gradient-root} is exactly the case $|S|=1$.
+-\end{remark}
+-
+-\begin{proposition}[Resultant-gradient root formula]\label{prop:resultant-gradient}
+-Assume $\operatorname{char}L\ne2$.  Let $F_0,\ldots,F_V\in L[t_0,\ldots,t_V]$ be homogeneous quadrics with a unique geometric common point $p=[p_0:\cdots:p_V]$.  Assume that their value Jacobian on the tangent space $T_p\PP^V$ has rank $V$.  Let $\mathcal R$ be their multivariate resultant, written in the monomial coefficients $c_{i,\alpha}$ of $F_i$, $|\alpha|=2$.  Then the coefficient tuple is a smooth point of the resultant hypersurface.  If $\lambda=(\lambda_0,\ldots,\lambda_V)$ spans the left kernel of the tangent Jacobian, there is a scalar $\kappa\ne0$ such that
+-\begin{equation}\label{eq:resultant-gradient}
+-\frac{\partial\mathcal R}{\partial c_{i,\alpha}}
+-=\kappa\lambda_i p^\alpha
+-\qquad(0\le i\le V,\ |\alpha|=2).
+-\end{equation}
+-In particular, for any $i,k$ with $\lambda_i p_k\ne0$,
+-\begin{equation}\label{eq:resultant-ratio}
+-\frac{p_j}{p_k}
+-=
+-\frac{\partial\mathcal R/\partial c_{i,e_j+e_k}}
+-     {\partial\mathcal R/\partial c_{i,2e_k}}
+-\qquad(0\le j\le V).
+-\end{equation}
+-The coefficient convention in \eqref{eq:resultant-ratio} treats $t_jt_k$ as one monomial, with no symmetric-matrix factor of two.
+-\end{proposition}
+-
+-\begin{proof}
+-Consider the incidence variety of coefficient tuples and projective points satisfying $F_i(p)=0$ for every $i$.  Its first-order equations at the given pair are
+-\[
+-\delta F_i(p)+dF_i(p)[\delta p]=0\qquad(0\le i\le V).
+-\]
+-The tangent Jacobian has rank $V$, so a tangent displacement $\delta p$ exists exactly when
+-\[
+-\sum_{i=0}^V\lambda_i\,\delta F_i(p)=0.
+-\]
+-Uniqueness and transversality make the incidence projection locally one-to-one onto a smooth branch of the resultant hypersurface.  Its tangent hyperplane is therefore the kernel of the displayed nonzero functional.  The differential of the irreducible resultant is proportional to that functional, giving \eqref{eq:resultant-gradient}; the ratio formula follows by evaluating the two quadratic monomials at $p$.
+-\end{proof}
+-
+-\begin{remark}[Compression achieved, evaluator still missing]\label{rem:implicit-memory}
+-The norm gradient outputs one root using only $V+1$ field elements, and the resultant gradient uses one nonzero coefficient block.  If quotient multiplication is available as a black box, a one-dimensional kernel can be found with $O(d)$ stored field elements and $O(d)$ multiplication-operator products by standard black-box linear algebra~\cite{Wiedemann}.  Alternatively, Baur--Strassen converts any arithmetic circuit for the norm or resultant into a circuit for all first derivatives with constant-factor overhead~\cite{BaurStrassen}.  These statements compress the \emph{root-extraction interface}; they do not construct the degree-$d$ quotient algebra, multiplication operators, norm, or resultant in $o(d)$ space.  With current constructions, the time remains near-quadratic in $d$ (with the fixed $\varepsilon$ loss of \cref{prop:finite-field-kronecker}) and at least one degree-$d$ state vector remains.  Moreover, \cref{prop:generic-full-isolation} gives no production-parameter density bound for uniqueness of the full-system root.  The formulas are therefore exact algorithmic targets, not a practical attack.
+-\end{remark}
+-
+ \paragraph{Check the resolution, prefilter, and extract rational roots.}
+ Convert the solver output to canonical coordinate polynomials and run the consistency checks of \cref{prop:resolution-checks}.  On failure, discard the invocation.  On a successful Las Vegas solver call, the returned separator polynomial $m_u(T)\in L_s[T]$ represents the full affine zero scheme and contains the planted oil point.  The additional checks reject malformed or incomplete implementation outputs.
+ 
+@@ -1472,13 +1511,18 @@
+ For each survivor $x$, compute the common derivative kernel.  Require an $O$-dimensional graph defined over $K$, total isotropy, and every identity \eqref{eq:graphid}.  Apply the specification's inverse pull-back and verify the base-field factorization against the original public map.  An output is called an \emph{exact candidate} only after all these checks pass.
+ 
+ \paragraph{Certify signing or restart.}
+-Deduplicate exact candidates by their $K$-rational graph.  For each remaining candidate, scan the designated vinegar pairs from \cref{prop:signing-search}: test the second matrix in each pair and every first-plus-$t$-times-second combination for $t\in\F_q$.  Return the first candidate with an invertible oil matrix, together with that matrix's inverse.  If no candidate passes, discard the trial and sample a fresh slice.  On a correct solver branch the candidate list contains the planted decomposition, so outside the event in \eqref{eq:eta-sign} the scan succeeds deterministically.  At most $D\lfloor V/2\rfloor(q+1)$ oil matrices are tested per trial, below the solver\'s near-quadratic-in-$D$ scale.
++Deduplicate exact candidates by their $K$-rational graph.  For each remaining candidate, first test the $V$ basis assignments from \cref{prop:signing-search}.  If they all fail, scan the remaining nonzero combinations on the designated pair lines.  Return the first candidate with an invertible oil matrix, together with that matrix's inverse.  If no candidate passes, discard the trial and sample a fresh slice.  On a correct solver branch the candidate list contains the planted decomposition, so outside the event in \eqref{eq:eta-sign} this scan succeeds deterministically.  At most
++\[
++ D\bigl(V+\lfloor V/2\rfloor(q-1)\bigr)
++\]
++oil matrices are tested per trial, below the solver's near-quadratic-in-$D$ scale.  In the public-random model, the basis-first part succeeds after fewer than $1.008$ tests on average.
+ 
+-Let $\mathsf A_s$ denote the event that the full trial accepts a publicly verified signing decomposition and inverse oil matrix.  On a key outside $\cE_{\rm sign}$, every draw with $\Theta_F(M,R)\ne0$ yields the planted exact candidate and the deterministic signing scan succeeds, except on the probability-zero event that a Las Vegas subroutine never terminates.  Hence
++Let $\mathsf A_{\varepsilon,V,s}$ denote the event that the full trial accepts a publicly verified signing decomposition and inverse oil matrix.  On a key outside $\cE_{\rm sign}$, a draw with $\Theta_F(M,R)\ne0$ yields the planted exact candidate whenever the finite solver invocation succeeds, after which the deterministic signing scan succeeds.  The outer and internal coins are fresh, so
+ \begin{equation}\label{eq:acceptance-lower-bound}
+-\Pr[\mathsf A_s]\ge1-\beta_s.
++\Pr[\mathsf A_{\varepsilon,V,s}]
++\ge(1-\beta_{V,s})(1-\alpha_{V,s}).
+ \end{equation}
+-This one-sided implication is the only interface needed between the solver guarantee and the verified attack.
++This one-sided implication is the only interface needed between the solver guarantee and the verified attack.  On irregular inputs or bad internal choices, a failed check returns \textsf{fail}; it never creates a false accepted key.
+ 
+ \begin{lemma}[Verified-restart accounting]\label{lem:restart-accounting}
+ Suppose each fresh trial, conditional on any history of earlier failures, accepts with probability at least $p>0$.  Then the number $N$ of trials satisfies
+@@ -1501,11 +1545,7 @@
+ 
+ \Needspace{15\baselineskip}
+ \subsection{Main recovery theorem}\label{subsec:main-theorem}
+-For fixed $\varepsilon>0$, write
+-\[
+- T_{\varepsilon,V}:=\widetilde O\!\left(2^V2^{(1+\varepsilon)(V-1)}3\log_2 127\right).
+-\]
+-For $0<\epsilon<1/4$ and an extension degree $s$ satisfying \eqref{eq:local-field-condition}, write
++Use $T_{\varepsilon,V}$ from \eqref{eq:fast-solver-scale}.  For $0<\epsilon<1/4$ and an extension degree $s$ satisfying \eqref{eq:local-field-condition}, write
+ \[
+  T_{\rm loc}(\epsilon,s):=
+  \widetilde O\!\left(
+@@ -1513,93 +1553,119 @@
+  \right).
+ \]
+ 
+-\begin{theorem}[Graph-direction pointwise verified recovery]\label{thm:graph-attack}
+-Let an expanded \QRUOV{} key over $K$ have a valid planted decomposition.  Suppose that some maximal minor of $\mathcal B(c)$ is a nonzero polynomial in $c$.  Fix $0<\epsilon<1/4$ and choose $s$ so that \eqref{eq:local-field-condition} holds.  Put
++\begin{theorem}[Key-by-key recovery from one graph direction]\label{thm:graph-attack}
++Let an expanded \QRUOV{} key over $K$ have a valid planted decomposition.  Suppose that at least one maximal minor of $\mathcal B(c)$ is a nonzero polynomial in $c$.  Fix $0<\epsilon<1/4$ and choose $s$ so that \eqref{eq:local-field-condition} holds.  Put
+ \[
+- p_{\rm dir}:=\left(1-\frac VQ\right)\rho_{V,V}(Q)(1-2\epsilon).
++ p_{\rm dir}:=\left(1-\frac VQ\right)
++ \left(1-\frac{V(m-V)}Q\right)(1-2\epsilon).
+ \]
+-Then:
++Then the following verified attacks are correct for this fixed key.
+ \begin{enumerate}
+-\item A verified-restart algorithm terminates almost surely and returns an exactly verified expanded UOV decomposition.  Every accepted output is correct, the expected number of graph-direction trials is at most $p_{\rm dir}^{-1}$, and the expected work is
++\item A randomized graph-direction trial finds an exactly verified expanded UOV decomposition with probability at least $p_{\rm dir}$.  Repeating fresh trials terminates almost surely, uses at most $p_{\rm dir}^{-1}$ trials on average, and has expected work
+ \begin{equation}\label{eq:local-expected-decomposition}
+  O\!\left(T_{\rm loc}(\epsilon,s)/p_{\rm dir}\right).
+ \end{equation}
+-\item If the planted determinant polynomial $\Delta$ of \cref{prop:signing-search} is nonzero and each trial tests one fresh uniform scalar-block vinegar assignment on every exact candidate, verified restart returns a functional equivalent key and inverse oil matrix.  The expected number of trials is at most
++Every accepted output is correct.
++
++\item If the determinant polynomial $\Delta$ of the planted decomposition is nonzero, testing one fresh uniform scalar-block vinegar assignment in each trial returns a signing certificate with expected trial count at most
+ \begin{equation}\label{eq:local-functional-trials}
+- \bigl(p_{\rm dir}(1-m/q)\bigr)^{-1},
++ \bigl(p_{\rm dir}(1-m/q)\bigr)^{-1}.
+ \end{equation}
+-and the expected work is $O(T_{\rm loc}/(p_{\rm dir}(1-m/q)))$.
+-\item Under the designated-pair condition of \cref{prop:signing-search}, the signing step is deterministic and the expected trial and work bounds are those of item~1.
+-\item If a coordinate direction $e_j$ satisfies $\rank\mathcal B(e_j)=V$, the outer choices of $c$ and $R$ can instead be made deterministic by enumerating the $O\binom mV$ coordinate-direction/row-subset pairs.  Round-robin repetition of the probabilistic solver still terminates almost surely; this costs only an additional polynomial factor.
++
++\item If one planted basis matrix is invertible, the deterministic basis-first signing scan succeeds on every successful recovery trial.  Under the designated-pair condition of \cref{prop:signing-search}, the full basis-and-line scan does so after at most $V+\lfloor V/2\rfloor(q-1)$ oil-matrix tests per candidate.  In either case the expected trial and work bounds are those of item~1.
++
++\item If a coordinate direction $e_j$ satisfies $\rank\mathcal B(e_j)=V$, all outer attack choices can be made deterministic: scan the $O\,[V(m-V)+1]$ direction/condenser pairs of \cref{cor:deterministic-outer-list}, and repeat the finitely many probabilistic solver calls in rounds.  This still terminates almost surely and adds only a polynomial factor.  The shorter lists of \cref{cor:compact-direction-list} give category-scale failure bounds in the public-random model.
+ \end{enumerate}
+-The theorem is pointwise and does not use the projective joint discriminant, the off-oil incidence argument, a key-generation distribution, or uniqueness of the recovered decomposition.
++The theorem uses only a local nonsingularity condition at the planted root.  It does not require the projective discriminant, the off-oil incidence argument, a key-generation distribution, or uniqueness of the recovered decomposition.
+ \end{theorem}
+ 
+ \begin{proof}
+-\proofstep{One good trial contains the planted root.}
+-By \cref{prop:graph-direction-density}, a random $c$ makes $\mathcal B(c)$ full rank with probability at least $1-V/Q$.  Conditional on that event, a random $R$ makes $R\mathcal B(c)$ invertible with probability $\rho_{V,V}(Q)$.  Then \cref{cor:local-hypotheses} places $Gc$ in the locally closed set and supplies the solver hypotheses.  By \cref{cor:gimenez-local}, a successful solver call, an event of probability at least $1-2\epsilon$, contains the planted root.
++\proofstep{A good trial contains the planted root.}
++By \cref{prop:graph-direction-density}, a random $c$ makes $\mathcal B(c)$ full rank with probability at least $1-V/Q$.  Conditional on that event, a random $t$ makes $\mathsf C(t)\mathcal B(c)$ invertible with probability at least $1-V(m-V)/Q$.  The planted root then lies in the localized smooth set by \cref{cor:local-hypotheses}.  By \cref{cor:gimenez-local}, the solver returns a representation containing it with probability at least $1-2\epsilon$.
+ 
+-\proofstep{One planted root gives the full graph.}
+-For every returned actual root $x$, solve the public systems \eqref{eq:direction-completion-system}.  At $x=Gc$, \cref{prop:graph-direction-completion} returns every column of $G$.  All original direction equations, rank conditions, graph identities, inverse pull-back identities, and public-map factorizations are then checked exactly.  Any root not yielding a valid graph is discarded.
++\proofstep{One planted root gives the whole hidden graph.}
++For every returned root $x$, solve the public systems \eqref{eq:direction-completion-system}.  At $x=Gc$, \cref{prop:graph-direction-completion} returns every column of $G$.  The attack then checks all original direction equations, rank conditions, graph identities, inverse pull-back identities, and public-map factorizations.  Any root that does not yield a valid graph is discarded.
+ 
+-\proofstep{Retry and signing.}
+-Thus a fresh trial reaches an exact planted decomposition with probability at least $p_{\rm dir}$.  Apply \cref{lem:restart-accounting}.  Under $\Delta\not\equiv0$, \cref{prop:signing-search} contributes the independent lower bound $1-m/q$ for the planted candidate; under the designated-pair hypothesis its scan always succeeds.  Filtering and completing at most $D$ roots costs $\widetilde O(D\operatorname{poly}(V,O,m,\log|L|))$, below \eqref{eq:local-solver-cost}.  Exact acceptance makes every returned key correct even when the internal Monte Carlo solver fails.
++\proofstep{Restart and signing.}
++A fresh trial therefore reaches the planted expanded decomposition with probability at least $p_{\rm dir}$.  Apply \cref{lem:restart-accounting}.  The randomized and deterministic signing claims follow from \cref{prop:signing-search}.  Filtering and completing at most $D$ roots costs $\widetilde O(D\operatorname{poly}(V,O,m,\log|L|))$, below \eqref{eq:local-solver-cost}.  Exact verification prevents false acceptance even when the internal Monte Carlo solver fails.
+ 
+-For item~4, a regular coordinate direction has some nonsingular $V$-row submatrix.  The deterministic scan reaches it.  Repeating all finitely many solver calls in rounds gives a fixed positive success probability per round and hence almost-sure termination.
++For item~4, \cref{cor:deterministic-outer-list} guarantees that a regular coordinate direction has a condenser value with nonsingular planted Jacobian.  The deterministic scan reaches it.  Repeating all finitely many solver calls in rounds gives a fixed positive success probability per round and hence almost-sure termination.
+ \end{proof}
+ 
+-\begin{corollary}[Public-random density for the graph route]\label{cor:graph-ideal-recovery}
+-In the public-random expansion model, the probability that the graph-direction decomposition theorem fails its key-level rank hypothesis is at most
++\begin{corollary}[Public-random density and compact deterministic certificates]\label{cor:graph-ideal-recovery}
++In the public-random expansion model, the probability that all $O$ coordinate directions are rank deficient is exactly $\tau_{m,V}(Q)^O$, whose base-two logarithms are
+ \[
+- \tau_{m,V}(Q)^O,
++ -1132.166907,\qquad-1635.352198,\qquad-2935.247544.
+ \]
+-whose logarithms are $-1132.166907,-1635.352198,-2935.247544$ at Levels I, III, and V.  The probability that either this rank condition or the planted signability condition fails is at most
++Hence, except with probability at most
+ \begin{equation}\label{eq:eta-local-functional}
+- \eta_{\rm local}:=\tau_{m,V}(Q)^O+\eta_{\rm sign}.
++ \eta_{\rm local}:=\tau_{m,V}(Q)^O+\eta_{\rm sign},
+ \end{equation}
+-Every other key satisfies the functional graph-direction conclusion of \cref{thm:graph-attack}.  This density statement is independent of the projective bad-key bound in \cref{thm:key-density}.
++the full deterministic direction list and deterministic signing fallback recover a universal signing certificate.
++
++A much shorter fixed attack already has category-scale coverage.  Use the first $3,4,4$ coordinate directions and their condenser lists, together with the first $22,31,40$ basis signing assignments, at Levels I, III, and V.  These attacks solve only $315,612,1228$ square systems and test at most $22,31,40$ oil matrices per exact candidate.  Their failure probabilities are at most
++\[
++ \tau_{m,V}(Q)^{r_{\rm dir}}+\sigma_m^{b_{\rm sign}},
++\]
++with base-two logarithms below
++\begin{equation}\label{eq:compact-combined-logs}
++ -153.502,\qquad-216.298,\qquad-279.095.
++\end{equation}
++No independence between the recovery and signing failures is needed for this union bound.
+ \end{corollary}
+ 
+ \begin{proof}
+-\Cref{prop:graph-direction-density} bounds the event that all coordinate directions are rank deficient.  A regular coordinate direction makes a maximal minor polynomial nonzero.  The signability event is bounded independently by \cref{prop:signing-search}; apply the union bound.
++The all-direction statement is \eqref{eq:all-coordinate-directions-bad}, followed by \cref{prop:signing-search} and the union bound.  For the compact statement, combine \cref{cor:compact-direction-list} with the fixed-prefix signing bound \eqref{eq:compact-sign-logs}.  On the complement, the deterministic outer list contains a square system with the planted point nonsingular, and the fixed signing list contains an invertible planted oil matrix.  Round-robin solver repetition and exact verification then give the claimed universal certificate.
+ \end{proof}
+ 
+-\begin{theorem}[Fast projective pointwise verified recovery]\label{thm:attack}
+-Let an expanded \QRUOV{} key over $K$ have a valid planted expanded decomposition, and assume that the public joint slice-and-output discriminant $\Theta_F(M,R)$ is not the zero polynomial.  Use the solver working fields $L_s$ with $s=10,13,16$ at Levels I, III, and V.  For every fixed rational $\varepsilon>0$:
++\begin{theorem}[Fast projective key-by-key recovery]\label{thm:attack}
++Let an expanded \QRUOV{} key over $K$ have a valid planted expanded decomposition, and assume that the public joint slice-and-output discriminant $\Theta_F(M,R)$ is not the zero polynomial.  Fix a rational $\varepsilon>0$, choose any $s\ge s_\varepsilon^0$, and put
++\[
++ p_{\varepsilon,V,s}:=(1-\beta_{V,s})(1-\alpha_{V,s}).
++\]
++Then:
+ \begin{enumerate}
+-\item A decomposition-only verified-restart algorithm terminates with probability one and returns an exactly verified expanded UOV decomposition.  Its acceptance is zero-error, its expected number of outer slice draws is at most $(1-\beta_s)^{-1}$, and its expected work is
++\item A decomposition-only verified-restart algorithm terminates with probability one and returns an exactly verified expanded UOV decomposition.  Every accepted output is correct, the expected number of outer trials is at most $p_{\varepsilon,V,s}^{-1}$, and the expected work is
+ \begin{equation}\label{eq:expected-decomposition}
+- O\!\left(\frac{T_{\varepsilon,V}}{1-\beta_s}\right)
+- =T_{\varepsilon,V}.
++ O\!\left(\frac{T_{\varepsilon,V}}{p_{\varepsilon,V,s}}\right).
+ \end{equation}
+-Here $\log_2\beta_s\le-145.647,-183.459,-219.513$.
+-\item Suppose the planted oil-matrix determinant polynomial $\Delta$ from \cref{prop:signing-search} is nonzero.  If each outer trial tests one fresh uniform scalar-block vinegar assignment for every exact candidate, verified restart returns a functional equivalent key and inverse oil matrix with zero-error acceptance.  The expected numbers of outer trials are at most
++For $\varepsilon=0.3$, the minimum fields are $s=8,12,15$.  Their expected-trial bounds are below
++\[
++1.00773,\qquad1.000003,\qquad1.07791.
++\]
++The safety fields $s=9,13,16$ give the near-one single-invocation probabilities in \cref{cor:fast-single-invocation}.
++
++\item Suppose the planted determinant polynomial $\Delta$ from \cref{prop:signing-search} is nonzero.  If each outer trial tests one fresh uniform scalar-block vinegar assignment for every exact candidate, verified restart returns an equivalent signing key and inverse oil matrix.  The expected number of outer trials is at most
+ \[
+- 1.740,\qquad2.592,\qquad5.773,
++ \frac{1}{p_{\varepsilon,V,s}(1-m/q)},
+ \]
+ and the expected work is
+ \begin{equation}\label{eq:expected-attack-randomized}
+- O\!\left(\frac{T_{\varepsilon,V}}{(1-\beta_s)(1-m/q)}\right)
+- =T_{\varepsilon,V}.
++ O\!\left(\frac{T_{\varepsilon,V}}{p_{\varepsilon,V,s}(1-m/q)}\right).
+ \end{equation}
+ At most $D$ oil matrices are tested per trial.
+-\item If one designated planted witness pair contains an invertible matrix in its projective span, the deterministic line-scan variant returns a functional equivalent key.  Its expected outer-draw count is at most $(1-\beta_s)^{-1}$, it tests at most $D\lfloor V/2\rfloor(q+1)$ oil matrices per trial, and its expected work is $T_{\varepsilon,V}$.
++
++\item If one planted basis matrix $M_j$ is invertible, the basis-first deterministic scan returns an equivalent signing key on every successful core invocation and tests at most $DV$ oil matrices per outer trial.  Under the designated-pair condition of \cref{prop:signing-search}, the full deterministic fallback tests at most
++\[
++ D\bigl(V+\lfloor V/2\rfloor(q-1)\bigr)
++\]
++oil matrices per trial.  In either case the expected trial count is at most $p_{\varepsilon,V,s}^{-1}$ and the expected work remains $O(T_{\varepsilon,V}/p_{\varepsilon,V,s})$.
+ \end{enumerate}
+-These are pointwise statements about the expanded key.  They make no assumption on the expansion mechanism or key distribution.  Recovering the planted coordinate representation, secret seed, or official serialized private key is unnecessary and is not claimed.
++These are statements about each fixed expanded key satisfying the displayed conditions.  They do not depend on how the key was generated.  Recovering the original seed or serialized private key is unnecessary.
+ \end{theorem}
+ 
+ \begin{proof}
+ \proofstep{A regular draw yields a complete core resolution.}
+-The discriminant hypothesis and \eqref{eq:fast-beta} imply that a fresh $(M,R)$ gives a smooth full core with probability at least $1-\beta_s$.  \Cref{lem:full-implies-prefix} supplies the solver hypotheses.  The Las Vegas solver of \cref{prop:finite-field-kronecker} then returns and verifies the complete geometric resolution in expected work $T_{\varepsilon,V}$.
++The discriminant hypothesis and \eqref{eq:fast-beta} imply that a fresh $(M,R)$ gives a smooth full core with probability at least $1-\beta_{V,s}$.  \Cref{lem:full-implies-prefix} supplies the solver hypotheses.  Conditional on a smooth core, the finite invocation in \cref{prop:finite-field-kronecker} returns and verifies the complete geometric resolution with probability at least $1-\alpha_{V,s}$.  Every invocation has a finite operation schedule and returns \textsf{fail} if a denominator, degree, or verification check rejects.  An irregular outer draw therefore cannot trap the attack inside an unjustified restart loop.
+ 
+ \proofstep{The planted decomposition appears among the exact candidates.}
+ On a regular draw, the quotient-algebra prefilter of \cref{prop:separator-prefilter}, rational-root extraction, and \cref{lem:descent} retain the planted oil point and recover the planted expanded decomposition.  Exact all-equation checks, inverse pull-back, and public-map factorization reject every invalid candidate.
+ 
+ \proofstep{Signing certification.}
+-If $\Delta\not\equiv0$, \cref{prop:signing-search} gives success probability at least $1-m/q$ for a fresh uniform assignment on the planted candidate.  This yields the displayed trial bounds $q/(q-m)$, up to the negligible factor $(1-\beta_s)^{-1}$.  Under the designated-pair hypothesis, the deterministic projective-line scan succeeds on every regular draw.
++If $\Delta\not\equiv0$, \cref{prop:signing-search} gives success probability at least $1-m/q$ for a fresh uniform assignment on the planted candidate.  If a basis matrix or designated pair witness exists, the corresponding deterministic scan succeeds on every regular draw.
+ 
+ \proofstep{Restart and auxiliary work.}
+-Apply \cref{lem:restart-accounting}.  Finite-field factorization has subquadratic expected dependence on degree, and all filtering, derivative-kernel, descent, pull-back, verification, and signing work costs $\widetilde O(D\operatorname{poly}(V,O,m,q,\log|L_s|))$.  For every fixed $\varepsilon>0$ this is lower order than $T_{\varepsilon,V}$.  Exact verification makes acceptance zero-error on every branch.
++Apply \cref{lem:restart-accounting}.  Finite-field factorization has subquadratic expected dependence on degree, and all filtering, derivative-kernel, descent, pull-back, verification, and signing work costs $\widetilde O(D\operatorname{poly}(V,O,m,q,\log|L_s|))$.  For every fixed $\varepsilon>0$ this is lower order than $T_{\varepsilon,V}$.  Exact verification prevents false acceptance on every branch.
+ \end{proof}
+ 
+ \begin{corollary}[Public-random density for the fast projective route]\label{cor:ideal-recovery}
+@@ -1607,7 +1673,7 @@
+ \[
+ 2^{-364.563},\qquad2^{-457.919},\qquad2^{-1038.066}
+ \]
+-at Levels I, III, and V.  Every other key satisfies the randomized functional-key conclusion of \cref{thm:attack}.  In fact, outside the same bounded union of bad events, a designated pair is invertible and the deterministic refinement applies.
++at Levels I, III, and V.  Every other key satisfies the randomized equivalent-key conclusion of \cref{thm:attack}.  In fact, outside the same bounded union of bad events, one designated pair span contains an invertible matrix, so the deterministic refinement applies.
+ \end{corollary}
+ 
+ \begin{proof}
+@@ -1618,11 +1684,11 @@
+ which gives the displayed numerical bounds.  On the complement of this particular union, the designated-pair condition itself holds, so item~3 of \cref{thm:attack} applies.
+ \end{proof}
+ 
+-\begin{corollary}[Single-pass key-only universal forger]\label{cor:single-pass-forger}
+-In the public-random expansion model, run the one-pass SLP procedure of \cref{cor:slp-one-pass}, followed by the deterministic signing-witness scan of \cref{prop:signing-search}.  The resulting adversary uses no signing oracle, never outputs an invalid signature, and forges every chosen message whenever it succeeds.  Its success probability over the key and attack coins is at least
+-\[
+- 1-\delta_{\rm key}-\pi_{s^+}-\beta_{s^+},
+-\]
++\begin{corollary}[One-invocation key-only universal forger]\label{cor:single-invocation-forger}
++In the public-random expansion model, set $\varepsilon=0.3$, use the safety field $s=s_{0.3}^+$, run the checked projective invocation of \cref{cor:fast-single-invocation}, and then run the basis-first scan and projective-line fallback of \cref{prop:signing-search}.  The adversary uses no signing oracle, never outputs an invalid signature, and can forge every chosen message whenever it succeeds.  Its success probability over the key and attack coins is at least
++\begin{equation}\label{eq:one-pass-forger-success}
++ 1-\delta_{\rm key}-\alpha_{V,s_{0.3}^+}-\beta_{V,s_{0.3}^+},
++\end{equation}
+ where $\delta_{\rm key}$ is the key-level exceptional probability in \cref{cor:ideal-recovery}.  In particular, the success probabilities at Levels I, III, and V are respectively at least
+ \[
+  0.999999996259,\qquad0.999999999998,\qquad0.999999964716.
+@@ -1630,19 +1696,19 @@
+ \end{corollary}
+ 
+ \begin{proof}
+-Outside the key-level exceptional set, the projective discriminant and deterministic signability witness both exist.  A successful single solver pass returns the complete core, so the planted point survives exact filtering and yields the planted expanded decomposition.  The deterministic signing scan then returns a certificate that inverts every public target.  Apply \cref{cor:universal-forgery} and union-bound the key and one-pass solver failures.  Every accepted candidate is checked exactly, so failure changes only the probability of returning a forgery, never its validity.
++Outside the key-level exceptional set, the projective discriminant and a deterministic pair-line witness both exist.  A successful checked solver pass returns the complete core, so the planted point survives exact filtering and yields the planted expanded decomposition.  The deterministic signing scan then returns a certificate that inverts every public target.  Apply \cref{cor:universal-forgery} and union-bound the key, outer-discriminant, and internal-solver failures.  Exact verification ensures that failure affects only whether a forgery is returned, never whether a returned forgery is valid.
+ \end{proof}
+ 
+-\section{Cost model and parameter implications}\label{sec:security}
++\section{Asymptotic cost and parameter implications}\label{sec:security}
+ 
+-\subsection{Work unit, indicator, and claim boundary}
++\subsection{What the cost numbers mean}
+ 
+-The QR-UOV specification expresses its classical security estimates in Boolean-gate exponents and charges finite-field arithmetic by an asymptotic circuit convention~\cite[Section~6.3 and Table~14]{QRUOVSpec}.  The solver theorem used here is also a bit-complexity theorem.  For a fixed rational $\varepsilon>0$, specializing its bound to $V$ quadrics gives the direct soft-$O$ exponent
++The QR-UOV specification reports classical security estimates as Boolean-gate exponents~\cite[Section~6.3 and Table~14]{QRUOVSpec}.  Our main solver result is an asymptotic bit-complexity theorem, so it is reasonable to compare exponents at the same high level.  It is not reasonable to interpret the result as a measured gate count.  For a fixed rational $\varepsilon>0$, the displayed leading term gives the normalized soft-$O$ exponent
+ \begin{equation}\label{eq:fast-indicator}
+  C_\varepsilon(V)
+  :=V+(1+\varepsilon)(V-1)+\log_2(3\log_2 127).
+ \end{equation}
+-The working-field construction and casting are already included in the theorem.  The outer regularization retry contributes less than $2^{-145}$ bits at Level I and still less at the other levels.
++The working-field construction and casting are already included in the theorem.  For the primary choice $\varepsilon=0.3$, using the minimum admissible fields changes the base-two expected-work exponent by at most $0.109$ bits; using the one-degree safety fields changes it by at most $5.1\times10^{-8}$ bits.
+ 
+ For a convention independent of the solver's internal circuit presentation, we also report
+ \begin{equation}\label{eq:uniform-indicator}
+@@ -1650,7 +1716,7 @@
+ \end{equation}
+ which exposes one unit-coefficient $T\log T$ simulation of a $T$-step bit algorithm~\cite{PippengerFischer}.  The specification does not apply both its field-operation conversion and a second generic simulation, so the two columns are sensitivity views rather than additive charges.
+ 
+-Neither \eqref{eq:fast-indicator} nor \eqref{eq:uniform-indicator} is a measured complete circuit.  Both inherit hidden constants and lower-order factors from the published asymptotic theorem.  Their role is the same as the specification's model-based attack rows: to determine whether a parameter set retains its claimed exponent under the best justified asymptotic algorithm.
++Neither \eqref{eq:fast-indicator} nor \eqref{eq:uniform-indicator} is a complete circuit estimate.  Both suppress constants and polylogarithmic factors, and the hidden constant may depend badly on $\varepsilon$.  The tables therefore answer a narrower question: whether the published asymptotic algorithm has enough exponent margin to justify a closer concrete analysis.  They do not, by themselves, certify that a NIST category target has been crossed.
+ 
+ \subsection{Sensitivity to the solver exponent}
+ 
+@@ -1689,75 +1755,53 @@
+ For fixed $\varepsilon$, subtracting $U_\varepsilon(V)$ from the target is a useful comparison of normalized exponents.  It is not a theorem that the solver can absorb an arbitrary multiplicative factor of that size: the constant hidden by $\widetilde O(\cdot)$ is unspecified and may itself depend on $\varepsilon$.  We therefore report bit margins, but do not call their exponentials ``whole-attack budgets.''
+ \end{remark}
+ 
+-\subsection{Epsilon-free fixed-budget SLP cross-check}\label{subsec:slp-cost}
++\subsection{Epsilon-free arithmetic cross-check}\label{subsec:slp-cost}
+ 
+-For the one-pass line, let $s^+=1+\min\{s:Q^s\ge100D^3\}$ and define
++The older straight-line-program theorem gives the arithmetic scale
++$L_{\rm quad}\widetilde O(D^2)$ from \eqref{eq:classical-slp-scale}.  To see what that scale means at the recommended dimensions, define the diagnostic operand-size parameter
++\[
++ s_{\rm diag}:=\min\{s\ge1:Q^s\ge100D^3\}
++\]
++and
+ \begin{align}
+- S_0^+(V)&:=2V+\log_2L_{\rm quad}+\log_2(s^+\log_2Q),\label{eq:slp-direct-indicator}\\
+- S_1^+(V)&:=S_0^+(V)+\log_2S_0^+(V),\qquad
+- S_2^+(V):=S_0^+(V)+2\log_2S_0^+(V).\label{eq:slp-stress-indicators}
++ A_0(V)&:=2V+\log_2L_{\rm quad}+\log_2(s_{\rm diag}\log_2Q),\label{eq:slp-direct-indicator}\\
++ A_1(V)&:=A_0(V)+\log_2A_0(V).\label{eq:slp-stress-indicators}
+ \end{align}
+-Here $S_0^+$ assigns unit coefficient to the displayed soft-$O$ per-pass leading term in \cref{cor:slp-one-pass}; $S_1^+$ and $S_2^+$ expose one and two generic logarithmic sensitivities.  Unlike $C_\varepsilon$ and $U_\varepsilon$, these indicators contain no adjustable solver exponent, and unlike the expected-work formulation they correspond to one fixed solver pass with an explicit success probability.
++The first row assigns unit coefficient to the displayed arithmetic term after charging for arithmetic in an $s_{\rm diag}$-degree extension.  The second adds one generic $T\log T$ sensitivity.  These are arithmetic-growth diagnostics only: \cref{subsec:slp-solver} explains why we do not attach the modern theorem's exact one-invocation failure constants to this older bound.
+ 
+ \begin{table}[t]
+ \centering
+ \small
+-\caption{Epsilon-free, one-pass classical SLP Kronecker line.  Failure is the proved upper bound $\pi_{s^+}+\beta_{s^+}$; margins are target minus indicator, in bits.}
++\caption{Epsilon-free classical SLP arithmetic cross-check.  Margins are target minus indicator, in bits.}
+ \label{tab:slp-costs}
+-\setlength{\tabcolsep}{3.5pt}
+-\begin{tabular}{@{}c r r r r r r r r@{}}
++\setlength{\tabcolsep}{5pt}
++\begin{tabular}{@{}c r r r r r@{}}
+ \toprule
+-Level & $s^+$ & $\log_2 p_{\rm fail}$ & $S_0^+$ & Margin & $S_1^+$ & Margin & $S_2^+$ & Margin \\
++Level & $s_{\rm diag}$ & $A_0$ & Margin & $A_1$ & Margin \\
+ \midrule
+-I   & 9  & $-27.994$ & $128.756$ & $14.244$ & $135.765$ & $7.235$ & $142.773$ & $0.227$ \\
+-III & 13 & $-39.858$ & $178.900$ & $28.100$ & $186.383$ & $20.617$ & $193.866$ & $13.134$ \\
+-V   & 16 & $-24.756$ & $232.456$ & $39.544$ & $240.317$ & $31.683$ & $248.178$ & $23.822$ \\
++I   & 8  & $128.587$ & $14.413$ & $135.593$ & $7.407$ \\
++III & 12 & $178.784$ & $28.216$ & $186.266$ & $20.734$ \\
++V   & 15 & $232.363$ & $39.637$ & $240.223$ & $31.777$ \\
+ \bottomrule
+ \end{tabular}
+ \end{table}
+ 
+-The Level-I two-log margin is intentionally reported rather than rounded away: it is only $0.227$ bits.  This column still does not certify a physical-gate break, because a soft-$O$ constant can exceed any fixed normalized margin.  Its significance is different.  The all-level conclusion no longer rests on taking an unspecified modern exponent $\varepsilon$ below a chosen threshold, or on converting an expected running time into a bounded-success attack: an older epsilon-free Kronecker theorem, a conservative explicit evaluation circuit, one fixed solver pass, the actual extension degrees, and the published bad-choice probabilities independently produce a below-target Level-I indicator with failure below $2^{-27.99}$.
++The diagnostic agrees with the modern theorem on the dominant growth: about $4^V$ times polynomial factors.  Its one-log sensitivity remains below all three targets, but the table is not a finite-gate attack estimate and has no standalone success-probability claim.  Its role is to show that the below-target trend is not created solely by choosing a favorable value of $\varepsilon$ in the newer theorem.
+ 
+-\begin{proposition}[Asymptotic parameter-growth constraint]\label{prop:slp-growth}
+-For fixed $Q$, the one-pass SLP leading term satisfies
++\begin{proposition}[Arithmetic growth check]\label{prop:slp-growth}
++For fixed $Q$,
+ \[
+- \log_2\!\left(L_{\rm quad}D^2s^+\log_2Q\right)
++ \log_2\!\left(L_{\rm quad}D^2s_{\rm diag}\log_2Q\right)
+  =2V+4\log_2V+O(1).
+ \]
+-Consequently, any parameter family targeting $\lambda$ classical bits and keeping $V\le(\tfrac12-\delta)\lambda$ for a fixed $\delta>0$ is eventually below target under this attack, even after multiplying by any fixed power of $V$ or $\log V$.
++Consequently, within this arithmetic model, any parameter family targeting $\lambda$ classical bits and keeping $V\le(\tfrac12-\delta)\lambda$ for a fixed $\delta>0$ is eventually below target, even after multiplication by any fixed polynomial in $V$.
+ \end{proposition}
+ 
+ \begin{proof}
+-The circuit length in \eqref{eq:slp-length} is $\Theta(V^3)$, while
+-\[
+- s^+=1+\left\lceil\frac{\log_Q100+3V\log_Q2}{1}\right\rceil=\Theta(V).
+-\]
+-Since $D=2^V$, the displayed logarithm is $2V+3\log_2V+\log_2V+O(1)$.  Any fixed polynomial or polylogarithmic multiplier contributes only $O(\log\lambda)$ bits, whereas the assumed gap to $\lambda$ is $2\delta\lambda$ in the exponent.
++The circuit length in \eqref{eq:slp-length} is $\Theta(V^3)$, while $s_{\rm diag}=\Theta(V)$ and $D=2^V$.  Taking base-two logarithms gives $2V+3\log_2V+\log_2V+O(1)$.  A fixed polynomial multiplier contributes only $O(\log\lambda)$ bits, whereas the assumed gap to $\lambda$ grows linearly.
+ \end{proof}
+ 
+-\paragraph{Attack-specific repair floors.}
+-The next table inverts the fixed-budget two-log indicator $S_2^+$.  The middle column is the first $V$ for which $S_2^+(V)$ reaches the nominal category target; the last adds a 16-bit attack-specific cushion.  The listed $m_{\min}=3\lceil V/3\rceil$ is only the smallest output dimension compatible with $m\ge V$ and the quotient degree $\ell=3$.  These are lower bounds from this attack alone, not proposed replacement sets.
+-
+-\begin{table}[t]
+-\centering
+-\small
+-\caption{Attack-specific lower floors obtained by inverting the one-pass two-log SLP indicator.}
+-\label{tab:repair-floors}
+-\setlength{\tabcolsep}{5pt}
+-\begin{tabular}{@{}c c c c@{}}
+-\toprule
+-Level & Current $(V,m)$ & Reach target: $(V,v,m_{\min},O_{\min})$ & Reach target $+16$: $(V,v,m_{\min},O_{\min})$ \\
+-\midrule
+-I   & $(52,54)$  & $(53,159,54,18)$   & $(60,180,60,20)$ \\
+-III & $(76,78)$  & $(83,249,84,28)$   & $(90,270,90,30)$ \\
+-V   & $(102,105)$& $(114,342,114,38)$ & $(122,366,123,41)$ \\
+-\bottomrule
+-\end{tabular}
+-\end{table}
+-
+-Thus even the deliberately two-log-normalized line requires increasing $V$ by at least $1,7,12$ merely to reach the three targets, and by $8,14,20$ to add a 16-bit cushion.  At Levels III and V, reaching the nominal target already forces $m$ upward as well.  Any actual redesign must be more conservative because it must also account for other attacks, signing behavior, key size, and unmeasured constants.
+-
+-\subsection{Independent explicit-prefactor solver lines}\label{subsec:independent-cost}
++\subsection{Separate explicit-prefactor solver lines}\label{subsec:independent-cost}
+ 
+ The modern fast line has a fixed solver exponent $\varepsilon$ and a hidden soft-$O$ constant; the classical SLP line removes $\varepsilon$ but remains in the same Kronecker lineage.  To separate the cryptanalytic reduction from both of those interfaces, we also specialize \cref{prop:gimenez-theorem} directly.  For each level, the audit chooses $\epsilon=2^{-b}$ and the smallest extension degree $s$ satisfying the theorem's field-size condition.  The ``direct'' column takes the displayed polynomial prefactor in \eqref{eq:gimenez-cost} with unit coefficient and includes the expected retry factor $(1-2\epsilon)^{-1}$.  The ``stress'' column adds one generic $T\log T$ simulation factor.  Both remain normalized soft-$O$ indicators, not measured circuits.
+ 
+@@ -1781,7 +1825,7 @@
+ \end{tabular}
+ \end{table}
+ 
+-The smooth-projective direct row is below every target without using the van der Hoeven--Lecerf exponent $\varepsilon$; its generic stress is below Levels III and V.  The graph-local route deliberately pays for a degree-$V$ localization polynomial and a division-free determinant circuit.  Its direct row is below Levels III and V, and its generic stress remains below both.  Thus Levels III and V are supported by two solver theorems and by two different geometric interfaces.
++The smooth-projective direct row is below every target, although its generic stress exceeds Level I.  The graph-local route deliberately pays for a degree-$V$ localization polynomial and a division-free determinant circuit; its direct and stress rows remain below the Level-III and Level-V targets.  Thus the concern at Levels III and V is visible through both the projective and graph-local reductions and through two published solver theorems.  No analogous concrete claim is made for Level I.
+ 
+ For transparency, the local table uses the normalized determinant allowance $L_{\rm loc}=L_{\rm core}+V^4$ suggested by the $O(V^4)$ Samuelson--Berkowitz bound.  Replacing that allowance by $L_{\rm core}+4V^4$ changes the local direct/stress rows to
+ \[
+@@ -1791,21 +1835,21 @@
+ 
+ \subsection{Comparison with the Round-2 rows}
+ 
+-The Round-2 specification reports classical attack rows $150,211,277$ bits and category targets $143,207,272$ for Levels I, III, and V~\cite[Table~14]{QRUOVSpec}.  At $\varepsilon=0.3$, the uniform modern indicators improve on the specification rows by $20.37,25.64,31.42$ bits and fall below target by $13.37,21.64,26.42$ bits.  The epsilon-free one-pass SLP one-log indicators improve on the specification rows by $14.24,24.62,36.68$ bits and fall below target by $7.24,20.62,31.68$ bits.  Even its two-log fixed-budget sensitivity remains below all three targets, while the worst one-pass failure probability is below $2^{-24.75}$.
++The Round-2 specification reports classical attack rows $150,211,277$ bits and category targets $143,207,272$ for Levels I, III, and V~\cite[Table~14]{QRUOVSpec}.  For the primary choice $\varepsilon=0.3$, the modern uniform indicators are $20.37,25.64,31.42$ bits below the reported attack rows and $13.37,21.64,26.42$ bits below the targets.  The epsilon-free SLP one-log diagnostics are $14.41,24.73,36.78$ bits below the reported rows and $7.41,20.73,31.78$ bits below the targets.
+ 
+-The evidence is now five-way.  The graph-direction theorem removes dependence on the projective off-oil argument.  The modern finite-field line gives the best bit-complexity exponent.  The classical SLP line removes the adjustable exponent $\varepsilon$.  Its one-pass corollary removes expected-time ambiguity and gives an explicit success probability.  The Gim\'enez line supplies a different solver theorem and explicit polynomial prefactor.  In the public-random model, the fast projective bad-key locus has explicit probability below $2^{-364.563},2^{-457.919},2^{-1038.066}$, while the separate graph-direction regularity exceptions are smaller still.
++The same pattern also appears through the independent Gim\'enez theorem.  Its smooth-projective direct row is below every target; its generic $T\log T$ stress row is below the Level-III and Level-V targets but above Level I.  The graph-local route, which needs only a nonsingular planted root rather than a global projective smoothness statement, is also below the Level-III and Level-V targets in the displayed direct calculation.  Thus Levels III and V show substantial margin through several theorem interfaces.  Level I remains more sensitive to hidden constants and representation choices.
+ 
+-\paragraph{Parameter decision.}
+-We believe all three recommended levels should be changed or reoptimized.  For Levels III and V, every displayed projective interface has a large below-target margin, and the graph-local route independently supports the recovery mechanism.  Level I is necessarily the hardest case because every normalized comparison is sensitive near $2^{143}$.  It now has, however, two qualitatively different below-target projective lines: the modern one-log indicator is $129.629$, and the epsilon-free classical line is $135.765$ after one generic log and $142.773$ after two, in a single pass whose failure is below $2^{-27.99}$.  Moreover, the parameter-growth theorem shows that the present ratios $V/\lambda=0.364,0.367,0.375$ are asymptotically incompatible with any $2^{2V}\operatorname{poly}(V)$ recovery line.  Retaining Level I unchanged therefore requires more than observing that $\varepsilon$, expected runtime, and soft-$O$ constants are unspecified.  A technical response must identify a failed theorem hypothesis or QR-UOV interface, or give calibrated evidence that the omitted factors reverse both principal cost lines.
++These are asymptotic warning signs, not replacement concrete attack rows.  The calculations combine published solver bounds with the actual QR-UOV dimensions and field sizes, but do not measure the hidden constants, low-level arithmetic, or memory traffic of a full implementation.  Their value is that the structural reduction, the modern near-quadratic theorem, the older arithmetic growth check, and the independent locally closed-set theorem all point in the same direction.
+ 
+-Replacement parameters must jointly reassess $V,m,O$, key size, signing failure, direct MQ attacks, MinRank attacks, and any pseudo-oil path; this paper does not propose final replacements.
++\paragraph{Parameter implications.}
++The results justify a concrete re-evaluation of all three parameter sets, with the strongest evidence at Levels III and V.  Such a review should implement or tightly upper-bound the dominant solver stages, include memory and low-level arithmetic costs, and then jointly reassess $V,m,O$, key size, signing failure, and the other known attack families.  This paper does not propose replacement parameter sets.
+ 
+-\paragraph{What this still does not prove.}
+-The rows do not certify that a full-parameter implementation executes fewer than $2^{143},2^{207},2^{272}$ physical gates.  The solver remains far beyond implementation scale, and its soft-$O$ constants are not measured.  In particular, the $0.227$-bit Level-I margin in the two-log one-pass SLP sensitivity is not an overhead reserve.  The fixed-pass theorem certifies the attack's success probability, not the hidden constant in its soft-$O$ bit bound.  The security-relevant conclusion is that the existing parameter rationale must now account for several published algebraic interfaces and either increase the parameters or supply a technical reason that those interfaces do not apply.
++\paragraph{What remains unproved.}
++The tables do not show that a full-parameter implementation uses fewer than $2^{143},2^{207},2^{272}$ physical gates.  The direct solver also requires astronomical space at the recommended dimensions, as \cref{subsec:memory} makes explicit.  The rigorous claims are the algebraic recovery reductions, their key-density statements in the stated models, the exact verification and failure accounting, and the cited asymptotic solver bounds.  A concrete category break requires an additional implementation-level cost analysis.
+ 
+ \subsection{Seeded expansion}
+ 
+-The pointwise theorem itself needs no idealization.  To obtain a high-probability theorem for seeded key generation, only the conditional uniformity of the $m$ public rectangular streams and the product-uniform marginal of the $m$ symmetric streams must be compared with the public-random model; arbitrary graph--symmetric-block correlation is allowed.  \Cref{app:seeded-transfer} proves the needed comparison, with explicit statistical losses, when SHAKE is modeled as an ideal XOF or AES as an ideal cipher.  Adding those losses to the much smaller ideal-key exceptions gives the following base-two logarithms:
++The key-by-key theorem itself needs no idealization.  To obtain a high-probability theorem for seeded key generation, only the conditional uniformity of the $m$ public rectangular streams and the product-uniform marginal of the $m$ symmetric streams must be compared with the public-random model; arbitrary graph--symmetric-block correlation is allowed.  \Cref{app:seeded-transfer} proves the needed comparison, with explicit statistical losses, when SHAKE is modeled as an ideal XOF or AES as an ideal cipher.  Adding those losses to the much smaller ideal-key exceptions gives the following base-two logarithms:
+ \[
+ \begin{array}{c|rrr}
+ &\text{Level I}&\text{Level III}&\text{Level V}\\ \hline
+@@ -1813,105 +1857,55 @@
+ \text{AES ideal cipher}&-99.863&-96.655&-94.112
+ \end{array}
+ \]
+-On every other seeded key in the corresponding ideal-primitive model, the same verified-restart attack terminates almost surely with the same pointwise expected-work bound and zero-error acceptance.  No factorization timeout or fixed attack budget is needed: the statistical comparison is applied only once, to the key-level exceptional set.
+-
+-This does not yield a high-probability key-generation theorem for the fixed SHAKE/AES primitives.  It does not weaken the pointwise theorem: every fixed-primitive key satisfying those pointwise conditions is already covered.  A deterministic $\lambda$-bit expansion has support at most $2^\lambda$, whereas the independent-stream experiment has vastly larger support; \cref{prop:seed-support-barrier} makes the resulting near-maximal total-variation gap explicit.  Any standard-model density theorem must therefore analyze the particular exceptional event or assume computational pseudorandomness.  These observations delimit the fixed-primitive probability gap; they do not affect the pointwise, ideal-XOF, or ideal-cipher theorems.
+-
+-\subsection{Why the spare equations do not yet lower the finite exponent}\label{subsec:exponent-audit}
+-
+-The full restricted system has $e=m-V\in\{2,2,3\}$ equations beyond the square core, and generically those equations isolate the planted point.  We tested whether they also lower the solving exponent.  The following deliberately optimistic semi-regular screen uses the Hilbert series
+-\[
+-\frac{(1-t^2)^{V+e}}{(1-t)^{V+1}}
+-\]
+-for $V+e$ homogeneous quadrics in $V+1$ projective variables.  Because the actual system contains a planted point, this is a diagnostic rather than a theorem.  At the last positive coefficient, the monomial counts are:
+-\begin{center}
+-\small
+-\begin{tabular}{@{}c r r r r r@{}}
+-\toprule
+-Level & $V$ & degree & $\log_2 N$ & optimistic $\log_2N^2$ & current $\log_2D^2$\\
+-\midrule
+-I   &52  &27 &$69.787$  &$139.574$ &$104$\\
+-III &76  &39 &$102.585$ &$205.170$ &$152$\\
+-V   &102 &48 &$131.814$ &$263.629$ &$204$\\
+-\bottomrule
+-\end{tabular}
+-\end{center}
+-Even charging only $N^2$ sparse black-box work is worse than the baseline $D^2$ geometric scale and also worse than the primary $\varepsilon=0.3$ fast-line indicators after field and circuit conversion; dense linear algebra is worse still.  This does not rule out a coefficient-specific method, but it rules out the most direct overdetermined-Macaulay improvement under standard linear algebra.
+-
+-\begin{proposition}[Underslicing loses more in hit probability than it saves in degree]\label{prop:underslice}
+-Let $0\le d<V$, and choose a uniform projective $d$-plane over $K=\F_Q$.  Its probability of meeting the planted projective oil space is
+-\begin{equation}\label{eq:underslice-probability}
+-\pi_d
+-=1-\prod_{i=0}^{d}
+-\frac{1-Q^{i-V}}{1-Q^{i-(V+O)}}.
+-\end{equation}
+-If the same degree-squared square-core solver is run independently on every sampled plane, its expected leading degree factor is $4^d/\pi_d$.  For $d=V-r$ and the \QRUOV{} base field $Q=127^3$, removing $r=1,2,3$ slice dimensions increases the base-two exponent relative to the $d=V$ slice by
+-\[
+-18.966053,\qquad37.932107,\qquad56.898161
+-\]
+-bits, respectively, before any other work is charged.  Choosing the slices over the larger solver field only worsens this tradeoff.
+-\end{proposition}
+-
+-\begin{proof}
+-Write $k=d+1$.  A vector $k$-subspace disjoint from the fixed $O$-dimensional oil space is the graph of a linear map from a $k$-subspace of the $V$-dimensional quotient to the oil space.  Hence there are
+-\[
+-Q^{Ok}\genfrac{[}{]}{0pt}{}{V}{k}_Q
+-\]
+-disjoint subspaces, out of $\genfrac{[}{]}{0pt}{}{V+O}{k}_Q$ total.  Taking the ratio and expanding the Gaussian binomial coefficients gives \eqref{eq:underslice-probability}.  Independent repetition needs expected $1/\pi_d$ planes.  Substitution into $4^d/\pi_d$ gives the displayed values, reproduced by \path{checks/underslice_tradeoff_check.py}.  Asymptotically each removed dimension costs $\log_2Q-2=18.966054\ldots$ bits: it saves two degree-squared bits but loses roughly one factor of $Q$ in intersection probability.
+-\end{proof}
++On every other seeded key in the corresponding ideal-primitive model, the same verified-restart attack terminates almost surely with the same key-by-key expected-work bound and acceptance with no false positives.  No factorization timeout or fixed attack budget is needed: the statistical comparison is applied only once, to the key-level exceptional set.
+ 
+-The same calculation covers the equivalent hybrid strategy of guessing one base-field coordinate of the oil point before solving: every guessed coordinate costs roughly $\log_2Q$ bits and saves only two bits in the degree-squared solver.  Thus the minimal guaranteed slice is also the best random underslice under the current solver model.
+-
+-The other natural routes also stop short of an exponent improvement.  Explicit resultant matrices remain exponentially larger than the $D$-dimensional quotient representation in the dense quadratic regime~\cite{DAndreaDickenstein}.  Chow-form algorithms are polynomial in geometric degree but do not provide a subquadratic dependence specialized to these parameters~\cite{JeronimoEtAl}.  Faster modular composition lowers an operation used after a univariate algebra exists, not the geometric-intersection stage that constructs that algebra~\cite{NeigerEtAl}.
+-
+-We also checked two recent refinements of Macaulay/Gr\"obner solving.  Degree smoothing replaces a full Macaulay matrix by a sufficient submatrix lying between two adjacent integer degrees~\cite{DegreeSmoothing}.  Our optimistic screen already charges the complete monomial space at the \emph{lower} adjacent degree and is still $35.574$, $53.170$, and $59.629$ bits above the $D^2$ geometric scale; smoothing within that interval cannot reverse the comparison.  The recent F4-tracer analysis for generic square degree-$\delta$ systems has leading arithmetic scale $\widetilde O(\delta^{\omega V+1}e^{cV})$ and relies on trace compatibility and genericity conjectures~\cite{F4Tracer}.  For quadrics, even its factor $2^{\omega V}$ exceeds $D^2=2^{2V}$ for every currently proved $\omega>2$.  Thus these improvements are valuable in their intended regimes but do not lower the exponent here.  The norm and resultant gradients identify a smaller \emph{output} target; no proved route found in this audit computes that target below the published near-quadratic-in-$D$ line used here.
++This does not yield a high-probability key-generation theorem for the fixed SHAKE/AES primitives.  It does not weaken the key-by-key theorem: every fixed-primitive key satisfying those key-by-key conditions is already covered.  A deterministic $\lambda$-bit expansion has support at most $2^\lambda$, whereas the independent-stream experiment has vastly larger support; \cref{prop:seed-support-barrier} makes the resulting near-maximal total-variation gap explicit.  Any standard-model density theorem must therefore analyze the particular exceptional event or assume computational pseudorandomness.  These observations delimit the fixed-primitive probability gap; they do not affect the key-by-key, ideal-XOF, or ideal-cipher theorems.
+ 
+ \subsection{Memory}\label{subsec:memory}
+ 
+-Standard Boolean-gate complexity does not charge storage.  That omission is decisive here.  \Cref{prop:implicit-root,prop:resultant-gradient,rem:implicit-memory} show that an isolated root itself has a tiny implicit output: $V+1$ norm derivatives, one resultant-gradient block, or one one-dimensional quotient-algebra eigenspace.  With black-box quotient multiplication, the eigenspace route stores $O(D)$ field elements rather than all $V$ degree-$D$ coordinate arrays.  This is a factor-$V$ reduction in post-solver representation, and the final root coordinates occupy only $O(V)$ field elements.  It does not compress construction of the quotient algebra or eliminate the need for at least one degree-$D$ working vector.
++The cost comparisons above count Boolean operations, not storage.  Here that distinction is decisive.  A smooth square core has degree $D=2^V$, so a conventional univariate resolution contains degree-$D$ polynomials.  Even one dense vector of $D$ elements over the minimum solver field is enormous.
+ 
+-A random chart contains all $D$ projective roots with probability at least $1-D/|L_s|$, which is respectively at least $1-2^{-136.69}$, $1-2^{-196.56}$, and $1-2^{-233.46}$.  On that overwhelmingly typical event, one degree-$D$ quotient vector over $L_s$ already requires at least
++For the minimum $\varepsilon=0.3$ fields $s=8,12,15$, a random affine chart contains all geometric roots with probability at least $1-D/|L_s|$.  The logarithms of the chart-miss bounds are $-115.728,-175.593,-212.491$.  Storing one degree-$D$ vector with $s\log_2Q$ bits per field element requires at least
+ \[
+-0.1024\ \mathrm{EiB},\qquad
+-2.23\times10^6\ \mathrm{EiB},\qquad
+-1.84\times10^{14}\ \mathrm{EiB}
++0.0819\ \mathrm{EiB},\qquad
++2.06\times10^6\ \mathrm{EiB},\qquad
++1.73\times10^{14}\ \mathrm{EiB}
+ \]
+-at Levels I, III, and V.  In the solver's primitive-coordinate format, a dense resolution stores the monic separator and $V-1$ coordinate numerators: $V$ degree-$D$ coefficient arrays in total, up to lower-order data.  Materializing those arrays requires approximately
++at Levels I, III, and V.  A dense primitive-element representation stores roughly $V$ such coefficient arrays, requiring about
+ \[
+-5.32\ \mathrm{EiB},\qquad
+-1.70\times10^8\ \mathrm{EiB},\qquad
+-1.88\times10^{16}\ \mathrm{EiB}.
++4.26\ \mathrm{EiB},\qquad
++1.57\times10^8\ \mathrm{EiB},\qquad
++1.76\times10^{16}\ \mathrm{EiB},
+ \]
+-Temporary data and solver workspaces only increase these figures.  Thus the implicit formulas sharpen the target for a future low-space solver, but the direct algorithm remains unimplementable at the Round-2 parameters.
++before temporary workspace.  The one-degree safety fields are larger still.
++
++\Cref{prop:implicit-root,prop:resultant-gradient,rem:implicit-memory} show that the desired \emph{output} can be much smaller: one isolated root can be encoded by $V+1$ norm derivatives, one resultant-gradient block, or a one-dimensional quotient-algebra eigenspace.  With black-box quotient multiplication, the eigenspace route needs only one $O(D)$ state vector rather than all $V$ coordinate arrays.  This saves a factor of $V$ in post-solver storage, but it does not show how to construct the quotient algebra in low space.  The published direct solvers are therefore asymptotically informative but not implementable at the recommended parameters.
+ 
+ \section{Conclusion}\label{sec:conclusion}
+ 
+-This paper gives two independently organized routes from the public \QRUOV{} map to a verified equivalent signing key.  The graph-direction route fixes a public oil direction $c$ and solves
++One regular public direction is enough to recover the hidden oil space.  For a chosen $c\in K^O$, the public system
+ \[
+- q_{i,c}(x)=P_i(-x,c)=0 \qquad (1\le i\le m).
++ P_i(-x,c)=0\qquad(1\le i\le m)
+ \]
+-Its planted root is $x=Gc$.  One root with full-rank planted Jacobian determines every column of $G$ through public linear systems.  Localizing at the Jacobian determinant makes every prefix smooth, radical, and of the expected codimension.  Thus structural recovery does not require the projective slice, off-oil incidence, cumulative-degree estimate, or global smoothness claim.
++contains the planted point $x=Gc$.  When the derivative matrix at that point has rank $V$, solving for this one point turns recovery of the remaining columns of $G$ into public linear algebra.  Exact graph identities, pull-back checks, and public-map factorization make false acceptance impossible.
++
++This local reduction is stronger and simpler than the original projective route.  It needs no global smoothness statement and no uniqueness assumption.  In the public-random model, the first $3,4,4$ coordinate directions, combined with optimal-length condenser lists, give deterministic recovery lists of only $315,612,1228$ square systems.  Adding fixed basis-first signing lists gives universal-forgery failure bounds below $2^{-153.502}$, $2^{-216.298}$, and $2^{-279.095}$.  The full coordinate and pair-line lists make those bounds much smaller.
+ 
+-The projective route supplies the strongest cost lines.  The modern van der Hoeven--Lecerf theorem gives the $\varepsilon=0.3$ one-log indicators $129.63,185.36,245.58$.  The classical Giusti--Lecerf--Salvy straight-line-program bound gives an independent epsilon-free line.  Choosing one additional working-field degree makes a single solver pass fail with probability below $2^{-24.75}$ at every level.  After charging a conservative shared-monomial circuit and extension-field arithmetic, its direct / one-log / two-log values are
++The projective route remains the fastest proved asymptotic route.  It reduces recovery to a smooth complete intersection of degree $2^V$ and uses a finite-field Kronecker solver with expected bit complexity arbitrarily close to quadratic in that degree.  Correctly coupling the solver exponent to its required working field gives a rigorous checked single-invocation forger with success at least
+ \[
+-\begin{array}{c|ccc}
+-&\text{Level I}&\text{Level III}&\text{Level V}\\ \hline
+-\text{direct}&128.756&178.900&232.456\\
+-\text{one log}&135.765&186.383&240.317\\
+-\text{two logs}&142.773&193.866&248.178.
+-\end{array}
++0.999999996259,\qquad0.999999999998,\qquad0.999999964716
+ \]
+-All remain below the category targets, including Level I after two generic logarithmic sensitivities.  The separate Gim\'enez specialization supplies a different solver family and polynomial prefactor.  The conclusion therefore does not rest on a single geometric proof, a single solver theorem, expected-time accounting, or a favorable free choice of $\varepsilon$.
++in the public-random model at Levels I, III, and V.  The older straight-line-program theorem and the independent locally closed-set theorem support the same growth trend without being used to borrow unstated failure constants.
+ 
+-The output is cryptographically decisive even though it is not the serialized secret key.  A verified signing certificate inverts every target of the unchanged public map.  For any chosen message and salt, the attacker computes the official hash target, inverts it, and obtains a signature accepted by the official verifier.  The result is key-only universal chosen-message forgery, stronger than what is needed to violate EUF-CMA.
++The normalized asymptotic indicators lie below the Round-2 category targets at all three levels.  They are not concrete gate counts: hidden constants, field arithmetic, and memory traffic still require separate evaluation.  The evidence is strongest at Levels III and V, where several independent theorem interfaces leave substantial exponent margins.  Level I is more sensitive to low-level costs, although the primary modern-solver indicator and the epsilon-free arithmetic cross-check are both below its target.
+ 
+-We recommend changing or reoptimizing all three parameter levels.  Levels III and V have large margins across every displayed projective interface.  Level I is not a certified finite-gate break, and the two-log one-pass SLP margin is only $0.227$ bits.  Yet the team can no longer dispose of Level I merely by objecting to a free solver exponent, expected running time, or one projective lemma: the modern line, epsilon-free fixed-budget line, explicit-prefactor line, graph-local recovery theorem, universal-forgery endpoint, and asymptotic parameter-growth constraint are separately stated and audited.  Retaining Level I unchanged should require a concrete theorem-level rebuttal or calibrated implementation evidence that reverses both principal cost comparisons.
++Space is the main obstacle to implementation.  A conventional degree-$2^V$ quotient representation is astronomically large even though the recovered key is compact.  The norm-gradient and resultant-gradient formulas isolate a much smaller output target, but no current method constructs that output without first building a huge algebraic state.  A low-space solver or direct root-extraction method would therefore change the practical picture more than a small improvement in the displayed time exponent.
+ 
+-The attack remains impractical.  Its direct solver representation is astronomically large, the fixed SHAKE/AES functions lack an unconditional density theorem, and the asymptotic constants are not calibrated.  Those limitations are explicit.  They do not convert the current parameter estimates into answers to the new algebraic attack.  The highest-value specialist checks are now sharply separated: (i) the graph-direction and completion identities, (ii) the localization-to-Kronecker crosswalk, (iii) the smooth-projective interface, (iv) the classical SLP cost crosswalk and finite-field bad-choice audit, and only then (v) the off-oil density argument needed for the strongest public-random projective theorem.
++\appendix
+ 
+ \section{Official seeded expansion: ideal primitives and fixed functions}\label{app:seeded-transfer}
+ 
+-The pointwise theorem needs no expansion model.  This appendix asks how often official seeded key generation satisfies the sufficient algebraic conditions for deterministic functional-key recovery.  The official expansion uses public counter $2i-1$ for the symmetric block $A_i$, public counter $2i$ for the rectangular block $E_i$, and secret counter $1$ for the graph $G$~\cite[Secs.~4.7--4.10]{QRUOVSpec}.  For every recommended set, the secret buffer length $\tau_2$ is at most the public $A_i$ buffer length $\tau_1$.  Hence, if the independently sampled public and secret seeds happen to coincide, the secret counter-$1$ raw stream is a prefix of the public $A_1$ stream.  The resulting correlation between $G$ and $A_1$ is expressly allowed by \cref{def:ideal}; it is not a bad event.
++The key-by-key theorem needs no expansion model.  This appendix asks how often official seeded key generation satisfies the sufficient algebraic conditions for deterministic equivalent-key recovery.  The official expansion uses public counter $2i-1$ for the symmetric block $A_i$, public counter $2i$ for the rectangular block $E_i$, and secret counter $1$ for the graph $G$~\cite[Secs.~4.7--4.10]{QRUOVSpec}.  For every recommended set, the secret buffer length $\tau_2$ is at most the public $A_i$ buffer length $\tau_1$.  Hence, if the independently sampled public and secret seeds happen to coincide, the secret counter-$1$ raw stream is a prefix of the public $A_1$ stream.  The resulting correlation between $G$ and $A_1$ is expressly allowed by \cref{def:ideal}; it is not a bad event.
+ 
+ For Levels I, III, and V, let $\lambda\in\{128,192,256\}$ be the seed length.  The specification uses $m$ public buffers of length $\tau_1$ bytes and $m$ public buffers of length $\tau_2$ bytes.  Each public rejection sampler exhausts its prescribed buffer with probability at most $2^{-\lambda}$.  Put
+ \begin{equation}\label{eq:public-rejection}
+@@ -1983,15 +1977,15 @@
+  \qquad
+  \eta_{\rm local}:=\tau_{m,V}(Q)^O+\eta_{\rm sign}
+ \]
+-be the public-random exceptional-key probabilities for the fast projective and graph-direction functional-key theorems.  Total variation is applied only to these key-level events, not to a bounded attack execution.
++be the public-random exceptional-key probabilities for the fast projective and graph-direction equivalent-key theorems.  Total variation is applied only to these key-level events, not to a bounded attack execution.
+ 
+ \begin{corollary}[Official seeded recovery in ideal-primitive models]\label{cor:seeded-ideal-primitives}
+ Under the official seeded key generation:
+ \begin{enumerate}
+-\item with SHAKE modeled as an ideal XOF, the probability that a key fails the graph-direction functional-key hypotheses is at most $\eta_{\rm local}+\delta_{\rm XOF}$, while the corresponding fast-projective bound is $\eta_{\rm fast}+\delta_{\rm XOF}$;
++\item with SHAKE modeled as an ideal XOF, the probability that a key fails the graph-direction equivalent-key hypotheses is at most $\eta_{\rm local}+\delta_{\rm XOF}$, while the corresponding fast-projective bound is $\eta_{\rm fast}+\delta_{\rm XOF}$;
+ \item with AES modeled as an ideal cipher, the corresponding bounds are $\eta_{\rm local}+\delta_{\rm IC}$ and $\eta_{\rm fast}+\delta_{\rm IC}$.
+ \end{enumerate}
+-Every other key for the relevant route satisfies its pointwise verified-restart theorem: acceptance is zero-error and the algorithm terminates almost surely with the expected-work bounds of \cref{thm:graph-attack,thm:attack}.  At Levels I, III, and V, both ideal-key exceptions are negligible compared with the transfer terms, so the base-two logarithms round respectively to
++Every other key for the relevant route satisfies the corresponding key-by-key recovery theorem: accepted outputs are always correct, and verified restart terminates almost surely with the expected-work bounds of \cref{thm:graph-attack,thm:attack}.  At Levels I, III, and V, both ideal-key exceptions are negligible compared with the transfer terms, so the base-two logarithms round respectively to
+ \[
+ (-121.245,-184.715,-248.286)
+ \quad\text{and}\quad
+@@ -2001,7 +1995,7 @@
+ \end{corollary}
+ 
+ \begin{proof}
+-By \cref{prop:rom-transfer,prop:icm-transfer}, the probability of every key event changes by at most the corresponding total-variation distance.  Apply this separately to the graph-direction event of \cref{cor:graph-ideal-recovery} and the fast-projective event of \cref{cor:ideal-recovery}.  On either complement, the corresponding theorem is pointwise and independent of how the expanded key was sampled.  Exact verification is distribution-free.  The ideal exceptional probabilities are far below the transfer terms at the displayed precision.
++By \cref{prop:rom-transfer,prop:icm-transfer}, the probability of every key event changes by at most the corresponding total-variation distance.  Apply this separately to the graph-direction event of \cref{cor:graph-ideal-recovery} and the fast-projective event of \cref{cor:ideal-recovery}.  On either complement, the corresponding theorem is key by key and independent of how the expanded key was sampled.  Exact verification is distribution-free.  The ideal exceptional probabilities are far below the transfer terms at the displayed precision.
+ \end{proof}
+ 
+ \subsection{Why this does not prove a fixed-primitive theorem}
+@@ -2021,7 +2015,7 @@
+ 
+ Thus the fixed public SHAKE/AES stream vector cannot be information-theoretically close to independent uniform streams.  Nor is there a generic public-seed PRG reduction: the public seed is revealed, expansion is deterministic, and a distinguisher can recompute the official stream and compare it with the transcript.  The ideal-XOF and ideal-cipher key-density conclusions above are exact statements inside those models; they do not instantiate themselves for fixed primitives.
+ 
+-The pointwise recovery theorem nevertheless applies to every fixed-primitive key satisfying the pointwise conditions.  A high-probability standard-model statement must therefore analyze the relevant algebraic bad events under the actual fixed expansion map, or introduce an explicitly event-specific hardness assumption.  The support barrier does not rule out such work; it rules out a generic statistical or transcript-pseudorandomness transfer that replaces the revealed deterministic expansion by independent uniform streams.
++The key-by-key recovery theorem nevertheless applies to every fixed-primitive key satisfying the key-by-key conditions.  A high-probability standard-model statement must therefore analyze the relevant algebraic bad events under the actual fixed expansion map, or introduce an explicitly event-specific hardness assumption.  The support barrier does not rule out such work; it rules out a generic statistical or transcript-pseudorandomness transfer that replaces the revealed deterministic expansion by independent uniform streams.
+ 
+ \section{Optional identification with the planted oil space}\label{app:uniqueness}
+ 
+@@ -2090,50 +2084,185 @@
+ Every exact candidate defines a common isotropic $O$-space.  Uniqueness forces that space to be $\cO_0$, and its graph determines the expanded decomposition used by \cref{prop:verified-key}.
+ \end{proof}
+ 
++\section{Alternative elimination and low-space directions}\label{app:alternatives}
++
++The main text uses complete univariate resolutions because they are the only route for which we have both a suitable theorem and full failure accounting.  This appendix records two exact ways to extract a root more compactly once a quotient algebra exists, and then explains why several natural attempts do not yet improve the proved exponent.
++
++\subsection{Extracting an isolated root from an existing quotient algebra}\label{subsec:implicit-extraction}
++
++Let $A=L[y_1,\ldots,y_V]/I$ be the reduced affine coordinate algebra of a square core, of degree $d\le D$.  Write $Z$ for its geometric root set, and let $q_1,\ldots,q_m$ denote the original restricted equations in $A$.
++
++\begin{proposition}[Norm-gradient root formula]\label{prop:implicit-root}
++Suppose $p\in L^V$ is the unique point of $Z$ satisfying all $m$ original equations.  Choose $\rho\leftarrow L^m$, put $h=\sum_i\rho_iq_i\in A$, and define
++\begin{equation}\label{eq:norm-jet}
++\mathcal N_h(z_0,\ldots,z_V)
++:=\operatorname{Norm}_{A/L}\!\left(h+z_0+\sum_{j=1}^Vz_jy_j\right).
++\end{equation}
++With probability at least $1-(d-1)/|L|$, $h$ vanishes at $p$ and at no other geometric core point.  On that event,
++\begin{equation}\label{eq:norm-gradient-root}
++\partial_{z_0}\mathcal N_h(0)\ne0,
++\qquad
++p_j=
++\frac{\partial_{z_j}\mathcal N_h(0)}
++     {\partial_{z_0}\mathcal N_h(0)}
++\quad(1\le j\le V).
++\end{equation}
++Equivalently, if $M_h$ and $M_{y_j}$ are the multiplication operators in $A$, then $\ker M_h$ is one-dimensional and every nonzero $w\in\ker M_h$ satisfies $M_{y_j}w=p_jw$.
++\end{proposition}
++
++\begin{proof}
++After scalar extension to an algebraic closure, reducedness gives
++\[
++A\otimes_L\overline L\cong\prod_{x\in Z}\overline L.
++\]
++At every $x\ne p$, the vector $(q_1(x),\ldots,q_m(x))$ is nonzero.  The condition $h(x)=0$ cuts out a proper $L$-linear subspace of $L^m$, so a uniform $\rho$ satisfies it with probability at most $1/|L|$.  A union bound over at most $d-1$ points proves the selector bound.  On the good event, the norm factors as
++\[
++\mathcal N_h(z)=
++\prod_{x\in Z}\left(h(x)+z_0+\sum_{j=1}^Vz_jx_j\right).
++\]
++Differentiating at the origin gives
++\[
++\partial_{z_0}\mathcal N_h(0)=\prod_{x\ne p}h(x),
++\qquad
++\partial_{z_j}\mathcal N_h(0)=p_j\prod_{x\ne p}h(x),
++\]
++which proves \eqref{eq:norm-gradient-root}.  In the same product decomposition, $M_h$ is diagonal with a unique zero eigenvalue and the coordinate operators act on its kernel by the scalars $p_j$.
++\end{proof}
++
++\begin{remark}[Several surviving roots]\label{rem:norm-multiple}
++For an arbitrary selector $h$, let $S=\{x\in Z:h(x)=0\}$.  The lowest nonzero homogeneous part of \eqref{eq:norm-jet} at the origin is
++\[
++\left(\prod_{x\notin S}h(x)\right)
++\prod_{x\in S}\left(z_0+\sum_{j=1}^Vz_jx_j\right).
++\]
++Thus the first nonzero norm jet is the Chow product of all selected roots.  The linear formula \eqref{eq:norm-gradient-root} is exactly the case $|S|=1$.
++\end{remark}
++
++\begin{proposition}[Resultant-gradient root formula]\label{prop:resultant-gradient}
++Assume $\operatorname{char}L\ne2$.  Let $F_0,\ldots,F_V\in L[t_0,\ldots,t_V]$ be homogeneous quadrics with a unique geometric common point $p=[p_0:\cdots:p_V]$.  Assume that their value Jacobian on the tangent space $T_p\PP^V$ has rank $V$.  Let $\mathcal R$ be their multivariate resultant, written in the monomial coefficients $c_{i,\alpha}$ of $F_i$, $|\alpha|=2$.  Then the coefficient tuple is a smooth point of the resultant hypersurface.  If $\lambda=(\lambda_0,\ldots,\lambda_V)$ spans the left kernel of the tangent Jacobian, there is a scalar $\kappa\ne0$ such that
++\begin{equation}\label{eq:resultant-gradient}
++\frac{\partial\mathcal R}{\partial c_{i,\alpha}}
++=\kappa\lambda_i p^\alpha
++\qquad(0\le i\le V,\ |\alpha|=2).
++\end{equation}
++In particular, for any $i,k$ with $\lambda_i p_k\ne0$,
++\begin{equation}\label{eq:resultant-ratio}
++\frac{p_j}{p_k}
++=
++\frac{\partial\mathcal R/\partial c_{i,e_j+e_k}}
++     {\partial\mathcal R/\partial c_{i,2e_k}}
++\qquad(0\le j\le V).
++\end{equation}
++The coefficient convention in \eqref{eq:resultant-ratio} treats $t_jt_k$ as one monomial, with no symmetric-matrix factor of two.
++\end{proposition}
++
++\begin{proof}
++Consider the incidence variety of coefficient tuples and projective points satisfying $F_i(p)=0$ for every $i$.  Its first-order equations at the given pair are
++\[
++\delta F_i(p)+dF_i(p)[\delta p]=0\qquad(0\le i\le V).
++\]
++The tangent Jacobian has rank $V$, so a tangent displacement $\delta p$ exists exactly when
++\[
++\sum_{i=0}^V\lambda_i\,\delta F_i(p)=0.
++\]
++Uniqueness and transversality make the incidence projection locally one-to-one onto a smooth branch of the resultant hypersurface.  Its tangent hyperplane is therefore the kernel of the displayed nonzero functional.  The differential of the irreducible resultant is proportional to that functional, giving \eqref{eq:resultant-gradient}; the ratio formula follows by evaluating the two quadratic monomials at $p$.
++\end{proof}
++
++\begin{remark}[Compression achieved, evaluator still missing]\label{rem:implicit-memory}
++The norm gradient outputs one root using only $V+1$ field elements, and the resultant gradient uses one nonzero coefficient block.  If quotient multiplication is available as a black box, a one-dimensional kernel can be found with $O(d)$ stored field elements and $O(d)$ multiplication-operator products by standard black-box linear algebra~\cite{Wiedemann}.  Alternatively, Baur--Strassen converts any arithmetic circuit for the norm or resultant into a circuit for all first derivatives with constant-factor overhead~\cite{BaurStrassen}.  These statements compress the \emph{root-extraction interface}; they do not construct the degree-$d$ quotient algebra, multiplication operators, norm, or resultant in $o(d)$ space.  With current constructions, the time remains near-quadratic in $d$ (with the fixed $\varepsilon$ loss of \cref{prop:finite-field-kronecker}) and at least one degree-$d$ state vector remains.  Moreover, \cref{prop:generic-full-isolation} gives no production-parameter density bound for uniqueness of the full-system root.  The formulas are therefore exact algorithmic targets, not a practical attack.
++\end{remark}
++
++\subsection{Why the spare equations do not yet lower the finite exponent}\label{subsec:exponent-audit}
++
++The full restricted system has $e=m-V\in\{2,2,3\}$ equations beyond the square core, and generically those equations isolate the planted point.  We tested whether they also lower the solving exponent.  The following deliberately optimistic semi-regular screen uses the Hilbert series
++\[
++\frac{(1-t^2)^{V+e}}{(1-t)^{V+1}}
++\]
++for $V+e$ homogeneous quadrics in $V+1$ projective variables.  Because the actual system contains a planted point, this is a diagnostic rather than a theorem.  At the last positive coefficient, the monomial counts are:
++\begin{center}
++\small
++\begin{tabular}{@{}c r r r r r@{}}
++\toprule
++Level & $V$ & degree & $\log_2 N$ & optimistic $\log_2N^2$ & current $\log_2D^2$\\
++\midrule
++I   &52  &27 &$69.787$  &$139.574$ &$104$\\
++III &76  &39 &$102.585$ &$205.170$ &$152$\\
++V   &102 &48 &$131.814$ &$263.629$ &$204$\\
++\bottomrule
++\end{tabular}
++\end{center}
++Even charging only $N^2$ sparse black-box work is worse than the baseline $D^2$ geometric scale and also worse than the primary $\varepsilon=0.3$ fast-line indicators after field and circuit conversion; dense linear algebra is worse still.  This does not rule out a coefficient-specific method, but it rules out the most direct overdetermined-Macaulay improvement under standard linear algebra.
++
++\begin{proposition}[Underslicing loses more in hit probability than it saves in degree]\label{prop:underslice}
++Let $0\le d<V$, and choose a uniform projective $d$-plane over $K=\F_Q$.  Its probability of meeting the planted projective oil space is
++\begin{equation}\label{eq:underslice-probability}
++\pi_d
++=1-\prod_{i=0}^{d}
++\frac{1-Q^{i-V}}{1-Q^{i-(V+O)}}.
++\end{equation}
++If the same degree-squared square-core solver is run independently on every sampled plane, its expected leading degree factor is $4^d/\pi_d$.  For $d=V-r$ and the \QRUOV{} base field $Q=127^3$, removing $r=1,2,3$ slice dimensions increases the base-two exponent relative to the $d=V$ slice by
++\[
++18.966053,\qquad37.932107,\qquad56.898161
++\]
++bits, respectively, before any other work is charged.  Choosing the slices over the larger solver field only worsens this tradeoff.
++\end{proposition}
++
++\begin{proof}
++Write $k=d+1$.  A vector $k$-subspace disjoint from the fixed $O$-dimensional oil space is the graph of a linear map from a $k$-subspace of the $V$-dimensional quotient to the oil space.  Hence there are
++\[
++Q^{Ok}\genfrac{[}{]}{0pt}{}{V}{k}_Q
++\]
++disjoint subspaces, out of $\genfrac{[}{]}{0pt}{}{V+O}{k}_Q$ total.  Taking the ratio and expanding the Gaussian binomial coefficients gives \eqref{eq:underslice-probability}.  Independent repetition needs expected $1/\pi_d$ planes.  Substitution into $4^d/\pi_d$ gives the displayed values, which are recomputed by the companion numerical audit.  Asymptotically each removed dimension costs $\log_2Q-2=18.966054\ldots$ bits: it saves two degree-squared bits but loses roughly one factor of $Q$ in intersection probability.
++\end{proof}
++
++The same calculation covers the equivalent hybrid strategy of guessing one base-field coordinate of the oil point before solving: every guessed coordinate costs roughly $\log_2Q$ bits and saves only two bits in the degree-squared solver.  Thus the minimal guaranteed slice is also the best random underslice under the current solver model.
++
++The other natural routes also stop short of an exponent improvement.  Explicit resultant matrices remain exponentially larger than the $D$-dimensional quotient representation in the dense quadratic regime~\cite{DAndreaDickenstein}.  Chow-form algorithms are polynomial in geometric degree but do not provide a subquadratic dependence specialized to these parameters~\cite{JeronimoEtAl}.  Faster modular composition lowers an operation used after a univariate algebra exists, not the geometric-intersection stage that constructs that algebra~\cite{NeigerEtAl}.
++
++We also checked two recent refinements of Macaulay/Gr\"obner solving.  Degree smoothing replaces a full Macaulay matrix by a sufficient submatrix lying between two adjacent integer degrees~\cite{DegreeSmoothing}.  Our optimistic screen already charges the complete monomial space at the \emph{lower} adjacent degree and is still $35.574$, $53.170$, and $59.629$ bits above the $D^2$ geometric scale; smoothing within that interval cannot reverse the comparison.  The recent F4-tracer analysis for generic square degree-$\delta$ systems has leading arithmetic scale $\widetilde O(\delta^{\omega V+1}e^{cV})$ and relies on trace compatibility and genericity conjectures~\cite{F4Tracer}.  For quadrics, even its factor $2^{\omega V}$ exceeds $D^2=2^{2V}$ for every currently proved $\omega>2$.  Thus these improvements are valuable in their intended regimes but do not lower the exponent here.  The norm and resultant gradients identify a smaller \emph{output} target; no proved route found in this audit computes that target below the published near-quadratic-in-$D$ line used here.
++
+ \Needspace{10\baselineskip}
+ \section{Reproducibility and executable attack description}\label{app:algorithms}
+ 
+-\subsection{Reproducible checks}
++\subsection{Companion numerical audit}
+ 
+-The release contains six independent groups of checks.
++The companion file \path{QRUOV_numerical_audit.py} uses only the Python standard library.  It recomputes, from the three parameter tuples:
+ \begin{itemize}
+-\item \textbf{Graph-direction identities and density.}  \path{checks/graph_direction_identity_check.py} tests the exact translated equations, planted Jacobian, and one-root completion systems.  \path{checks/graph_direction_probability_cost_audit.py} recomputes the exact public-random rank-failure probabilities, fixed-key direction bound, solver-field choices, and both independent published-solver rows.
+-\item \textbf{Localized geometry.}  \path{checks/localized_geometry_toy_check.py} exhaustively verifies on randomized small systems that localization at a nonzero Jacobian determinant removes the singular locus and leaves every prefix smooth, radical, and of the expected codimension.
+-\item \textbf{Numerical consistency and solver-line robustness.}  \path{checks/fast_line_cost_audit.py} recomputes every fixed-$\varepsilon$ direct and uniform indicator, target margin, regularization-failure bound, and $\varepsilon$ threshold.  \path{checks/slp_kronecker_cost_audit.py} independently recomputes the shared-monomial SLP length, smallest working extension, explicit bad-choice probability, expected retry factor, and expected-work rows.  \path{checks/slp_fixed_budget_audit.py} recomputes the one-extra-degree fixed-pass failure, direct/one-log/two-log rows, and repair floors; \path{checks/independent_fixed_budget_recompute.py} repeats the headline calculation with high-precision decimal arithmetic.  Frozen assertions detect drift.
+-\item \textbf{Signing certification.}  \path{checks/signing_witness_check.py} checks the quotient-ring row map and target inversion over a toy extension field.  \path{checks/signing_span_check.py} exhaustively checks the pair bound and projective-line scan on small matrix spaces.
+-\item \textbf{Solver output, ideal primitives, and implicit extraction.}  \path{checks/resolution_consistency_check.py} accepts valid toy resolutions, including partial ones, and rejects corrupted, repeated-root, and nonprimitive representations.  \path{checks/separator_prefilter_check.py} checks quotient-algebra filtering before factorization.  \path{checks/seeded_model_check.py} recomputes the ideal-XOF and exact ideal-cipher transfer bounds, including the equal-seed prefix case.  \path{checks/norm_jet_check.py} and \path{checks/resultant_gradient_check.py} test the two implicit extraction formulas.
+-\item \textbf{End-to-end, negative-route, and source checks.}  \path{checks/toy_recovery_check.py} tests block factorization, projective intersection, all-$m$ filtering, derivative-kernel recovery, graph reconstruction, and exact public verification.  \path{checks/exponent_route_audit.py} and \path{checks/underslice_tradeoff_check.py} reproduce the negative exponent and underslicing audits.  \path{checks/source_audit.py} checks labels, citations, environments, and prose statistics.
++\item the field size, B\'ezout degrees, Wronskian-list lengths, deterministic system counts, and exact random-matrix rank probabilities;
++\item the basis-first and pair-line signing bounds, including the compact fixed-list bounds;
++\item the minimum and safety extension degrees for the finite solver, its explicit outer and internal failure terms, and the one-invocation success probabilities;
++\item every normalized cost indicator, robustness threshold, seeded-model transfer exponent, and memory figure quoted in the paper.
+ \end{itemize}
++The script contains frozen assertions for the headline values and prints a plain-text report.  It is an arithmetic audit, not an implementation of the full-dimensional Kronecker solver.
+ 
+-In the fixed-seed 1,000-key toy run over $\F_{13}$, 999 instances met the deliberately stronger toy core condition and recovered a verified graph; one exhausted the toy search budget, and no nonplanted candidate passed exact public factorization.  A naive choice of purported ``remaining'' output rows formed a valid complement in only $928$ of the $999$ accepted instances.  None of these scripts implements or benchmarks the full-dimensional Kronecker solver.
+-
++\subsection{Executable attack description}
+ 
+-\paragraph{One graph-direction trial.}
++\paragraph{Graph-direction route.}
+ \begin{enumerate}
+-\item Expand the public key to matrices $P_i$ over $K=\F_{127^3}$.  Choose $c\in K^O$ and $R\in K^{V\times m}$, and form $q_{i,c}(x)=P_i(-x,c)$, the square core $f=Rq_c$, and its Jacobian determinant $h=\det J_f$.
+-\item Choose a working extension $L=\F_{Q^s}$ satisfying the field-size condition of \cref{cor:gimenez-local}.  Run the locally closed Kronecker algorithm of \cref{prop:gimenez-theorem} on $f_1,\ldots,f_V$ localized at $h$.  The source algorithm is Monte Carlo rather than certified complete; malformed or incomplete output therefore causes rejection and a fresh trial.
+-\item Convert every represented root to affine coordinates, re-evaluate all $m$ equations $q_{i,c}$, and require $h(x)\ne0$.  For each survivor, solve the $O$ public completion systems of \cref{prop:graph-direction-completion} for the columns of $G$.
+-\item Require a unique solution for every column and verify every graph identity, total isotropy, the inverse pull-back, and exact factorization of the original public map.  Deduplicate by the verified $K$-rational graph.
+-\item Search each exact candidate for an invertible oil system as in \cref{prop:signing-search}; return the first candidate and inverse oil matrix that pass.  If none pass, restart.  The coordinate directions and all $V$-row subsets give the deterministic polynomial outer fallback of \cref{prop:graph-direction-density}.
++\item Expand the public key to matrices $P_i$ over $K=\F_{127^3}$.  Choose either a random nonzero direction $c\in K^O$ or a direction from the fixed coordinate list.  Form $q_{i,c}(x)=P_i(-x,c)$.
++\item Choose either a random Wronskian condenser value $t$ or one of the $V(m-V)+1$ fixed values from \cref{cor:deterministic-outer-list}.  Form the square core $f=\mathsf C(t)q_c$ and $h=\det J_f$.
++\item Over a field satisfying \eqref{eq:local-field-condition}, run the locally closed Kronecker algorithm on $f_1,\ldots,f_V$ localized at $h$.  Reject malformed, incomplete, or inconsistent output; a failed solver call causes only a retry.
++\item Re-evaluate all $m$ direction equations at every represented root with $h(x)\ne0$.  For each survivor, solve the $O$ public linear systems of \cref{prop:graph-direction-completion}.  Keep only graphs passing every graph identity, total-isotropy check, inverse pull-back, and exact public-map factorization.
++\item Test the basis signing assignments first.  If necessary, scan the remaining nonzero points on the designated pair lines.  Return the first exact candidate with an invertible oil matrix, together with its inverse.  For a fully deterministic outer list, repeat the finitely many probabilistic solver calls in rounds.
+ \end{enumerate}
++The compact public-random version uses the first $3,4,4$ coordinate directions and the first $22,31,40$ basis signing assignments.  The full deterministic fallback uses all $O$ coordinate directions and all designated pair lines.
+ 
+-\paragraph{One fast projective trial.}
++\paragraph{Fast projective route.}
+ \begin{enumerate}
+-\item Use the fast solver working field $L_s=\F_{Q^s}$ with $s=10,13,16$ at Levels I, III, and V.  Sample fresh $M\in L_s^{(V+O)\times(V+1)}$ and $R\in L_s^{V\times m}$, restrict the public quadrics to the slice, and form the square core $g=Rq$.
+-\item Run the finite-field Kronecker algorithm of \cref{prop:finite-field-kronecker}; its internal Las Vegas coordinate choices, field construction, and certification are part of the solver call.
+-\item Convert the output to canonical coordinates and run \cref{prop:resolution-checks}.  On failure, restart.  Otherwise evaluate all original restricted equations in the quotient algebra, apply \cref{prop:separator-prefilter}, factor the rational separator, reconstruct its represented points, and recheck all $m$ equations.
+-\item For every survivor $x=Mt$, compute the public derivative kernel.  Require dimension $O$, descent of its graph to $K$, total isotropy, and every public graph identity.  Apply the specification's inverse pull-back and verify the base-field factorization against the original public map.
+-\item Deduplicate exact candidates, search for an invertible oil system, and return the first verified signing decomposition.  If none pass, restart.
++\item Set $\varepsilon=0.3$.  Use the minimum fields $s=8,12,15$ for expected-restart analysis or the safety fields $s=9,13,16$ for the one-invocation theorem.  Sample a full-rank slice matrix $M$ and an output recombination $R$ over $L_s$; restrict the public quadrics and form the square core.
++\item Run one finite checked invocation of the van der Hoeven--Lecerf solver.  Return \textsf{fail} on an exceptional division, degree mismatch, or consistency failure.  Do not hide an unbounded internal restart inside one outer draw.
++\item Canonicalize and verify the resolution.  Evaluate all original restricted equations in its quotient algebra, prefilter with \cref{prop:separator-prefilter}, extract $L_s$-rational roots, and recheck all equations at each reconstructed point.
++\item At every survivor, compute the common derivative kernel.  Require dimension $O$, descent to a graph over $K$, total isotropy, all graph identities, the official inverse pull-back, and exact factorization of the original public map.
++\item Run the basis-first signing scan and, if needed, the pair-line fallback.  Return the first verified signing certificate; otherwise begin a fresh outer trial.
+ \end{enumerate}
+ 
+-A successful solver branch on either route contains the planted point under the corresponding theorem's hypotheses.  The graph-direction wrapper of \cref{thm:graph-attack} is zero-error on acceptance despite the internal Monte Carlo solver, and the projective wrapper of \cref{thm:attack} uses a Las Vegas solver.  On every branch, exact graph, public-map, and oil-matrix checks prevent false acceptance.  The output is a publicly verified expanded signing decomposition and signing certificate that invert every target, not the secret seed or an official serialized key.
++Both wrappers have one-sided error: a solver failure may cause a retry, but exact public verification prevents an invalid equivalent key or invalid signature from being returned.  The output is a verified expanded signing decomposition and an inverse oil matrix, not the original seed or an official serialized private key.
+ 
+ \begin{multicols}{2}
+ \raggedcolumns
+ \begin{thebibliography}{99}
+-\small
+-\linespread{0.98}\selectfont
+-\setlength{\itemsep}{0.10em}
++\fontsize{8.5pt}{9.6pt}\selectfont
++\setlength{\itemsep}{0pt}
+ \setlength{\parsep}{0pt}
+ 
+ \bibitem{QRUOVSpec}
