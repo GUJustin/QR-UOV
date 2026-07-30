@@ -1,0 +1,6 @@
+generic-to-local specialization: PASS
+start separator values: [0, 0, 2, 3]
+target separator values: [1, -1, 3, 4]
+deg_t q_generic / q_local: 4 4
+deg_t v_generic / v_local: 4 4
+simple target derivative recovery: PASS

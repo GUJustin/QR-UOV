@@ -1,0 +1,405 @@
+{
+  "description": "Local-separator split-before-lift QR-UOV stress ledger with exact simple-root Frobenius descent.",
+  "version": "v2 correctness pass",
+  "status": "Candidate finite gate audit; proof still depends on exact applicability of the characteristic-polynomial degree theorem, the rational-filter graph bound, and a fully explicit online-multiplication schedule.",
+  "rows": [
+    {
+      "level": "I",
+      "target": 143,
+      "a": 50,
+      "r": 51,
+      "extension_degree": 8,
+      "modulus": "X^8+X^4-1",
+      "C": 1125899906842624,
+      "C0": 29273397577908224,
+      "precision": 117093590311632897,
+      "probabilities": {
+        "eligible_nonsingular_projective_root_lower": 0.3690869822834685,
+        "chart": 0.9921259842519685,
+        "seed_disjoint": 1.0,
+        "valuation_or_target_collision_failure_upper": 0.016636808419943375,
+        "valuation_denominator_failure_upper": 0.016918274511792085,
+        "one_trial_success_lower": 0.35399662641930446,
+        "restart_factor": 2.8248856779090112
+      },
+      "terminal": {
+        "value_families": 2,
+        "tree_long_product_units": 125.0,
+        "rational_reconstruction_long_product_units": 99.88531145313222,
+        "candidate_long_product_units_each": 11.342703367124612,
+        "coordinate_candidates_per_success": 1.0,
+        "misc_long_product_units": 64.0,
+        "total_long_product_units_per_trial": 292.9005901795692,
+        "relaxed_product_multiplier": 1.0
+      },
+      "cost_log2_gates": {
+        "initial_base_field_branch_lifts": 139.3584247624159,
+        "valuation_safe_filter_series": 132.12011578413464,
+        "terminal_scalar_recombination": 138.79097630477096,
+        "on_demand_coordinate_relifts": 137.86023227904772,
+        "extension_leaf_formation": 127.61047937854057,
+        "coordinate_relift_leaf_formation": 124.89816208981956,
+        "auxiliary_factorization_and_verification": 115.70686751548628,
+        "preprocessing": 63.36503247102531,
+        "total": 140.3839950628948,
+        "target": 143.0,
+        "margin": 2.6160049371052025,
+        "split_global_baseline": 141.12573375744344,
+        "saving_vs_global_split": 0.7417386945486442,
+        "strict_bundle_baseline": 151.63874638899327,
+        "saving_vs_strict_bundle": 11.254751326098472
+      },
+      "sensitivity": {
+        "total_with_RR_constant_10": {
+          "extension_degree": 8,
+          "total": 140.42420042112934
+        },
+        "total_with_RR_constant_16": {
+          "extension_degree": 8,
+          "total": 140.53850144907295
+        },
+        "total_with_RR_constant_32": {
+          "extension_degree": 8,
+          "total": 140.80528266857087
+        },
+        "total_with_RR_constant_64": {
+          "extension_degree": 8,
+          "total": 141.22499004228217
+        },
+        "total_with_RR_constant_128": {
+          "extension_degree": 8,
+          "total": 141.8146073502292
+        },
+        "total_with_RR_constant_256": {
+          "extension_degree": 8,
+          "total": 142.55528600694583
+        },
+        "degree_candidates": {
+          "8": 140.3839950628948,
+          "9": 140.4189649938072,
+          "10": 140.49111419313238,
+          "11": 140.5620290245443,
+          "12": 140.6315976746042,
+          "13": 140.70088128668917,
+          "14": 140.76814762907253,
+          "15": 140.83430255713452
+        },
+        "parent_root_probability_fallback": {
+          "root_lower": 0.326336998767509,
+          "extension_degree": 8,
+          "total": 140.5314607006596,
+          "margin": 2.4685392993403923,
+          "restart_factor": 3.1949442879384415
+        },
+        "online_product_envelope_multiplier": {
+          "2": {
+            "extension_degree": 8,
+            "total": 141.11748322854865,
+            "margin": 1.8825167714513498
+          },
+          "4": {
+            "extension_degree": 9,
+            "total": 141.95154886593892,
+            "margin": 1.0484511340610823
+          },
+          "8": {
+            "extension_degree": 9,
+            "total": 142.85648095290225,
+            "margin": 0.14351904709775454
+          },
+          "16": {
+            "extension_degree": 9,
+            "total": 143.8064896567364,
+            "margin": -0.806489656736403
+          }
+        }
+      }
+    },
+    {
+      "level": "III",
+      "target": 207,
+      "a": 74,
+      "r": 75,
+      "extension_degree": 12,
+      "modulus": "X^12-X^3+X+1",
+      "C": 18889465931478580854784,
+      "C0": 717799705396186072481792,
+      "precision": 2871198821584744289927169,
+      "probabilities": {
+        "eligible_nonsingular_projective_root_lower": 0.3690869822834685,
+        "chart": 0.9921259842519685,
+        "seed_disjoint": 1.0,
+        "valuation_or_target_collision_failure_upper": 0.0010729389901674312,
+        "valuation_denominator_failure_upper": 0.0010740914247360349,
+        "one_trial_success_lower": 0.36539500628799315,
+        "restart_factor": 2.7367642764439717
+      },
+      "terminal": {
+        "value_families": 2,
+        "tree_long_product_units": 185.0,
+        "rational_reconstruction_long_product_units": 144.01004382981677,
+        "candidate_long_product_units_each": 16.73386738628719,
+        "coordinate_candidates_per_success": 1.0,
+        "misc_long_product_units": 64.0,
+        "total_long_product_units_per_trial": 399.12451540865163,
+        "relaxed_product_multiplier": 1.0
+      },
+      "cost_log2_gates": {
+        "initial_base_field_branch_lifts": 190.17081776711825,
+        "valuation_safe_filter_series": 182.4108321379383,
+        "terminal_scalar_recombination": 188.987005615807,
+        "on_demand_coordinate_relifts": 188.71834658957675,
+        "extension_leaf_formation": 177.75867334088935,
+        "coordinate_relift_leaf_formation": 175.15810352435872,
+        "auxiliary_factorization_and_verification": 164.6716245244988,
+        "preprocessing": 63.87570523372797,
+        "total": 191.02713332295528,
+        "target": 207.0,
+        "margin": 15.97286667704472,
+        "split_global_baseline": 191.63008785822356,
+        "saving_vs_global_split": 0.6029545352682817,
+        "strict_bundle_baseline": 203.5069338584919,
+        "saving_vs_strict_bundle": 12.479800535536612
+      },
+      "sensitivity": {
+        "total_with_RR_constant_10": {
+          "extension_degree": 12,
+          "total": 191.05843298905853
+        },
+        "total_with_RR_constant_16": {
+          "extension_degree": 12,
+          "total": 191.1484529061969
+        },
+        "total_with_RR_constant_32": {
+          "extension_degree": 12,
+          "total": 191.36420263478288
+        },
+        "total_with_RR_constant_64": {
+          "extension_degree": 12,
+          "total": 191.71786794384474
+        },
+        "total_with_RR_constant_128": {
+          "extension_degree": 12,
+          "total": 192.23873103863474
+        },
+        "total_with_RR_constant_256": {
+          "extension_degree": 12,
+          "total": 192.92228421949957
+        },
+        "degree_candidates": {
+          "11": 191.36297116415122,
+          "12": 191.02713332295528,
+          "13": 191.06045644941196,
+          "14": 191.09575448028158,
+          "15": 191.13099514920074,
+          "16": 191.1658298418976,
+          "17": 191.20192968139452,
+          "18": 191.23712344499074,
+          "22": 191.37563505114227
+        },
+        "parent_root_probability_fallback": {
+          "root_lower": 0.326336998767509,
+          "extension_degree": 12,
+          "total": 191.1699645916971,
+          "margin": 15.830035408302905,
+          "restart_factor": 3.09527902698379
+        },
+        "online_product_envelope_multiplier": {
+          "2": {
+            "extension_degree": 12,
+            "total": 191.8364775018292,
+            "margin": 15.163522498170806
+          },
+          "4": {
+            "extension_degree": 12,
+            "total": 192.7307850940237,
+            "margin": 14.269214905976298
+          },
+          "8": {
+            "extension_degree": 12,
+            "total": 193.67488587904455,
+            "margin": 13.325114120955448
+          },
+          "16": {
+            "extension_degree": 12,
+            "total": 194.64610250668068,
+            "margin": 12.353897493319323
+          }
+        }
+      }
+    },
+    {
+      "level": "V",
+      "target": 272,
+      "a": 101,
+      "r": 102,
+      "extension_degree": 16,
+      "modulus": "X^16+X-1",
+      "C": 2535301200456458802993406410752,
+      "C0": 130568011823507628354160430153728,
+      "precision": 522272047294030513416641720614913,
+      "probabilities": {
+        "eligible_nonsingular_projective_root_lower": 0.3690869822834685,
+        "chart": 0.9921259842519685,
+        "seed_disjoint": 1.0,
+        "valuation_or_target_collision_failure_upper": 0.0005535667888037984,
+        "valuation_denominator_failure_upper": 0.0005538733947203176,
+        "one_trial_success_lower": 0.3657753745293929,
+        "restart_factor": 2.7339183270240683
+      },
+      "terminal": {
+        "value_families": 2,
+        "tree_long_product_units": 252.5,
+        "rational_reconstruction_long_product_units": 193.4464239475903,
+        "candidate_long_product_units_each": 22.812942328132547,
+        "coordinate_candidates_per_success": 1.0,
+        "misc_long_product_units": 64.0,
+        "total_long_product_units_per_trial": 518.2908364717804,
+        "relaxed_product_multiplier": 1.0
+      },
+      "cost_log2_gates": {
+        "initial_base_field_branch_lifts": 246.36910009775914,
+        "valuation_safe_filter_series": 237.90172215458668,
+        "terminal_scalar_recombination": 244.72738524296065,
+        "on_demand_coordinate_relifts": 244.9181299531902,
+        "extension_leaf_formation": 233.147994694327,
+        "coordinate_relift_leaf_formation": 230.58705170773294,
+        "auxiliary_factorization_and_verification": 219.27827234308802,
+        "preprocessing": 64.3178123661532,
+        "total": 247.12543894689134,
+        "target": 272.0,
+        "margin": 24.874561053108664,
+        "split_global_baseline": 247.63744362396085,
+        "saving_vs_global_split": 0.5120046770695126,
+        "strict_bundle_baseline": 260.38909148275417,
+        "saving_vs_strict_bundle": 13.263652535862832
+      },
+      "sensitivity": {
+        "total_with_RR_constant_10": {
+          "extension_degree": 16,
+          "total": 247.1507552086601
+        },
+        "total_with_RR_constant_16": {
+          "extension_degree": 16,
+          "total": 247.22414288851306
+        },
+        "total_with_RR_constant_32": {
+          "extension_degree": 16,
+          "total": 247.4033441765932
+        },
+        "total_with_RR_constant_64": {
+          "extension_degree": 16,
+          "total": 247.70623798461742
+        },
+        "total_with_RR_constant_128": {
+          "extension_degree": 16,
+          "total": 248.16959932021092
+        },
+        "total_with_RR_constant_256": {
+          "extension_degree": 16,
+          "total": 248.80131934738563
+        },
+        "degree_candidates": {
+          "15": 247.27669480356096,
+          "16": 247.12543894689134,
+          "17": 247.1451520646878,
+          "18": 247.16575002873296,
+          "22": 247.2480915001258,
+          "23": 247.26862972288188,
+          "24": 247.2891461901894,
+          "25": 247.31000485153723,
+          "26": 247.3307102236555,
+          "27": 247.35133903355361,
+          "30": 247.4127781189655
+        },
+        "parent_root_probability_fallback": {
+          "root_lower": 0.326336998767509,
+          "extension_degree": 16,
+          "total": 247.2658663946903,
+          "margin": 24.734133605309694,
+          "restart_factor": 3.092060259614198
+        },
+        "online_product_envelope_multiplier": {
+          "2": {
+            "extension_degree": 16,
+            "total": 247.9791332491808,
+            "margin": 24.02086675081921
+          },
+          "4": {
+            "extension_degree": 16,
+            "total": 248.90001201799006,
+            "margin": 23.099987982009935
+          },
+          "8": {
+            "extension_degree": 16,
+            "total": 249.8587623653077,
+            "margin": 22.14123763469229
+          },
+          "16": {
+            "extension_degree": 16,
+            "total": 250.8376866592347,
+            "margin": 21.16231334076531
+          }
+        }
+      }
+    }
+  ],
+  "sparse_modulus_certificates": [
+    {
+      "degree": 8,
+      "polynomial": "X^8+X^4-1",
+      "x_qd_equals_x": true,
+      "gcd_degrees_for_prime_divisors": {
+        "2": 0
+      },
+      "irreducible": true
+    },
+    {
+      "degree": 9,
+      "polynomial": "X^9+X^2+1",
+      "x_qd_equals_x": true,
+      "gcd_degrees_for_prime_divisors": {
+        "3": 0
+      },
+      "irreducible": true
+    },
+    {
+      "degree": 11,
+      "polynomial": "X^11-X^5+1",
+      "x_qd_equals_x": true,
+      "gcd_degrees_for_prime_divisors": {
+        "11": 0
+      },
+      "irreducible": true
+    },
+    {
+      "degree": 12,
+      "polynomial": "X^12-X^3+X+1",
+      "x_qd_equals_x": true,
+      "gcd_degrees_for_prime_divisors": {
+        "2": 0,
+        "3": 0
+      },
+      "irreducible": true
+    },
+    {
+      "degree": 15,
+      "polynomial": "X^15+X^12-X+1",
+      "x_qd_equals_x": true,
+      "gcd_degrees_for_prime_divisors": {
+        "3": 0,
+        "5": 0
+      },
+      "irreducible": true
+    },
+    {
+      "degree": 16,
+      "polynomial": "X^16+X-1",
+      "x_qd_equals_x": true,
+      "gcd_degrees_for_prime_divisors": {
+        "2": 0
+      },
+      "irreducible": true
+    }
+  ]
+}

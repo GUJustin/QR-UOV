@@ -1,0 +1,397 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{booktabs,tabularx}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage[nameinlink,noabbrev]{cleveref}
+\usepackage{fancyhdr}
+
+\definecolor{navy}{HTML}{17365D}
+\definecolor{teal}{HTML}{1F6E6D}
+\definecolor{lightblue}{HTML}{EAF2F8}
+\hypersetup{colorlinks=true,linkcolor=navy,citecolor=teal,urlcolor=teal}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.55em}
+\setlist{nosep,leftmargin=1.5em}
+\pagestyle{fancy}
+\setlength{\headheight}{14pt}
+\fancyhf{}
+\lhead{QR-UOV local-separator upgrade}
+\rhead{30 July 2026}
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0.3pt}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{remark}[theorem]{Remark}
+\newcommand{\F}{\mathbb F}
+\newcommand{\ord}{\operatorname{ord}}
+\newcommand{\M}{\mathsf M}
+\newcommand{\QRUOV}{\textsc{QR-UOV}}
+
+\title{\textbf{Local Separation Is Enough}\\[0.3em]
+\large A characteristic-polynomial upgrade to the split-before-lift attack on \QRUOV}
+\author{Research-program handoff note\\
+\small Candidate argument pending independent expert review}
+\date{30 July 2026}
+
+\begin{document}
+\maketitle
+
+\begin{center}
+\colorbox{lightblue}{\parbox{0.92\textwidth}{
+\textbf{Status.} This note strengthens the accompanying split-before-lift candidate.  A second adversarial pass corrected the infinite-branch specialization proof, added a previously omitted one-time separator-leaf charge, proved the sharpened root-probability bound explicitly, and added conservative sensitivity ledgers.  The result remains model-based rather than a measured implementation claim; the characteristic-polynomial specialization, rational-filter graph, and explicit online-product schedule remain the principal points requiring external review.
+}}
+\end{center}
+
+\begin{abstract}
+The split-before-lift attack used an auxiliary field large enough for one linear form to separate all $C=2^a$ homotopy branches, paying a $C^2/|K'|$ bad-event bound.  We show that global separation is unnecessary.  The characteristic eliminant and its scalar interpolation polars are obtained from the generic characteristic polynomial of the saturated homotopy algebra and retain degree at most $C_0$ even when the chosen linear form has collisions.  To recover a forgery it suffices that the linear form have the correct valuation on branches at infinity and separate one canonical eligible target point from the other finite limits, at most $C-1$ bad hyperplanes in total.
+
+On a simple target factor, one Frobenius sketch using the separator itself is exact: a non-base-field point passing the test would collide with its Frobenius conjugate, contradicting simplicity.  Thus the second linear numerator, the probabilistic false-positive term, the root cap, and all but one coordinate re-lift disappear.  Retuning the extension degree gives a Level-I stress estimate of $2^{140.383995}$ Boolean gates, $2.616$ bits below the $2^{143}$ target, under the inherited accounting model.  Replacing the sharpened root bound by the parent manuscript's already-proved bound still gives $2^{140.531461}$.  The previous split-before-lift estimate was $2^{141.125734}$.
+\end{abstract}
+
+\section{Headline}
+
+Let $q=127$, $a=m-4$, $C=2^a$, and $C_0=2^{a-1}(a+2)$ as in the parent attack.  The supplied audit optimizes the extension degree over certified sparse irreducible polynomials.
+
+\begin{theorem}[Candidate local-separator bound]\label{thm:headline}
+Assume the public-random model, homotopy degree bound, and Boolean-gate conventions of the parent manuscript and the split-before-lift note.  Replace global separation by the local conditions in \cref{sec:local}, accept only simple linear target factors, and use the exact descent test in \cref{sec:frob}.  Then the retry-aware diagnostic costs are those in \cref{tab:headline}.  In particular, Level I costs
+\[
+ 2^{140.383995063}
+\]
+Boolean gates, leaving $2.616004937$ bits below the category target.
+\end{theorem}
+
+\begin{table}[h]
+\centering
+\caption{Audited stress estimates.  ``Global split'' is the preceding split-before-lift bundle.}
+\label{tab:headline}
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+Level & Parent & Global split & Local split & Target & Margin\\
+\midrule
+I   & 151.639 & 141.126 & 140.384 & 143 & $+2.616$\\
+III & 203.507 & 191.630 & 191.027 & 207 & $+15.973$\\
+V   & 260.389 & 247.637 & 247.125 & 272 & $+24.875$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The Level-I optimum in the main ledger uses $K'=\F_{127^8}$ with the Rabin-certified modulus
+\[
+ X^8+X^4-1.
+\]
+Degree $9$, using $X^9+X^2+1$, gives total $140.418965$ and is retained as a nearby cross-check.
+
+\section{Characteristic polynomials do not need separation}\label{sec:charpoly}
+
+Let $\Gamma\subset\mathbb A^{1+a}$ be the union of the saturated homotopy-curve components that dominate the $t$-line, with degree at most $D=C_0$.  The Jacobian saturation removes the non-etale locus, so over $K'(t)$ its generic fiber is a finite product of separable field extensions,
+\[
+ B=K'(t)[X_1,\ldots,X_a]/J,
+ \qquad \dim_{K'(t)}B=C.
+\]
+Write $x_j$ for the image of $X_j$ and $M_{x_j}$ for multiplication by $x_j$ on $B$.
+
+Introduce independent coefficients $\Lambda=(\Lambda_1,\ldots,\Lambda_a)$ and the generic linear element
+\[
+ u_\Lambda=\sum_j\Lambda_jx_j.
+\]
+Its characteristic polynomial is
+\begin{equation}\label{eq:generic-characteristic}
+ \chi_\Lambda(t,U)
+ =\det\!\left(UI-\sum_j\Lambda_jM_{x_j}\right).
+\end{equation}
+Schost proves two facts that are exactly suited to the present use: specialization of $\Lambda$ gives the characteristic polynomial of the specialized linear element, and the generic characteristic polynomial can be written
+\[
+ \chi_\Lambda=\frac{\Xi_\Lambda}{\Theta},
+\]
+where the $t$-degrees of $\Xi_\Lambda$ and $\Theta$ are at most $\deg\Gamma\le D$ and $\Theta$ is independent of $\Lambda$~\cite[Lemmas~2--3 and Proposition~2]{Schost2003}.  This is the characteristic-polynomial, or generic $u$-resultant, form of the parametric degree theorem.
+
+Schost phrases one corollary using a primitive element with coefficients in the ground field, together with a field-size hypothesis.  The generic characteristic polynomial itself does not require such an element.  After extending to an algebraic closure of $K'(t)$, the finite etale algebra has $C$ distinct geometric points.  For every distinct pair, the difference
+\[
+ \Lambda\cdot(x_s-x_r)
+\]
+is a nonzero polynomial in the independent indeterminates $\Lambda$.  Hence $u_\Lambda$ separates the geometric points over the rational-function field $K'(t)(\Lambda)$ and is primitive there, irrespective of the size of $K'$.  Apply Schost's degree argument after this transcendental scalar extension.  The determinant in \eqref{eq:generic-characteristic} is formed from the original multiplication matrices, so its coefficients already lie in $K'(t)[\Lambda,U]$; scalar extension cannot lower a reduced $t$-degree and thereby hide a larger degree over $K'$.  Thus no $K'$-rational global separator, and in particular no $|K'|\gg C^2$ assumption, is used.
+
+\begin{lemma}[Nonseparating eliminant]\label{lem:charpoly}
+For every $\lambda\in K'^a$, including a colliding one,
+\[
+ q_\lambda(t,U)
+ :=\prod_{s=1}^{C}\bigl(U-\lambda(x_s(t))\bigr)
+ =\chi_\Lambda(t,U)\big|_{\Lambda=\lambda}.
+\]
+Every coefficient of $q_\lambda$ has a common-denominator representation with numerator and denominator $t$-degrees at most $D$.
+\end{lemma}
+
+\begin{proof}
+The first identity is the characteristic-polynomial product formula in the reduced generic fiber, with repeated factors allowed after specialization.  The second assertion follows by substituting $\Lambda=\lambda$ in $\Xi_\Lambda/\Theta$.  Since $\Theta$ is independent of $\Lambda$, a separator collision cannot create a new parameter denominator or increase its degree.
+\end{proof}
+
+The coordinate interpolation numerators are already encoded in the same generic characteristic polynomial.
+
+\begin{lemma}[Characteristic-polynomial polar]\label{lem:polar}
+Define
+\[
+ v_j(t,U)=\sum_s x_{s,j}(t)
+       \prod_{r\ne s}\bigl(U-\lambda(x_r(t))\bigr).
+\]
+Then
+\begin{equation}\label{eq:polar}
+ v_j(t,U)
+ =-\left.\frac{\partial\chi_\Lambda(t,U)}{\partial\Lambda_j}
+   \right|_{\Lambda=\lambda}.
+\end{equation}
+Consequently each $v_j$, and every fixed affine-linear combination of the $v_j$ and $q_U$, has numerator and denominator $t$-degrees at most $D$, without assuming that $\lambda$ separates the branches.
+\end{lemma}
+
+\begin{proof}
+Over a splitting field, differentiate
+\[
+ \chi_\Lambda(t,U)=\prod_s\left(U-\sum_i\Lambda_i x_{s,i}(t)\right)
+\]
+with respect to $\Lambda_j$ and then specialize $\Lambda=\lambda$.  This gives \eqref{eq:polar}.  Differentiating $\Xi_\Lambda$ in the linear-form coefficients does not increase its $t$-degree, while the denominator $\Theta$ is unchanged.
+\end{proof}
+
+This directly covers the sole linear sketch used later:
+\[
+ b_1(P)=\lambda^{q^{d-1}}\!\cdot P.
+\]
+Its interpolation numerator is the corresponding fixed $K'$-linear combination of the $v_j$.
+
+For the rational oil filter
+\[
+ \psi(X)=\frac{H_0(X)}{c+\lambda(X)},
+\]
+the preceding split-before-lift note proves that the saturated graph curve has degree at most $2D$.  Apply the same construction to its generic linear element
+\[
+ u_{\Lambda,\mu}=\Lambda\cdot X+\mu Y,
+\]
+where $Y=\psi(X)$ is the graph coordinate.  Specializing $(\Lambda,\mu)=(\lambda,0)$ gives $q_\lambda$, and
+\[
+ -\left.\frac{\partial\chi_{\Lambda,\mu}}{\partial\mu}
+ \right|_{(\lambda,0)}
+ =v_\psi.
+\]
+The graph degree bound therefore gives numerator and denominator $t$-degrees at most $2D$ for the filter numerator.  Consequently the existing precision
+\[
+ P=4C_0+1
+\]
+remains valid.
+
+\begin{remark}
+Separation is needed only when one wants the linear element to be a primitive coordinate for every point.  The attack instead keeps the full characteristic polynomial and later accepts only a simple target factor.  Characteristic polynomials and their coefficient polars remain defined at colliding linear forms.
+\end{remark}
+
+\section{Only local separation is needed}\label{sec:local}
+
+At target specialization, normalize $q$ and each scalar numerator by the common $t$-valuation exactly as in Safey El Din--Schost Lemma~12~\cite{SafeySchost2018}.  Call $\lambda$ \emph{valuation-generic} if every branch escaping to infinity with minimum coordinate valuation $\mu_s<0$ satisfies
+\[
+ \ord \lambda(x_s)=\mu_s.
+\]
+This condition, not pairwise branch separation, is what the specialization proof uses to remove the infinite factors from the specialized eliminant.
+
+\begin{lemma}[Simple-factor recovery]\label{lem:simple}
+Assume $\lambda$ is valuation-generic.  Let $\bar q(U)$ and $\bar v_b(U)$ be the normalized target specializations.  If $\tau\in K'$ is a simple root of $\bar q$, then there is exactly one finite represented target point $P$ with $\lambda(P)=\tau$, and
+\[
+ b(P)=\frac{\bar v_b(\tau)}{\bar q'(\tau)}.
+\]
+No separation condition is needed away from that one fiber value.
+\end{lemma}
+
+\begin{proof}
+Let $S_\infty$ and $S_0$ index the escaping and finite branches.  With
+\[
+ e=-\sum_{s\in S_\infty}\mu_s,
+\]
+valuation genericity gives
+\[
+ (t^e q)(0,U)=\gamma\prod_{s\in S_0}
+   \bigl(U-\lambda(P_s)\bigr)
+\]
+for a nonzero scalar $\gamma$.  In the normalized numerator, the summand indexed by a finite branch $s$ specializes to
+\[
+ \gamma b(P_s)\prod_{r\in S_0,\ r\ne s}
+   \bigl(U-\lambda(P_r)\bigr).
+\]
+A summand indexed by an escaping branch need not vanish term by term; rather, every such surviving summand is divisible by the full finite product $\prod_{r\in S_0}(U-\lambda(P_r))$.  It therefore vanishes modulo $\bar q$, and in particular at every finite root of $\bar q$.  Thus $\bar v_b$ modulo $\bar q$ is the ordinary interpolation numerator on the finite limits.  A simple root $\tau$ belongs to exactly one finite branch, and evaluation followed by division by $\bar q'(\tau)$ gives the claimed value.
+\end{proof}
+
+Condition on the existence of a canonical eligible nonsingular base-field target point $P_\star$; for example, choose the first under any fixed ordering.  Nonsingularity makes it an isolated multiplicity-one point.  Let $I$ generic branches escape to infinity and let $F$ have finite target limits, counted with branch multiplicity.  Then $I+F=C$.  There are at most $I$ valuation-cancellation hyperplanes and at most $F-1$ collision hyperplanes against $P_\star$.  Each bad equality
+\[
+ \lambda(w)=0
+ \quad\text{or}\quad
+ \lambda(P-P_\star)=0
+\]
+cuts out at most $|K'|^{a-1}$ choices of $\lambda$ in $(K')^a$.  Thus a uniform $\lambda\in(K')^a$ fails valuation genericity or collides at $P_\star$ with probability at most
+\begin{equation}\label{eq:lambdafail}
+ \frac{I+F-1}{|K'|}=\frac{C-1}{|K'|}.
+\end{equation}
+The coefficient vector of the equation may lie only over an algebraic closure, so its solution set need not literally be a $K'$-defined hyperplane.  The count is still valid: choose a nonzero coordinate of that vector and fix all other coefficients of $\lambda$; the remaining equation has at most one solution in $K'$ (and may have none).
+
+For the filter denominator, first compute the $C$ known start values $\lambda(\xi_s)$ and sample $c$ uniformly from the complement of the forbidden set $\{-\lambda(\xi_s)\}_s$ in $K'$.  Rejection sampling costs an expected factor at most $(1-C/|K'|)^{-1}$ for a scan of the start values; this scan is negligible beside one length-$P$ filter lift and is included in the miscellaneous envelope.  Conditional on this choice, only the at most $F\le C$ finite target values remain forbidden.  Therefore
+\begin{equation}\label{eq:cfail}
+ \Pr[c+\lambda(P)=0\text{ for a finite target branch}]
+ \le \frac{C}{|K'|-C}.
+\end{equation}
+The old $C^2/|K'|$ event has disappeared.
+
+\section{Exact one-sketch Frobenius descent}\label{sec:frob}
+
+Set
+\[
+ b_1(P)=\lambda^{q^{d-1}}\!\cdot P,
+ \qquad K'=\F_{q^d}.
+\]
+The separator value $\tau=\lambda(P)$ is already available from the factor of $\bar q$, so no numerator for $\lambda\cdot P$ is needed.
+
+\begin{lemma}[Simple-root descent is exact]\label{lem:exactfrob}
+Let $\tau\in K'$ be a simple linear factor of the target eliminant, and let $P$ be its unique represented point.  Then
+\[
+ b_1(P)^q=\tau
+ \quad\Longleftrightarrow\quad
+ P\in\F_q^a.
+\]
+\end{lemma}
+
+\begin{proof}
+The forward identity for a base-field point is immediate.  Conversely,
+\[
+ b_1(P)^q
+ =\lambda\cdot P^q.
+\]
+If it equals $\tau=\lambda\cdot P$, then $P$ and $P^q$ have the same separator value.  The target equations and homotopy are defined over $\F_q$, so the represented finite target limits are stable under Frobenius.  If $P^q\ne P$, the two distinct represented points produce multiplicity at least two at $U=\tau$, contradicting simplicity.  Hence $P^q=P$.
+\end{proof}
+
+This eliminates the probabilistic $C/|K'|$ false-positive term.  It also eliminates the abort cap: every simple factor passing the Frobenius test and the nonzero-square oil filter is a genuine base-field target solution.  The algorithm reconstructs coordinates for the first such factor and stops, so exactly one coordinate re-lift is charged per successful forgery.
+
+\section{The sharpened root bound is explicit}\label{sec:rootbound}
+
+For completeness, this pass expands the probability calculation inherited from the split-before-lift note.  Let $M$ count all off-oil affine roots of the normalized residual system, and let $N$ count those with invertible affine Jacobian.  The parent manuscript proves, for an actual parameter $\mu\ge 1-q^{-1}$,
+\[
+ \mathbb E[M]=\mu,
+ \qquad
+ \mathbb E[M^2]=2\mu+\mu^2-(q-1)\mu q^{-r},
+ \qquad
+ \mathbb E[N]=\mu\pi,
+\]
+where $\pi=\prod_{j=1}^{r-1}(1-q^{-j})$.  The roots occur in pairs $z,-z$, and each nonsingular normalized pair yields one eligible projective point.  Applying the second Bonferroni inequality to the projective-point events and bounding pairs of nonsingular roots by pairs of all roots gives
+\begin{align*}
+ \Pr[\text{eligible nonsingular projective root}]
+ &\ge \frac{\mathbb E[N]}2
+      -\mathbb E\!\left[\binom{M/2}{2}\right]\\
+ &=\frac{\mu\pi}{2}-\frac{\mu^2}{8}
+   +\frac{(q-1)\mu q^{-r}}8.
+\end{align*}
+The right-hand side is increasing for $\mu\in[1-q^{-1},1]$, so substituting $\mu=1-q^{-1}$ yields
+\[
+ p_{\rm root}=0.3690869822\ldots.
+\]
+As a separate fallback, the ledger also substitutes the parent manuscript's already-proved lower bound $0.326336998767509\ldots$; the Level-I total then becomes $140.531461$, still $2.469$ bits below target.
+
+\section{Finite ledger}
+
+At Level I the local variant has two scalar families, $b_1$ and $\psi$, instead of three.  The terminal product tree therefore uses
+\[
+ \frac a2(1+2\cdot2)=125
+\]
+long-product units.  Rational reconstruction contributes $99.885$ units.  Candidate coordinate evaluation is charged once over the complete Las Vegas execution, rather than per trial, and the $64$-unit miscellaneous cushion is retained.  This pass also charges the one-time formation of $u_s=\lambda\cdot x_s$ during that coordinate rerun.
+
+\begin{table}[h]
+\centering
+\caption{Level-I component ledger for extension degree $d=8$.}
+\label{tab:components}
+\begin{tabularx}{0.88\textwidth}{@{}Xr@{}}
+\toprule
+Component & $\log_2$ gates\\
+\midrule
+Initial base-field branch lifts & 139.358\\
+Valuation-safe filter series & 132.120\\
+Terminal scalar recombination & 138.791\\
+One on-demand coordinate re-lift & 137.860\\
+Extension-valued leaf formation & 127.610\\
+Coordinate-rerun separator leaves & 124.898\\
+Factorization and exact verification envelope & 115.707\\
+Preprocessing & 63.365\\
+\midrule
+\textbf{Total} & \textbf{140.383995}\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The one-trial success lower bound is $0.353997$, giving restart factor $2.824886$.  At $d=8$, the local-separator failure bound in \eqref{eq:lambdafail} is $0.016637$, and the conditional target-denominator bound in \eqref{eq:cfail} is $0.016918$.
+
+\begin{table}[h]
+\centering
+\caption{Level-I sensitivity to the multiplier on $\M(n)\log n$ in rational reconstruction, retaining $d=8$.}
+\label{tab:sensitivity}
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+Multiplier & 8 & 10 & 16 & 32 & 64 & 128\\
+\midrule
+Total & 140.384 & 140.424 & 140.538 & 140.805 & 141.225 & 141.815\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\caption{Level-I cross-checks.  Each row reoptimizes the extension degree.}
+\label{tab:robustness}
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+Online-envelope multiplier & $1$ & $2$ & $4$ & $8$ & $16$\\
+\midrule
+Best extension degree & $8$ & $8$ & $9$ & $9$ & $9$\\
+Total & 140.384 & 141.117 & 141.952 & 142.856 & 143.806\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Thus the candidate remains below $2^{143}$ throughout the rational-reconstruction sensitivity range.  It also remains below target after multiplying the entire claimed online-product envelope by eight, but not by sixteen; the finite margin therefore does not excuse the remaining obligation to provide a fully explicit schedule.  The aggregate Level-I margin corresponds to an overall multiplicative cushion of $2^{2.616}=6.13$ in the inherited gate model; this does not address memory traffic or a change of model.
+
+\section{Validation and remaining risk}
+
+The bundle includes:
+\begin{enumerate}
+\item \texttt{QRUOV\_local\_separator\_audit.py}, which computes the optimized degree, finite probabilities, and all component costs;
+\item \texttt{verify\_local\_separator\_ledger.py}, a separately written implementation importing neither the primary audit nor its parent modules, matching all displayed totals to below $5\cdot10^{-10}$ bits;
+\item Rabin certificates for every newly used sparse modulus; and
+\item the original split-before-lift toys validating branch lifting, symmetric recombination, and Frobenius arithmetic, together with an exhaustive $\F_9/\F_3$ toy showing that a non-base point passes the one-sketch test exactly on separator collisions;
+\item \texttt{toy\_infinite\_branch\_specialization.py}, which exhibits the subtle case in which an escaping-branch numerator term survives normalization but is a multiple of the finite eliminant and hence vanishes at every finite simple root.
+\end{enumerate}
+
+The principal remaining proof obligations are external checks that the characteristic-polynomial degree theorem in \cref{lem:charpoly,lem:polar} applies to the exact saturated dominant homotopy algebra and to the rational-filter graph with the stated degree bounds.  The determinant identities are exact and no defect is currently known, but this identification with the parent solver's saturated dominant algebra is what the degree-$8$ retuning depends on.  A second independent obligation is to turn the dyadic online-product envelope into a line-by-line finite schedule or prototype; the new multiplier table shows exactly how much error that part can absorb.  The earlier caveats about the idealized public-random model, seeded transfer, and astronomical memory traffic are unchanged.
+
+\section{Assessment}
+
+This is a real strengthening rather than a cosmetic ledger improvement.  The preceding candidate crossed Level I by splitting before lifting; the present argument removes the largest remaining auxiliary-field overkill.  It replaces a global primitive-element event with a one-sided local isolation event and turns Frobenius filtering from probabilistic to exact.  Under the inherited model, the cumulative improvement over the strict parent bundle is $11.254751$ bits.
+
+The result is now robust to far larger rational-reconstruction constants than the original $1.87$-bit-margin version.  It should be integrated into the main draft only after a specialist in computational algebra verifies that the characteristic-polynomial degree theorem applies to the exact saturated dominant algebra and its rational-filter graph, but it is the strongest credible route found in the program so far.
+
+\begin{thebibliography}{9}
+\scriptsize
+\setlength{\itemsep}{0.1em}
+\setlength{\parskip}{0pt}
+
+\bibitem{SafeySchost2018}
+M.~Safey El Din and E.~Schost.
+\newblock Bit complexity for multi-homogeneous polynomial system solving---application to polynomial minimization.
+\newblock \emph{Journal of Symbolic Computation}, 87:176--206, 2018.
+\newblock \href{https://doi.org/10.1016/j.jsc.2017.08.001}{doi:10.1016/j.jsc.2017.08.001}; \href{https://arxiv.org/abs/1605.07433}{arXiv:1605.07433}.
+
+\bibitem{Schost2003}
+E.~Schost.
+\newblock Computing parametric geometric resolutions.
+\newblock \emph{Applicable Algebra in Engineering, Communication and Computing}, 13(5):349--393, 2003.
+\newblock \href{https://doi.org/10.1007/s00200-002-0109-x}{doi:10.1007/s00200-002-0109-x}.
+
+\end{thebibliography}
+\end{document}

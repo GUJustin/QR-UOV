@@ -1,0 +1,5 @@
+Independent split-before-lift ledger verification
+============================================================
+Level I: total=141.125733757, margin=+1.874266243 [MATCH]
+Level III: total=191.630087858, margin=+15.369912142 [MATCH]
+Level V: total=247.637443624, margin=+24.362556376 [MATCH]

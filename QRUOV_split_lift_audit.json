@@ -1,0 +1,174 @@
+{
+  "description": "Split-before-lift QR-UOV direct-forgery stress ledger with Frobenius descent and a valuation-safe rational oil filter.",
+  "status": "Candidate finite gate audit under the strict bundle's asymptotic multiplication convention; not a measured circuit.",
+  "rows": [
+    {
+      "level": "I",
+      "target": 143,
+      "a": 50,
+      "r": 51,
+      "extension_degree": 15,
+      "C": 1125899906842624,
+      "C0": 29273397577908224,
+      "precision": 117093590311632897,
+      "root_cap": 65536,
+      "probabilities": {
+        "eligible_nonsingular_projective_root_lower": 0.3690869822834685,
+        "root_and_cap_lower": 0.3690793530053508,
+        "chart": 0.9921259842519685,
+        "seed_disjoint": 1.0,
+        "separator_failure_upper": 0.0351514910890412,
+        "valuation_denominator_failure_upper": 6.244159161113529e-17,
+        "frobenius_descent_filter_failure_upper": 3.1220795805567645e-17,
+        "one_trial_success_lower": 0.35330168181532523,
+        "restart_factor": 2.8304422296033995
+      },
+      "multiplication": {
+        "relaxed_product_R_over_M": 54.223060605622685,
+        "long_extension_product_log2_gates": 130.23979320335212
+      },
+      "terminal": {
+        "value_families": 3,
+        "tree_long_product_units": 175.0,
+        "rational_reconstruction_long_product_units": 124.35722387243474,
+        "candidate_long_product_units_each": 11.342703367124612,
+        "expected_candidates_per_trial_upper": 0.5000000000020461,
+        "misc_long_product_units": 64.0,
+        "total_long_product_units_per_trial": 369.02857555602026
+      },
+      "cost_log2_gates": {
+        "initial_base_field_branch_lifts": 139.36125975705622,
+        "valuation_safe_filter_series": 133.77773912335107,
+        "terminal_scalar_recombination": 140.26840940616563,
+        "on_demand_coordinate_relifts": 138.36125975706213,
+        "extension_leaf_formation": 129.78516115397636,
+        "auxiliary_factorization_and_verification": 115.7097025101266,
+        "preprocessing": 63.36786746566564,
+        "total": 141.12573375744344,
+        "target": 143.0,
+        "margin": 1.8742662425565584,
+        "strict_bundle_baseline": 151.63874638899327,
+        "saving_vs_strict_bundle": 10.513012631549827
+      },
+      "sensitivity": {
+        "total_with_RR_constant_10": 141.1913086863712,
+        "total_with_RR_constant_16": 141.37184700521573,
+        "total_with_RR_constant_32": 141.7654500872947,
+        "total_with_RR_constant_64": 142.32865490642584,
+        "total_with_RR_constant_128": 143.04797496734122
+      }
+    },
+    {
+      "level": "III",
+      "target": 207,
+      "a": 74,
+      "r": 75,
+      "extension_degree": 22,
+      "C": 18889465931478580854784,
+      "C0": 717799705396186072481792,
+      "precision": 2871198821584744289927169,
+      "root_cap": 65536,
+      "probabilities": {
+        "eligible_nonsingular_projective_root_lower": 0.3690869822834685,
+        "root_and_cap_lower": 0.3690793530053508,
+        "chart": 0.9921259842519685,
+        "seed_disjoint": 1.0,
+        "separator_failure_upper": 0.018567673777828288,
+        "valuation_denominator_failure_upper": 1.9659289304612854e-24,
+        "frobenius_descent_filter_failure_upper": 9.829644652306427e-25,
+        "one_trial_success_lower": 0.3593742315398233,
+        "restart_factor": 2.78261464578377
+      },
+      "multiplication": {
+        "relaxed_product_R_over_M": 79.30280170942974,
+        "long_extension_product_log2_gates": 179.9729506363734
+      },
+      "terminal": {
+        "value_families": 3,
+        "tree_long_product_units": 259.0,
+        "rational_reconstruction_long_product_units": 179.515950458265,
+        "candidate_long_product_units_each": 16.73386738628719,
+        "expected_candidates_per_trial_upper": 0.5,
+        "misc_long_product_units": 64.0,
+        "total_long_product_units_per_trial": 510.88288415140863
+      },
+      "cost_log2_gates": {
+        "initial_base_field_branch_lifts": 190.19478771847244,
+        "valuation_safe_filter_series": 183.95323279095817,
+        "terminal_scalar_recombination": 190.4462405577152,
+        "on_demand_coordinate_relifts": 189.19478771847244,
+        "extension_leaf_formation": 179.83833975259907,
+        "auxiliary_factorization_and_verification": 164.695594475853,
+        "preprocessing": 63.899675185082145,
+        "total": 191.63008785822356,
+        "target": 207.0,
+        "margin": 15.369912141776439,
+        "strict_bundle_baseline": 203.5069338584919,
+        "saving_vs_strict_bundle": 11.87684600026833
+      },
+      "sensitivity": {
+        "total_with_RR_constant_10": 191.68482200272544,
+        "total_with_RR_constant_16": 191.8375693675166,
+        "total_with_RR_constant_32": 192.180015431588,
+        "total_with_RR_constant_64": 192.6885395257698,
+        "total_with_RR_constant_128": 193.3612976010227
+      }
+    },
+    {
+      "level": "V",
+      "target": 272,
+      "a": 101,
+      "r": 102,
+      "extension_degree": 30,
+      "C": 2535301200456458802993406410752,
+      "C0": 130568011823507628354160430153728,
+      "precision": 522272047294030513416641720614913,
+      "root_cap": 65536,
+      "probabilities": {
+        "eligible_nonsingular_projective_root_lower": 0.3690869822834685,
+        "root_and_cap_lower": 0.3690793530053508,
+        "chart": 0.9921259842519685,
+        "seed_disjoint": 1.0,
+        "separator_failure_upper": 0.004942509303131772,
+        "valuation_denominator_failure_upper": 3.898952362931802e-33,
+        "frobenius_descent_filter_failure_upper": 1.949476181465901e-33,
+        "one_trial_success_lower": 0.36436340183905924,
+        "restart_factor": 2.744512744564022
+      },
+      "multiplication": {
+        "relaxed_product_R_over_M": 101.60486596721958,
+        "long_extension_product_log2_gates": 235.36251161110178
+      },
+      "terminal": {
+        "value_families": 3,
+        "tree_long_product_units": 353.5,
+        "rational_reconstruction_long_product_units": 241.31330353964793,
+        "candidate_long_product_units_each": 22.812942328132547,
+        "expected_candidates_per_trial_upper": 0.5,
+        "misc_long_product_units": 64.0,
+        "total_long_product_units_per_trial": 670.2197747037142
+      },
+      "cost_log2_gates": {
+        "initial_base_field_branch_lifts": 246.37467999189295,
+        "valuation_safe_filter_series": 239.49226454944167,
+        "terminal_scalar_recombination": 246.20755209318537,
+        "on_demand_coordinate_relifts": 245.37467999189295,
+        "extension_leaf_formation": 235.2877653781699,
+        "auxiliary_factorization_and_verification": 219.28385223722182,
+        "preprocessing": 64.32339226028701,
+        "total": 247.63744362396085,
+        "target": 272.0,
+        "margin": 24.36255637603915,
+        "strict_bundle_baseline": 260.38909148275417,
+        "saving_vs_strict_bundle": 12.75164785879332
+      },
+      "sensitivity": {
+        "total_with_RR_constant_10": 247.68485501158494,
+        "total_with_RR_constant_16": 247.81840122733095,
+        "total_with_RR_constant_32": 248.12380614140426,
+        "total_with_RR_constant_64": 248.59011466398982,
+        "total_with_RR_constant_128": 249.2245884587267
+      }
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+=== local separator upgrade ===
+PDF: QRUOV_local_separator_upgrade.pdf
+Pages: 8
+Encrypted: False
+Openable (PyMuPDF): True
+Likely scanned: False
+XFA present: False
+
+=== split-before-lift note ===
+PDF: QRUOV_split_before_lift_note.pdf
+Pages: 11
+Encrypted: False
+Openable (PyMuPDF): True
+Likely scanned: False
+XFA present: False

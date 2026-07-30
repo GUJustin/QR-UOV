@@ -1,0 +1,11 @@
+QR-UOV split-before-lift audit
+========================================================================
+Level I: a=50, d=15, cost=141.125734, target=143, margin=+1.874266, saving=10.513013
+  branch=139.361, terminal=140.268, coordinates=138.361, restart=2.830442
+  RR sensitivity: 10->141.191, 16->141.372, 32->141.765, 64->142.329, 128->143.048
+Level III: a=74, d=22, cost=191.630088, target=207, margin=+15.369912, saving=11.876846
+  branch=190.195, terminal=190.446, coordinates=189.195, restart=2.782615
+  RR sensitivity: 10->191.685, 16->191.838, 32->192.180, 64->192.689, 128->193.361
+Level V: a=101, d=30, cost=247.637444, target=272, margin=+24.362556, saving=12.751648
+  branch=246.375, terminal=246.208, coordinates=245.375, restart=2.744513
+  RR sensitivity: 10->247.685, 16->247.818, 32->248.124, 64->248.590, 128->249.225

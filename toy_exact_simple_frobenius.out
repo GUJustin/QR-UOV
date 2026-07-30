@@ -1,0 +1,5 @@
+exact simple-root Frobenius toy: PASS
+non-base target orbit: ((0+1u), (1+0u)) ((0+2u), (1+0u))
+passing/colliding lambda: 9 of 81
+simple separator choices rejecting non-base point: 72
+all lambda accept a base-field point: PASS

@@ -1,0 +1,5 @@
+Infinite-branch specialization toy: PASS
+  normalized eliminant: -U**2 + 5*U - 6
+  normalized numerator: U**2 - 10*U + 18
+  escaping-branch summand: U**2 - 5*U + 6 (divisible by eliminant)
+  recovered finite values: 2, 3
