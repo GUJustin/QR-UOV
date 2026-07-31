@@ -1,0 +1,193 @@
+{
+  "description": "Corrected finite-precision, sparse-field, and explicit Karatsuba ledger for the QR-UOV directional attack.",
+  "cost_rows": [
+    {
+      "level": "I",
+      "V": 52,
+      "O": 18,
+      "m": 54,
+      "target": 143,
+      "r": 6,
+      "d": 18,
+      "sparse_modulus": "X^18+X^4+1",
+      "restart_factor": 1.0000261493016818,
+      "separated_factor_stress": 158.6949950450853,
+      "corrected_dense_field_stress": 156.2697180235938,
+      "corrected_schoolbook_sparse_field_stress": 155.42944626565213,
+      "corrected_sparse_field_stress": 154.8257292746374,
+      "sparse_margin": -11.82572927463741,
+      "extension_saving_bits": 1.4439887489564331,
+      "karatsuba_saving_bits": 0.6037169910147389,
+      "one_flat_array_memory_log2_bytes": 113.72983346071874
+    },
+    {
+      "level": "III",
+      "V": 76,
+      "O": 26,
+      "m": 78,
+      "target": 207,
+      "r": 8,
+      "d": 24,
+      "sparse_modulus": "X^24+X^5-X+1",
+      "restart_factor": 1.0000560122225193,
+      "separated_factor_stress": 211.01044415928567,
+      "corrected_dense_field_stress": 207.89080343562995,
+      "corrected_schoolbook_sparse_field_stress": 207.06303847468502,
+      "corrected_sparse_field_stress": 206.1772811774955,
+      "sparse_margin": 0.8227188225044983,
+      "extension_saving_bits": 1.713522258134451,
+      "karatsuba_saving_bits": 0.8857572971894904,
+      "one_flat_array_memory_log2_bytes": 162.67538567669638
+    },
+    {
+      "level": "V",
+      "V": 102,
+      "O": 35,
+      "m": 105,
+      "target": 272,
+      "r": 10,
+      "d": 30,
+      "sparse_modulus": "X^30+X^7+1",
+      "restart_factor": 1.0202200749156747,
+      "separated_factor_stress": 266.38160707367115,
+      "corrected_dense_field_stress": 262.73362456823094,
+      "corrected_schoolbook_sparse_field_stress": 261.8939537427332,
+      "corrected_sparse_field_stress": 260.85658359148255,
+      "sparse_margin": 11.143416408517453,
+      "extension_saving_bits": 1.8770409767484033,
+      "karatsuba_saving_bits": 1.03737015125068,
+      "one_flat_array_memory_log2_bytes": 215.4123512708626
+    }
+  ],
+  "sparse_modulus_certificates": [
+    {
+      "degree": 18,
+      "polynomial": "X^18+X^4+1",
+      "x_qd_equals_x": true,
+      "gcd_degrees_for_prime_divisors": {
+        "2": 0,
+        "3": 0
+      },
+      "irreducible": true
+    },
+    {
+      "degree": 24,
+      "polynomial": "X^24+X^5-X+1",
+      "x_qd_equals_x": true,
+      "gcd_degrees_for_prime_divisors": {
+        "2": 0,
+        "3": 0
+      },
+      "irreducible": true
+    },
+    {
+      "degree": 27,
+      "polynomial": "X^27+X^12+X^8+1",
+      "x_qd_equals_x": true,
+      "gcd_degrees_for_prime_divisors": {
+        "3": 0
+      },
+      "irreducible": true
+    },
+    {
+      "degree": 30,
+      "polynomial": "X^30+X^7+1",
+      "x_qd_equals_x": true,
+      "gcd_degrees_for_prime_divisors": {
+        "2": 0,
+        "3": 0,
+        "5": 0
+      },
+      "irreducible": true
+    },
+    {
+      "degree": 33,
+      "polynomial": "X^33-X^13+1",
+      "x_qd_equals_x": true,
+      "gcd_degrees_for_prime_divisors": {
+        "3": 0,
+        "11": 0
+      },
+      "irreducible": true
+    },
+    {
+      "degree": 36,
+      "polynomial": "X^36+X^8+X+1",
+      "x_qd_equals_x": true,
+      "gcd_degrees_for_prime_divisors": {
+        "2": 0,
+        "3": 0
+      },
+      "irreducible": true
+    }
+  ],
+  "karatsuba_convolution_plans": [
+    {
+      "degree": 18,
+      "base_field_multiplications": 153,
+      "base_field_additions": 404,
+      "schoolbook_gate_envelope": 42943.14489975201,
+      "karatsuba_gate_envelope": 28259.008705544846,
+      "saving_bits": 0.6037169910147389
+    },
+    {
+      "degree": 24,
+      "base_field_multiplications": 243,
+      "base_field_additions": 512,
+      "schoolbook_gate_envelope": 77008.07027643436,
+      "karatsuba_gate_envelope": 41677.02642539029,
+      "saving_bits": 0.8857572971894904
+    },
+    {
+      "degree": 27,
+      "base_field_multiplications": 243,
+      "base_field_additions": 896,
+      "schoolbook_gate_envelope": 97383.8426553002,
+      "karatsuba_gate_envelope": 52663.23875299614,
+      "saving_bits": 0.8868861799641502
+    },
+    {
+      "degree": 30,
+      "base_field_multiplications": 243,
+      "base_field_additions": 1112,
+      "schoolbook_gate_envelope": 119336.21092375042,
+      "karatsuba_gate_envelope": 58142.367547425514,
+      "saving_bits": 1.03737015125068
+    },
+    {
+      "degree": 33,
+      "base_field_multiplications": 339,
+      "base_field_additions": 1264,
+      "schoolbook_gate_envelope": 144402.6857128749,
+      "karatsuba_gate_envelope": 72607.7390204114,
+      "saving_bits": 0.9919023411782681
+    },
+    {
+      "degree": 36,
+      "base_field_multiplications": 459,
+      "base_field_additions": 1352,
+      "schoolbook_gate_envelope": 172834.85967139743,
+      "karatsuba_gate_envelope": 88774.55375746821,
+      "saving_bits": 0.9611761207020996
+    }
+  ],
+  "exact_identity_checks": {
+    "vandermonde_start_roots_checked": 28,
+    "characteristic_127_lifted_paths_checked": 120,
+    "flattened_bivariate_products_checked": 360,
+    "karatsuba_convolutions_checked": 48
+  },
+  "end_to_end_toy_equivalent_key_recovery": {
+    "field": 7,
+    "V": 3,
+    "O": 2,
+    "m": 5,
+    "trials": 200,
+    "full_rank_planted_directions": 199,
+    "verified_equivalent_keys_recovered": 199,
+    "all_equation_roots_examined": 204,
+    "nonverifying_full_rank_candidates": 0,
+    "trials_without_verified_key": 1,
+    "verified_keys_from_nonplanted_roots": 0
+  }
+}

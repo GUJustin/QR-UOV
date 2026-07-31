@@ -1,0 +1,70 @@
+QR-UOV STRICT FINAL BUILD AND AUDIT RECORD
+===========================================
+
+Scope
+-----
+No end-to-end attack in this bundle completes on an official QR-UOV parameter set.
+The paper makes no practical full-break claim and contains no prospective or
+"looming breakthrough" claim. It reports only proved reductions, reproducible
+symbolic cost diagnostics, and executable toy-model checks.
+
+Build
+-----
+Command:
+  latexmk -pdf -interaction=nonstopmode -halt-on-error QRUOV_strict_final.tex
+
+Result:
+  pages: 65
+  page size: A4
+  encrypted: no
+  PDF bytes: 829069
+  PDF SHA-256: d9e6ffc58d712067c8d9d6c6016ab24273a88c5d46412f6915ae6485ed8745e1
+  TeX SHA-256: dcb0ae3fb81803c154ef9f37d4c3d7fb0150a5474d0d9afd74a9a1cbc9415fdf
+  final LaTeX/package/reference/box warnings: 0
+
+References and bibliography
+---------------------------
+  labels: 239 total, 239 unique
+  unresolved reference markers in extracted PDF text: 0
+  bibliography entries: 34
+  all bibliography entries cited: yes
+
+Fonts and rendering
+-------------------
+  fonts reported by pdffonts: 38
+  fonts failing embedded-and-subset check: 0
+  rendered pages: 65 of 65
+  changed page after strict-scope edit: page 35
+  changed-page visual inspection: passed
+  complete prior 65-page render inspection remained unchanged outside page 35
+  clipped text, overlaps, black squares, or broken glyphs found: none
+
+Executable audits rerun
+-----------------------
+1. QRUOV_directional_audit.py
+   Level I:   154.826 modeled bits (11.826 above 143 target)
+   Level III: 206.177 modeled bits (0.823 below 207 target)
+   Level V:   260.857 modeled bits (11.143 below 272 target)
+   exact identity checks: 556 total across listed test families
+   toy equivalent-key recovery: 199/200 exact and publicly verified
+   invalid or nonplanted verified keys: 0
+
+2. QRUOV_scissors_audit.py
+   projective direct-forgery modeled rows:
+   Level I:   151.639 bits (8.639 above target)
+   Level III: 203.507 bits (3.493 below target)
+   Level V:   260.389 bits (11.611 below target)
+   all listed sparse-field Rabin certificates: passed
+
+3. QRUOV_direct_qr_toy.py --trials 200 --max-attempts 12
+   verified toy forgeries: 199/200
+   all returned candidates passed the unchanged toy verifier: yes
+   this is a toy execution, not a full-parameter attack
+
+Strict-language check
+---------------------
+Searched the paper, notes, and README for speculative phrases including:
+  looming, breakthrough, next step, future direction, streaming,
+  implicit root, prospective, and evidence of non-semi-regularity.
+No prospective attack claim remains. The only occurrence of "looming" is in the
+notes' explicit statement that the paper contains no such claim.

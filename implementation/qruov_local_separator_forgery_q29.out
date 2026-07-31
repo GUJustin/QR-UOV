@@ -1,0 +1,10 @@
+Reduced QR-UOV local-separator forgery
+parameters: {'q': 29, 'ell': 3, 'V': 3, 'O': 2, 'v': 9, 'm': 6, 'n': 15, 'a': 2}
+honest signature verified: True
+forgery success: True; verified: True; salt attempts: 1
+attack records: 1; elapsed: 3.633s
+successful trace: {"base_series_coeff_mults": 771736, "base_series_products": 4096, "branch_coefficients": 528, "branch_lifts": 8, "branch_residual_checks": 4, "coordinate_reruns": 1, "exact_candidates_verified": 1, "exhaustive_base_roots": 1, "exhaustive_extension_roots": 3, "ext_ops": {"add": 303232, "inv": 494, "mul": 306343, "pow": 3}, "extension_series_coeff_mults": 51159, "extension_series_inversions": 4, "extension_series_products": 151, "filter_passes": 1, "frobenius_passes": 1, "product_tree_nodes": 9, "rational_reconstructions": 31, "simple_fibers_crosschecked": 3, "simple_target_roots": 3, "stage_seconds": {"coordinate_rerun": 0.10477384000000711, "initial_branch_lifts": 0.0570045909998953, "rational_reconstruction_specialization": 0.056282515000020794, "scalar_recombination": 0.01426164700001209}, "target_roots_examined": 3, "upoly_products": 33}
+signature salt: 0594e43b0f48facdc0cb714c8886faa3
+signature vector: [5, 4, 4, 12, 26, 11, 26, 7, 15, 6, 24, 4, 25, 0, 20]
+target: [19, 23, 22, 8, 8, 4]
+wrote qruov_local_separator_forgery_q29.json

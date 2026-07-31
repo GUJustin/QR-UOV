@@ -1,0 +1,11 @@
+--- /tmp/QRUOV_projective_prior.tex	2026-07-30 03:37:11.375452528 +0000
++++ QRUOV_strict_final.tex	2026-07-30 03:37:11.227452533 +0000
+@@ -2188,7 +2188,7 @@
+ about $2^{53.73}$, $2^{102.68}$, and $2^{155.41}$ EiB.  A full-parameter
+ execution using these representations is physically unrealistic.
+ 
+-This limitation is stated rather than hidden.  It prevents a claim of a practical implementation and makes a streaming or implicit root extractor the most valuable next step.  It does not invalidate the exact reductions or the fixed-output scissors theorem.  Time, storage, and correctness are separate resources and are reported separately.
++This limitation prevents a claim of a practical full-parameter implementation.  No full-parameter forgery or equivalent-key recovery is reported, and the paper draws no conclusion from unimplemented attack variants.  The exact reductions and the fixed-output scissors theorem are algebraic results; time, storage, and correctness are reported as separate resources.
+ 
+ \section{Executable audits}\label{sec:audits-new}
+ The bundle contains three independent executable checks.

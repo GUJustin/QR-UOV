@@ -1,0 +1,21 @@
+seed=20260000 success=True verify=True replay=True salts=1 records=1 elapsed=0.440s
+seed=20260001 success=True verify=True replay=True salts=1 records=3 elapsed=2.392s
+seed=20260002 success=True verify=True replay=True salts=2 records=11 elapsed=10.252s
+seed=20260003 success=True verify=True replay=True salts=2 records=9 elapsed=7.625s
+seed=20260004 success=True verify=True replay=True salts=1 records=5 elapsed=4.093s
+{
+  "parameters": {
+    "q": 13,
+    "ell": 3,
+    "V": 3,
+    "O": 2
+  },
+  "count": 5,
+  "all_succeeded": true,
+  "successful_forgery_count": 5,
+  "public_replay_count": 5,
+  "total_elapsed_seconds": 30.958175943000015,
+  "maximum_single_run_seconds": 10.25198302900003,
+  "maximum_salt_attempts": 2
+}
+wrote qruov_local_separator_regression.json

@@ -70,3 +70,9 @@ The online schedule is therefore the most important finite-constant obligation.
 ## Bottom line
 
 The second pass made the claim more defensible and slightly more expensive. It did not overturn the candidate Level-I crossing. The current result deserves specialist computational-algebra review, but it is still premature to call it an unconditional or practical QR-UOV break.
+
+## Third pass: end-to-end reduced attack implementation
+
+The previous artifact's most important presentation weakness was that its executable checks were componentwise: ledgers, branch-recombination toys, specialization toys, and Frobenius toys. It did not compose those parts into a forgery. The new `implementation/` directory now does so on reduced QR-UOV-style parameters. It generates a fresh compact extension-field key, runs the complete local-separator pipeline using only public data, produces a signature accepted by the unchanged public verifier, and supports public-only transcript replay. Five fixed regression instances and a supplementary `q=29` instance also succeed.
+
+This closes the narrow "never instantiates the attack" objection. It does not close the stronger full-parameter objection: the toy uses naive series arithmetic at `a=2` and does not instantiate the asymptotically fast online-product schedule charged in the Level-I ledger. The paper now draws that distinction explicitly.

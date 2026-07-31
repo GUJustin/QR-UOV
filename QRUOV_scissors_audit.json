@@ -1,0 +1,364 @@
+{
+  "description": "Exact projective slicing inequalities, fixed-oil seed bounds, Karatsuba sparse-field certificates, and combined QR-UOV attack ledger.",
+  "direct_forgery_rows": [
+    {
+      "level": "I",
+      "v": 156,
+      "m": 54,
+      "isotropic_dimension": 51,
+      "projective_core": 50,
+      "target": 143,
+      "cw_rhs": 207,
+      "cw_slack": 3,
+      "working_degree": 15,
+      "sparse_modulus": "X^15+X^12-X+1",
+      "seed_dimension": 7,
+      "seed_oil_intersection_failure_upper_log2": -1048.2912982525525,
+      "seed_disjoint_probability_lower": 1.0,
+      "nonsingular_root_probability": 0.32633699876750927,
+      "chart_probability": 0.9921259842519685,
+      "separator_probability": 0.9648485089109587,
+      "restart_factor": 3.201162573555707,
+      "lifting_stress": 151.63874638898548,
+      "auxiliary_stress": 114.20867503211812,
+      "preprocessing_stress": 63.54543593480204,
+      "one_flat_array_memory_log2_eib": 49.41235127086257,
+      "total_stress": 151.63874638899327,
+      "margin": -8.638746388993269
+    },
+    {
+      "level": "III",
+      "v": 228,
+      "m": 78,
+      "isotropic_dimension": 75,
+      "projective_core": 74,
+      "target": 207,
+      "cw_rhs": 303,
+      "cw_slack": 3,
+      "working_degree": 22,
+      "sparse_modulus": "X^22+X+1",
+      "seed_dimension": 7,
+      "seed_oil_intersection_failure_upper_log2": -1551.4765957001487,
+      "seed_disjoint_probability_lower": 1.0,
+      "nonsingular_root_probability": 0.32633699876750927,
+      "chart_probability": 0.9921259842519685,
+      "separator_probability": 0.9814323262221716,
+      "restart_factor": 3.147070718330508,
+      "lifting_stress": 203.5069338584908,
+      "auxiliary_stress": 163.2191533469573,
+      "preprocessing_stress": 64.07724365421855,
+      "one_flat_array_memory_log2_eib": 98.51238008919384,
+      "total_stress": 203.5069338584919,
+      "margin": 3.493066141508109
+    },
+    {
+      "level": "V",
+      "v": 306,
+      "m": 105,
+      "isotropic_dimension": 102,
+      "projective_core": 101,
+      "target": 272,
+      "cw_rhs": 411,
+      "cw_slack": 0,
+      "working_degree": 30,
+      "sparse_modulus": "X^30+X^7+1",
+      "seed_dimension": 7,
+      "seed_oil_intersection_failure_upper_log2": -2096.5940012683773,
+      "seed_disjoint_probability_lower": 1.0,
+      "nonsingular_root_probability": 0.32633699876750927,
+      "chart_probability": 0.9921259842519685,
+      "separator_probability": 0.9950574906968682,
+      "restart_factor": 3.1039783778862136,
+      "lifting_stress": 260.38909148275394,
+      "auxiliary_stress": 217.82730219851908,
+      "preprocessing_stress": 64.50096072942343,
+      "one_flat_array_memory_log2_eib": 153.39841207990472,
+      "total_stress": 260.38909148275417,
+      "margin": 11.610908517245832
+    }
+  ],
+  "directional_recovery_rows": [
+    {
+      "level": "I",
+      "V": 52,
+      "O": 18,
+      "m": 54,
+      "target": 143,
+      "r": 6,
+      "d": 18,
+      "sparse_modulus": "X^18+X^4+1",
+      "restart_factor": 1.0000261493016818,
+      "separated_factor_stress": 158.6949950450853,
+      "corrected_dense_field_stress": 156.2697180235938,
+      "corrected_schoolbook_sparse_field_stress": 155.42944626565213,
+      "corrected_sparse_field_stress": 154.8257292746374,
+      "sparse_margin": -11.82572927463741,
+      "extension_saving_bits": 1.4439887489564331,
+      "karatsuba_saving_bits": 0.6037169910147389,
+      "one_flat_array_memory_log2_bytes": 113.72983346071874
+    },
+    {
+      "level": "III",
+      "V": 76,
+      "O": 26,
+      "m": 78,
+      "target": 207,
+      "r": 8,
+      "d": 24,
+      "sparse_modulus": "X^24+X^5-X+1",
+      "restart_factor": 1.0000560122225193,
+      "separated_factor_stress": 211.01044415928567,
+      "corrected_dense_field_stress": 207.89080343562995,
+      "corrected_schoolbook_sparse_field_stress": 207.06303847468502,
+      "corrected_sparse_field_stress": 206.1772811774955,
+      "sparse_margin": 0.8227188225044983,
+      "extension_saving_bits": 1.713522258134451,
+      "karatsuba_saving_bits": 0.8857572971894904,
+      "one_flat_array_memory_log2_bytes": 162.67538567669638
+    },
+    {
+      "level": "V",
+      "V": 102,
+      "O": 35,
+      "m": 105,
+      "target": 272,
+      "r": 10,
+      "d": 30,
+      "sparse_modulus": "X^30+X^7+1",
+      "restart_factor": 1.0202200749156747,
+      "separated_factor_stress": 266.38160707367115,
+      "corrected_dense_field_stress": 262.73362456823094,
+      "corrected_schoolbook_sparse_field_stress": 261.8939537427332,
+      "corrected_sparse_field_stress": 260.85658359148255,
+      "sparse_margin": 11.143416408517453,
+      "extension_saving_bits": 1.8770409767484033,
+      "karatsuba_saving_bits": 1.03737015125068,
+      "one_flat_array_memory_log2_bytes": 215.4123512708626
+    }
+  ],
+  "combined_scissors_rows": [
+    {
+      "level": "I",
+      "current_V": 52,
+      "current_m": 54,
+      "target": 143,
+      "direct_cost": 151.63874638899327,
+      "directional_cost": 154.8257292746374,
+      "best_cost": 151.63874638899327,
+      "best_attack": "target-orthogonal direct forgery",
+      "best_margin": -8.638746388993269,
+      "simple_qr_compatible_target_pair": {
+        "V": 52,
+        "directional_cost": 154.8257292746374,
+        "directional_field_degree": 18,
+        "m": 54,
+        "direct_cost": 151.63874638899327,
+        "direct_field_degree": 15
+      },
+      "simple_qr_compatible_target_plus_16_pair": {
+        "V": 57,
+        "directional_cost": 165.500305021818,
+        "directional_field_degree": 18,
+        "m": 60,
+        "direct_cost": 164.846947128013,
+        "direct_field_degree": 17
+      }
+    },
+    {
+      "level": "III",
+      "current_V": 76,
+      "current_m": 78,
+      "target": 207,
+      "direct_cost": 203.5069338584919,
+      "directional_cost": 206.1772811774955,
+      "best_cost": 203.5069338584919,
+      "best_attack": "target-orthogonal direct forgery",
+      "best_margin": 3.493066141508109,
+      "simple_qr_compatible_target_pair": {
+        "V": 78,
+        "directional_cost": 210.36908307708882,
+        "directional_field_degree": 24,
+        "m": 81,
+        "direct_cost": 209.8553274689021,
+        "direct_field_degree": 23
+      },
+      "simple_qr_compatible_target_plus_16_pair": {
+        "V": 87,
+        "directional_cost": 229.51131308634257,
+        "directional_field_degree": 27,
+        "m": 90,
+        "direct_cost": 228.97351905354685,
+        "direct_field_degree": 26
+      }
+    },
+    {
+      "level": "V",
+      "current_V": 102,
+      "current_m": 105,
+      "target": 272,
+      "direct_cost": 260.38909148275417,
+      "directional_cost": 260.85658359148255,
+      "best_cost": 260.38909148275417,
+      "best_attack": "target-orthogonal direct forgery",
+      "best_margin": 11.610908517245832,
+      "simple_qr_compatible_target_pair": {
+        "V": 108,
+        "directional_cost": 273.5703915156713,
+        "directional_field_degree": 33,
+        "m": 111,
+        "direct_cost": 272.8749140181272,
+        "direct_field_degree": 32
+      },
+      "simple_qr_compatible_target_plus_16_pair": {
+        "V": 117,
+        "directional_cost": 292.45155273498017,
+        "directional_field_degree": 36,
+        "m": 120,
+        "direct_cost": 291.8688208641043,
+        "direct_field_degree": 34
+      }
+    }
+  ],
+  "sparse_modulus_certificates": [
+    {
+      "degree": 15,
+      "polynomial": "X^15+X^12-X+1",
+      "x_qd_equals_x": true,
+      "gcd_degrees_for_prime_divisors": {
+        "3": 0,
+        "5": 0
+      },
+      "irreducible": true
+    },
+    {
+      "degree": 17,
+      "polynomial": "X^17+X^8+1",
+      "x_qd_equals_x": true,
+      "gcd_degrees_for_prime_divisors": {
+        "17": 0
+      },
+      "irreducible": true
+    },
+    {
+      "degree": 18,
+      "polynomial": "X^18+X^4+1",
+      "x_qd_equals_x": true,
+      "gcd_degrees_for_prime_divisors": {
+        "2": 0,
+        "3": 0
+      },
+      "irreducible": true
+    },
+    {
+      "degree": 22,
+      "polynomial": "X^22+X+1",
+      "x_qd_equals_x": true,
+      "gcd_degrees_for_prime_divisors": {
+        "2": 0,
+        "11": 0
+      },
+      "irreducible": true
+    },
+    {
+      "degree": 23,
+      "polynomial": "X^23+X^2+1",
+      "x_qd_equals_x": true,
+      "gcd_degrees_for_prime_divisors": {
+        "23": 0
+      },
+      "irreducible": true
+    },
+    {
+      "degree": 24,
+      "polynomial": "X^24+X^5-X+1",
+      "x_qd_equals_x": true,
+      "gcd_degrees_for_prime_divisors": {
+        "2": 0,
+        "3": 0
+      },
+      "irreducible": true
+    },
+    {
+      "degree": 25,
+      "polynomial": "X^25-X^3+1",
+      "x_qd_equals_x": true,
+      "gcd_degrees_for_prime_divisors": {
+        "5": 0
+      },
+      "irreducible": true
+    },
+    {
+      "degree": 26,
+      "polynomial": "X^26+X^3-X+1",
+      "x_qd_equals_x": true,
+      "gcd_degrees_for_prime_divisors": {
+        "2": 0,
+        "13": 0
+      },
+      "irreducible": true
+    },
+    {
+      "degree": 27,
+      "polynomial": "X^27+X^12+X^8+1",
+      "x_qd_equals_x": true,
+      "gcd_degrees_for_prime_divisors": {
+        "3": 0
+      },
+      "irreducible": true
+    },
+    {
+      "degree": 30,
+      "polynomial": "X^30+X^7+1",
+      "x_qd_equals_x": true,
+      "gcd_degrees_for_prime_divisors": {
+        "2": 0,
+        "3": 0,
+        "5": 0
+      },
+      "irreducible": true
+    },
+    {
+      "degree": 32,
+      "polynomial": "X^32+X^2-1",
+      "x_qd_equals_x": true,
+      "gcd_degrees_for_prime_divisors": {
+        "2": 0
+      },
+      "irreducible": true
+    },
+    {
+      "degree": 33,
+      "polynomial": "X^33-X^13+1",
+      "x_qd_equals_x": true,
+      "gcd_degrees_for_prime_divisors": {
+        "3": 0,
+        "11": 0
+      },
+      "irreducible": true
+    },
+    {
+      "degree": 34,
+      "polynomial": "X^34+X^16+1",
+      "x_qd_equals_x": true,
+      "gcd_degrees_for_prime_divisors": {
+        "2": 0,
+        "17": 0
+      },
+      "irreducible": true
+    },
+    {
+      "degree": 36,
+      "polynomial": "X^36+X^8+X+1",
+      "x_qd_equals_x": true,
+      "gcd_degrees_for_prime_divisors": {
+        "2": 0,
+        "3": 0
+      },
+      "irreducible": true
+    }
+  ],
+  "scissors_identity": {
+    "quotient_degree": 3,
+    "statement": "For nonzero targets at fixed m, directional recovery covers V <= m-ell-1 and projectivized target-orthogonal slicing covers V >= m-ell, so one attack core is at most m-ell-1."
+  }
+}
