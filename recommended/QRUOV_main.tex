@@ -14,7 +14,7 @@
 
 \definecolor{deepblue}{RGB}{28,69,125}
 \hypersetup{colorlinks=true,linkcolor=deepblue,citecolor=deepblue,urlcolor=deepblue,
- pdftitle={Structural Cryptanalysis of QR-UOV: Projective Direct Forgery, Equivalent-Key Recovery, and Limits of Vinegar Retuning},
+ pdftitle={QR-UOV Across Vinegar Dimensions: Direct Forgery and Equivalent-Key Recovery},
  pdfauthor={Justin Thaler, Kai Zhang, Scott Kominers, Quang Dao},
  pdfsubject={Projective direct forgery, verified equivalent-key recovery, and parameter implications for QR-UOV},
  pdfkeywords={QR-UOV,UOV,projective direct forgery,equivalent-key recovery,Chevalley-Warning,nonsingular roots,Karatsuba,symbolic homotopy,exact verification}}
@@ -73,7 +73,7 @@
 \fancyfoot[C]{\thepage}
 \renewcommand{\headrulewidth}{0pt}
 
-\title{\bfseries Structural Cryptanalysis of \QRUOV{}:\ Projective Direct Forgery, Equivalent-Key Recovery, and Limits of Vinegar Retuning}
+\title{\bfseries \QRUOV{} Across Vinegar Dimensions:\ Direct Forgery and Equivalent-Key Recovery}
 \author{Justin Thaler\thanks{Georgetown University and a16z crypto research.}
 \and Kai Zhang\thanks{MIT.}
 \and Scott Kominers\thanks{Harvard University and a16z crypto research.}
@@ -84,43 +84,38 @@
 \maketitle
 
 \begin{abstract}
-\QRUOV{} compresses Unbalanced Oil and Vinegar (UOV) by representing variables
-in a degree-three quotient ring.  In this paper, we give two complementary
-structural attacks whose nonlinear solver cores respond oppositely to the
-vinegar count.  For
-every vinegar count and every nonzero verification target, one of these attacks
-has solver core dimension at most $m-4$, where $m$ is the expanded output
-dimension.  Thus changing only the vinegar count cannot move \QRUOV{} beyond
-this fixed-output algebraic ceiling.
+Unbalanced Oil and Vinegar (UOV) offers short signatures and a simple signing
+procedure, but its public keys are large.  \QRUOV{} reduces this cost by
+arranging the public quadratic map in blocks that represent elements of a
+quotient ring, chosen in the recommended parameters to be a degree-three
+extension field.  NIST advanced \QRUOV{} to the third round of its Additional
+Digital Signatures process.  Existing analyses cost direct forgery and
+structural key recovery as separate attacks at fixed parameter sets.  This
+leaves open whether changing only the number of vinegar variables can make
+both attack paths harder while the output dimension remains fixed.
 
-The direct attack sends a chosen target to $(0,\ldots,0,1)$, constructs an
-$(m-3)$-dimensional common isotropic space for three zero-target quadrics, and
-quotients the remaining homogeneous system by scaling.  The resulting square
-projective cores have dimensions $50$, $74$, and $101$.  The equivalent-key
-attack recovers the hidden oil graph from one regular directional root.
+In this paper, we prove that it cannot, as measured by the square nonlinear
+system passed to the root solver.  Let $m$ be the expanded output dimension and let $\ell$ be the
+quotient degree.  For every vinegar dimension $V$ and every nonzero
+verification target, one of two attacks has a solver core of dimension at most
+$m-\ell-1$.  When $V\leq m-\ell-1$, a regular solution of a $V$-variable
+directional system determines an equivalent signing key.  When
+$V\geq m-\ell$, a direct attack zeros $\ell$ target coordinates, constructs a
+common isotropic space for the corresponding quadrics, and uses homogeneity to
+remove one more variable.  For \QRUOV{}, $\ell=3$, so the bound is $m-4$ and
+the recommended parameter sets yield cores of dimensions $50$, $74$, and
+$101$.
 
-To estimate the cost of these cores, we split the homotopy before lifting and
-replace a global primitive-element requirement by local separation of one
-eligible simple target branch.  A generic characteristic polynomial and its
-coefficient polars remain valid even when the chosen linear form collides on
-other branches.
-On a simple target factor, a single Frobenius sketch is exact.  In the inherited
-Boolean-gate model, the resulting costs are $140.383995$, $191.027133$, and
-$247.125439$ bits, respectively $2.616$, $15.973$, and $24.875$ bits below the
-NIST category targets.  Using the parent paper's weaker root-probability bound
-still gives $140.531461$ bits at Level I.
-
-We also implement the complete local-separator pipeline on reduced QR-UOV
-parameters.  From only the public key, message, and salt, the program constructs
-the residual system, lifts and recombines all branches, performs rational
-specialization and exact Frobenius descent, reconstructs one point, and outputs
-a forgery accepted by the unchanged public verifier.  Five deterministic
-instances and a supplementary larger-field instance all succeed and replay
-from public transcripts.  This closes the end-to-end composability objection at
-toy scale, but it does not validate the full-parameter time or memory
-extrapolation.  The Level-I statement remains conditional on the stated
-characteristic-polynomial degree transfer, the fast online-product schedule,
-the public-random expansion model, and astronomical symbolic memory.
+We estimate the cost of these cores with a finite-characteristic symbolic
+solver that uses local, rather than global, branch separation.  In the inherited
+Boolean-gate model, the resulting costs are $140.384$, $191.027$, and $247.125$
+bits, below the corresponding category targets by $2.616$, $15.973$, and
+$24.875$ bits.  We also execute the complete attack pipeline on reduced
+parameters and obtain forgeries accepted by the unchanged public verifier.
+These experiments validate the algebraic composition at toy scale, not the
+full-parameter extrapolation.  The concrete estimates remain conditional on
+the stated characteristic-polynomial degree transfer, the fast online-product
+schedule, the public-random expansion model, and astronomical symbolic memory.
 \end{abstract}
 
 \section{Introduction}\label{sec:intro}
@@ -135,44 +130,69 @@ setting because it retains the simple signing procedure and short signatures of
 Unbalanced Oil and Vinegar (UOV) while addressing UOV's main efficiency
 drawback: its large public key~\cite{QRUOVOriginal,QRUOVSpec}.
 
-UOV publishes a quadratic map from $v+m$ variables to $m$ outputs over a finite
-field.  A secret change of coordinates reveals two classes of variables,
-\emph{vinegar variables and oil variables}, with $v$ of the former and $m$ of
-the latter.  The central equations contain no oil-oil products.
-Once the vinegar variables are fixed, signing reduces to solving a linear
-system in the oil variables~\cite{KPG1999}.  The same hidden structure creates
-two distinct attack goals.  A direct forgery needs only one preimage of a
-verification target.  An equivalent-key attack instead recovers any
-decomposition that can invert every target accepted by the public verifier.
+Oil and Vinegar signatures hide a linear subspace on which the central
+quadratic map becomes easy to invert.  Kipnis and Shamir recovered this hidden
+structure in the balanced construction~\cite{KipnisShamir1998}.  Kipnis,
+Patarin, and Goubin responded with UOV, which uses more vinegar variables than
+oil variables~\cite{KPG1999}.  The vinegar-to-oil ratio is therefore a security
+parameter.
+Increasing it frustrates some key-recovery attacks, but it also gives a forger
+more freedom when solving the public equations.  Braeken, Wolf, and Preneel
+made this second effect explicit by identifying highly unbalanced regimes that
+are vulnerable to direct algebraic attacks~\cite{BraekenWolfPreneel2005}.
 
-The original \QRUOV{} construction compresses the public key by arranging its
-matrices into blocks represented by elements of a quotient ring
-$\F_q[X]/(f)$~\cite{QRUOVOriginal,QRUOVSpec}.  The recommended parameter sets
-use an irreducible polynomial of degree $\ell=3$, so this quotient ring is the
-field $\F_{q^3}$.  The public map is still verified over $\F_q$, but its block
-structure exposes a smaller extension-field description with $V$ vinegar
-variables and $m/\ell$ oil variables.  In the notation used throughout this
-paper, the expanded base-field dimension is
+Concretely, UOV publishes a quadratic map from $v+m$ variables to $m$ outputs
+over a finite field.  A secret change of coordinates reveals $v$
+\emph{vinegar variables and oil variables}, with $v$ of the former and $m$ of
+the latter.  The central equations
+contain no products of two oil variables.  Once the vinegar variables are
+fixed, signing reduces to a linear system in the oil variables.  The public
+key must nevertheless describe $m$ dense quadratic forms, each with
+quadratically many coefficients.  This cost motivated several
+structured variants, including field lifting and block-anti-circulant UOV
+~\cite{FieldLifting,BACUOV}.  The latter was broken by decomposing the
+reducible quotient-ring structure behind its public blocks
+~\cite{BACUOVAttack}.
+
+\QRUOV{} keeps the block-compression idea but represents the public matrices
+by elements of a quotient ring $\F_q[X]/(f)$ and chooses $f$ to be
+irreducible~\cite{QRUOVOriginal,QRUOVSpec}.  For the recommended parameters,
+$\deg f=\ell=3$, so the quotient ring is the field $\F_{q^3}$.  Irreducibility
+prevents the decomposition used against block-anti-circulant UOV, but it does
+not erase the extension-field description.  An attacker can still view the
+structured public key as a smaller UOV-like system with $V$ vinegar variables
+and $m/\ell$ oil variables over $\F_{q^\ell}$.  In the notation used throughout
+this paper, the expanded base-field dimension is
 \[
  n=\ell V+m.
 \]
-Thus changing the vinegar count $V$ simultaneously changes the amount of
-underdetermination visible to a direct attack and the dimension of the hidden
-extension-field system visible to a structural attack
-(\cref{sec:model}).
+This description is the common starting point for the QR-UOV pull-back,
+lifting, and rectangular-MinRank analyses
+~\cite{QRUOVOriginal,FurueIkematsu}.  It also shows why changing $V$ affects
+two different attack surfaces at once.  It changes the underdetermination of
+the base-field verification equations and the dimension of the hidden
+extension-field system (\cref{sec:model}).
 
-These two attack directions have long been studied separately.  Direct attacks
-reduce underdetermined MQ systems before applying a polynomial-system
-solver~\cite{ThomaeWolf2012,FurueUnderdetermined2021,Hashimoto2023}.  Structural
-attacks recover the hidden UOV geometry through intersection or MinRank
-methods~\cite{Beullens,FurueIkematsu,Suzuki}, while P\'ebereau showed that one
-suitable oil vector can already determine an equivalent
-key~\cite{Pebereau}.  The \QRUOV{} specification and the team's latest security
-response cost several such attacks for fixed parameter
-sets~\cite{QRUOVSpec,QRUOVResponse2026}.  What these estimates do not provide is a
-single structural statement explaining how the direct-forgery and
-equivalent-key endpoints interact when $V$ is retuned while $m$ remains fixed.
-We measure that interaction by the number of variables in the square nonlinear
+Prior work follows the two attack surfaces separately.  Direct attacks reduce
+an underdetermined multivariate quadratic system before applying a polynomial
+solver~\cite{ThomaeWolf2012,FurueUnderdetermined2021,Hashimoto2023,JustGuess}.
+Key-recovery attacks instead search for the hidden oil space through
+reconciliation, intersection, or MinRank equations
+~\cite{DingEtAl2008,Beullens,FurueIkematsu,Suzuki}.  P\'ebereau showed that one
+suitable oil vector can suffice to recover an equivalent UOV key and stated
+the resulting parameter tradeoff directly: a larger variable-to-equation
+ratio helps against key recovery but hurts against forgery
+~\cite{Pebereau}.  The original \QRUOV{} paper reflects the same division when
+it chooses the vinegar count mainly against pull-back and lifting
+reconciliation attacks, while choosing the output count against direct
+forgery~\cite{QRUOVOriginal}.
+
+The \QRUOV{} specification and the team's latest security response cost these
+attack families at fixed parameter sets~\cite{QRUOVSpec,QRUOVResponse2026}.
+What the prior analyses do not provide is a single bound covering every
+integer $V$ while $m$ and the quotient degree remain fixed.  We give such a
+bound by connecting a directional equivalent-key system to a projective direct
+system.  We measure both by the number of variables in the square nonlinear
 system passed to the root solver, which we call the \emph{solver core}.
 
 This brings us to the question that governs the paper:
@@ -276,37 +296,83 @@ evidence, assumptions, cost, memory, and parameter consequences.
 
 \section{Related work}\label{sec:related}
 
+\paragraph{From Oil and Vinegar to \QRUOV{}.}
+Kipnis and Shamir broke the balanced Oil and Vinegar construction by
+recovering its hidden linear structure~\cite{KipnisShamir1998}.  Kipnis,
+Patarin, and Goubin then introduced UOV with more vinegar variables
+~\cite{KPG1999}.  Subsequent
+analysis showed that this imbalance must be chosen against both structural
+attacks and the increasingly underdetermined public system
+~\cite{BraekenWolfPreneel2005}.  Efforts to reduce UOV's public key include
+field lifting and block-anti-circulant matrices~\cite{FieldLifting,BACUOV}.
+The attack on block-anti-circulant UOV traces its weakness to a reducible
+quotient polynomial~\cite{BACUOVAttack}.  \QRUOV{} replaces that polynomial
+with an irreducible one and develops the resulting quotient-ring construction
+and its pull-back and lifting analyses~\cite{QRUOVOriginal}.  We take this
+compressed construction as fixed and study what remains possible when only
+its vinegar dimension changes.
+
 \paragraph{Direct attacks on underdetermined MQ.}
-Thomae--Wolf, Furue et al., and Hashimoto reduce underdetermined quadratic
-systems before applying an MQ solver~\cite{ThomaeWolf2012,FurueUnderdetermined2021,Hashimoto2023}.
-Hashimoto's line is the benchmark used in the QR-UOV specification.  The
-QR-UOV team's January 2026 response reports classical Hashimoto estimates of
-$158$, $217$, and $285$ bits for the recommended sets~\cite{QRUOVResponse2026}.
-The affine residual dimensions $51,75,102$ are therefore prior art.  Our
-contribution is a self-contained homogeneous construction, a fixed-key
-seed-disjointness bound, a QR-UOV-specific nonsingular-root theorem, and the
-observation that full target normalization lets the solver quotient by radial
-scaling, reducing the square geometric cores to $50,74,101$.  We then cost
-those projective cores with a separate finite-characteristic solver.  The recent ``Just Guess''
-algorithm improves the quantum analysis of underdetermined MQ but does not
-improve the team's reported classical QR-UOV estimates~\cite{JustGuess,QRUOVResponse2026}.
+Thomae and Wolf reduce an underdetermined quadratic system to a smaller square
+system before invoking a generic solver~\cite{ThomaeWolf2012}.  Furue,
+Nakamura, and Takagi improve the range in which this reduction applies, and
+Hashimoto divides the residual equations into smaller blocks
+~\cite{FurueUnderdetermined2021,Hashimoto2023}.  Hashimoto's method is the
+classical benchmark used by the QR-UOV team.  Its January 2026 response gives
+costs of $158$, $217$, and $285$ bits for the recommended parameter sets
+~\cite{QRUOVResponse2026}.  The resulting affine residual dimensions
+$51,75,102$ are therefore prior art.  The later ``Just Guess'' algorithm
+pushes more of the computation into exhaustive search.  It improves the
+quantum estimates for QR-UOV, but it does not improve the team's classical
+Hashimoto estimates~\cite{JustGuess,QRUOVResponse2026}.  Our direct attack
+starts from the same affine dimensions, but full target normalization makes
+the residual equations homogeneous.  Passing to projective space removes the
+common scale and gives the smaller square cores $50,74,101$.
 
-\paragraph{Equivalent-key recovery for UOV.}
-P\'ebereau showed that one suitable oil vector can suffice for polynomial-time
-UOV equivalent-key recovery~\cite{Pebereau}.  We do not claim that endpoint as
-new.  The QR-UOV-specific contribution is the public mechanism for finding the
-needed information: a direction exposes a planted root $Gc$, full derivative
-rank makes it isolated, and cross-direction graph identities recover all of
-$G$.  Exact pull-back and signing checks then certify a key-only universal
-forgery.
+\paragraph{Recovering the hidden oil space.}
+The Kipnis--Shamir attack searches directly for the secret linear structure
+~\cite{KipnisShamir1998}.  Reconciliation expresses membership in the oil
+space as quadratic equations, while Beullens' intersection attack uses the
+intersection of transformed oil spaces to reduce the search
+~\cite{DingEtAl2008,Beullens}.  P\'ebereau strengthens the endpoint: for the
+practical UOV parameters he analyzes, one suitable oil vector is enough to
+recover an equivalent key in polynomial time~\cite{Pebereau}.  We do not claim this
+one-vector endpoint.  Our contribution is a public QR-UOV mechanism for
+finding the required information.  A chosen extension-field direction exposes
+a planted root $Gc$, the derivative test certifies when that root determines
+the hidden graph, and exact signing checks certify the recovered equivalent
+key (\cref{sec:recovery}).
 
-Beullens' intersection attack and later work recover hidden UOV geometry
-through structured linear algebra~\cite{Beullens}.  Rectangular-MinRank
-estimates were sharpened for QR-UOV and related schemes~\cite{FurueIkematsu,Suzuki}.
-Truncated-polynomial-ring methods improve some UOV parameters but do not report
-an improvement for the QR-UOV sets studied here~\cite{FurueIkematsu2026}.
-Odd-characteristic symmetric-algebra attacks apply to QR-UOV but, at
-characteristic $127$, do not improve the existing QR-UOV estimates~\cite{JinEtAl2026}.
+\paragraph{QR-UOV-specific key recovery.}
+The original QR-UOV analysis applies reconciliation and intersection after
+pulling the block matrices back to the quotient field or lifting the public
+map to an extension field~\cite{QRUOVOriginal}.  Furue and Ikematsu instead
+form a rectangular-MinRank instance from the same extension-field structure
+~\cite{FurueIkematsu}.  Suzuki et al. extend the admissible target ranks and
+connect this method to the singular geometry used by other UOV attacks
+~\cite{Suzuki}.  More recent symmetric-algebra and truncated-ring methods
+improve key recovery for some UOV parameter sets
+~\cite{JinEtAl2026,FurueIkematsu2026}.  For the recommended QR-UOV sets, the
+truncated-ring calculation gives no improvement because the characteristic
+$127$ already exceeds the relevant solving degree, and the reported
+odd-characteristic symmetric-algebra costs do not beat reconciliation.  These
+works sharpen individual key-recovery costs at fixed parameters.  None gives a
+bound that joins key recovery to direct forgery for every vinegar dimension.
+
+\paragraph{Parameter tradeoffs and common UOV frameworks.}
+P\'ebereau states the qualitative tradeoff that motivates our theorem:
+increasing the variable-to-equation ratio strengthens UOV against key recovery
+and weakens it against forgery, while decreasing the ratio has the opposite
+effect~\cite{Pebereau}.  The original QR-UOV paper makes the same point through
+its parameter selection, assigning the vinegar count to reconciliation and
+the output count to direct forgery~\cite{QRUOVOriginal}.  Li, Guo, and Ding
+later describe QR-UOV, MAYO, and SNOVA through a common tensor-product
+framework and reduce QR-UOV key-recovery accounting to an extension-field UOV
+instance~\cite{LiGuoDing2025}.  We do not claim the qualitative tradeoff or the
+extension-field view.  Our result is the exact two-case statement that every
+integer $V$ leaves either a direct-forgery core or an equivalent-key core of
+dimension at most $m-\ell-1$, with the direct side reaching this bound only
+after projectivization (\cref{thm:security-scissors}).
 
 \paragraph{Polynomial-system solving.}
 The arbitrary-core engine is the nonsingular-solutions homotopy of Safey El
@@ -315,7 +381,9 @@ geometric-resolution methods~\cite{Schost2003,GiustiLecerfSalvy2001}.  We
 replace the start-system and separator choices responsible for its published
 characteristic restriction.  The appendices retain independent checks using
 the near-quadratic solver of van der Hoeven--Lecerf and a locally closed
-Kronecker algorithm~\cite{vdHL,Gimenez2026}.
+Kronecker algorithm~\cite{vdHL,Gimenez2026}.  These methods cost the square
+cores produced by our reductions; they do not supply the QR-UOV reductions or
+the fixed-output theorem.
 
 \paragraph{Chevalley--Warning.}
 The direct reduction uses the classical fact that, when the sum of the degrees
@@ -323,7 +391,9 @@ is smaller than the number of variables, the number of common zeros over a
 finite field is divisible by the characteristic~\cite{Chevalley1935,Warning1935}.
 Applied to three quadrics in seven variables, it guarantees a nonzero extension
 vector.  Exhaustive projective search makes the theorem constructive, so no
-unpriced existence oracle is hidden in the preprocessing.
+unpriced existence oracle is hidden in the preprocessing.  Our use of this
+classical theorem is therefore algorithmic rather than a new finite-field
+existence result.
 
 \section{Expanded-key model and exact signing certificates}\label{sec:model}
 
@@ -2521,6 +2591,11 @@ H.~Furue, Y.~Ikematsu, Y.~Kiyomura, and T.~Takagi.
 \newblock A new variant of Unbalanced Oil and Vinegar using quotient ring: QR-UOV.
 \newblock Cryptology ePrint Archive, Paper 2020/1243, 2020.
 
+\bibitem{LiGuoDing2025}
+P.~Li, H.~Guo, and J.~Ding.
+\newblock Unified approach to UOV-like multivariate signature schemes.
+\newblock Cryptology ePrint Archive, Paper 2025/1778, 2025.
+
 \bibitem{QRUOVSpec}
 H.~Furue, Y.~Ikematsu, F.~Hoshino, T.~Takagi, H.~Kosuge, K.~Yamakoshi, R.~Akiyama, S.~Nakamura, S.~Orihara, and K.~Kinjo.
 \newblock \emph{QR-UOV Specification Document (Round 2 submission)}.
@@ -2530,6 +2605,36 @@ H.~Furue, Y.~Ikematsu, F.~Hoshino, T.~Takagi, H.~Kosuge, K.~Yamakoshi, R.~Akiyam
 A.~Kipnis, J.~Patarin, and L.~Goubin.
 \newblock Unbalanced Oil and Vinegar signature schemes.
 \newblock In \emph{EUROCRYPT 1999}, pp.~206--222, 1999.
+
+\bibitem{KipnisShamir1998}
+A.~Kipnis and A.~Shamir.
+\newblock Cryptanalysis of the Oil and Vinegar signature scheme.
+\newblock In \emph{CRYPTO 1998}, pp.~257--266, 1998.
+
+\bibitem{BraekenWolfPreneel2005}
+A.~Braeken, C.~Wolf, and B.~Preneel.
+\newblock A study of the security of Unbalanced Oil and Vinegar signature schemes.
+\newblock Cryptology ePrint Archive, Paper 2004/222, 2004.
+
+\bibitem{FieldLifting}
+W.~Beullens and B.~Preneel.
+\newblock Field lifting for smaller UOV public keys.
+\newblock In \emph{INDOCRYPT 2017}, pp.~227--246, 2017.
+
+\bibitem{BACUOV}
+A.~Szepieniec and B.~Preneel.
+\newblock Block-anti-circulant Unbalanced Oil and Vinegar.
+\newblock In \emph{SAC 2019}, pp.~574--588, 2019.
+
+\bibitem{BACUOVAttack}
+H.~Furue, K.~Kinjo, Y.~Ikematsu, Y.~Wang, and T.~Takagi.
+\newblock A structural attack on block-anti-circulant UOV at SAC 2019.
+\newblock In \emph{PQCrypto 2020}, pp.~323--339, 2020.
+
+\bibitem{DingEtAl2008}
+J.~Ding, B.-Y.~Yang, C.-O.~Chen, M.-S.~Chen, and C.-M.~Cheng.
+\newblock New differential-algebraic attacks and reparametrization of Rainbow.
+\newblock In \emph{ACNS 2008}, pp.~242--257, 2008.
 
 \bibitem{NISTRound3}
 National Institute of Standards and Technology.

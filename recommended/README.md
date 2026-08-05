@@ -4,8 +4,8 @@ This directory develops a shorter main paper while preserving the canonical
 source and PDF in the parent directory. The revision is being made one
 reviewable slice at a time.
 
-- `QRUOV_main.tex` contains the protected original abstract and the revised
-  main text.
+- `QRUOV_main.tex` contains the revised abstract and main text. The canonical
+  source in the parent directory remains unchanged.
 - `QRUOV_supplement.tex` contains the original appendices and technical
   material moved out of the main paper.
 - `CONTENT_LEDGER.md` records the central thesis, preservation rules, and the
