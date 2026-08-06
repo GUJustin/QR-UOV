@@ -89,11 +89,11 @@
 The main body presents the direct forgery, directional equivalent-key recovery,
 characteristic-$127$ solver, and combined parameter consequences.  The first
 appendices retain an independent smooth-projective route and two solver
-cross-checks.  Later appendices give the expanded-key certificate calculations,
-seeded expansion, optional identification with the planted oil space,
-alternative low-space directions, and executable pseudocode.  These details
-are separated so that readers can understand the attack and its parameter
-implications before entering the full audit.
+cross-checks.  Later appendices give the direct-forgery proofs, expanded-key
+certificate calculations, seeded expansion, optional identification with the
+planted oil space, alternative low-space directions, and executable
+pseudocode.  These details are separated so that readers can understand the
+attack and its parameter implications before entering the full audit.
 
 \section{Independent projective smooth-core route}\label{sec:projective}
 
@@ -985,6 +985,186 @@ Outside the key-level exceptional set, the projective discriminant and a determi
 
 
 
+
+\section{Direct-forgery proofs and preprocessing}\label{app:direct-proofs}
+
+This section gives the local distribution proofs, dimension counts, and
+finite preprocessing ledger used by the direct attack in
+\cref{sec:direct}.  The main paper retains the complete reduction and success
+statements.  We use the notation of Lemma~\ref{lem:pullback-one-jet} and
+\eqref{eq:trace-pullback}: $E=K^{V+O}$, $\widehat{\cO}\subset E$ is the hidden
+base-field oil space, and $\gamma\in K^*$ is fixed.
+
+\subsection{Proof of local value and derivative randomness}
+
+We prove Lemma~\ref{lem:pullback-one-jet}.  Write an off-oil point as
+$x=(v_x,o_x)$ in central $K$-coordinates, so $v_x\ne0$.  Choose a $K$-linear
+functional $\varphi:E\to K$ with
+$\varphi|_{\widehat{\cO}}=0$ and $\varphi(x)=1$.  The map
+\[
+ h\longmapsto\bigl(u\mapsto\Tr_{K/\F_q}(\gamma h(u))\bigr)
+\]
+from $K$-linear maps $E\to K$ to $\F_q$-linear maps $E\to\F_q$ is an
+isomorphism by nondegeneracy of the trace pairing and equality of dimensions.
+
+Fix a desired pair $(c,\lambda)$ with $\lambda(x)=2c$.  Choose a $K$-linear
+$h$ whose trace functional restricts to $\lambda/2$ on $U$, and define
+\[
+ b_h(u,w)
+ =\varphi(u)h(w)+h(u)\varphi(w)-h(x)\varphi(u)\varphi(w).
+\]
+This symmetric $K$-bilinear form vanishes on
+$\widehat{\cO}\times\widehat{\cO}$ and satisfies $b_h(x,u)=h(u)$.  Hence
+\[
+ p_h(u):=b_h(u,u),
+ \qquad
+ Q_h(u):=\Tr_{K/\F_q}(\gamma p_h(u))
+\]
+is a pulled-back UOV form with
+\[
+ Q_h(x)=\Tr(\gamma h(x))=c,
+ \qquad
+ d(Q_h)_x(u)=2\Tr(\gamma h(u))=\lambda(u).
+\]
+This proves the value and derivative claims.
+
+For the last claim, suppose evaluation at off-oil points $x$ and $z$ is
+proportional by $\rho\in\F_q^*$.  Comparing central coefficients and using the
+trace pairing gives
+\[
+ v_zv_z^{\mathsf T}=\rho v_xv_x^{\mathsf T},
+ \qquad
+ v_zo_z^{\mathsf T}=\rho v_xo_x^{\mathsf T}.
+\]
+The first identity gives $v_z=\lambda v_x$ and $\lambda^2=\rho$ for some
+$\lambda\in K^*$.  The second then gives $o_z=\lambda o_x$.  Finally,
+\[
+ \gcd\bigl(2(q-1),q^3-1\bigr)=q-1
+\]
+because $q^2+q+1$ is odd.  Thus $\lambda^{q-1}=1$ and
+$\lambda\in\F_q$.
+
+\subsection{The seed count and constructive extension}
+
+For completeness, the fixed-oil-space estimate in
+Proposition~\ref{prop:off-oil-seed} is a direct projective count.  There are
+$(q^m-1)/(q-1)$ projective oil points.  A uniform seven-dimensional subspace
+contains any fixed projective point with probability
+$(q^7-1)/(q^n-1)$.  A union bound gives \eqref{eq:seed-oil-bound}; substituting
+the three official pairs $(n,m)$ gives \eqref{eq:seed-oil-numbers}.
+
+We next give the full construction from Theorem~\ref{thm:cw-extension}.
+Suppose a $j$-dimensional common totally isotropic subspace $W$ containing the
+seed point has already been constructed.  Put
+\[
+ L_W=\bigcap_{i=1}^s W^{\perp_{B_{Q_i}}}.
+\]
+The $sj$ orthogonality conditions give
+\[
+ \dim(L_W/W)\ge n-(s+1)j.
+\]
+For $j\le r-1$, condition \eqref{eq:cw-feasibility} makes this dimension at
+least $2s+1$.  Choose any $(2s+1)$-dimensional subspace of the quotient.  The
+$s$ induced quadrics have total degree $2s<2s+1$.  Chevalley--Warning says
+that their number of common zeros is divisible by the characteristic
+~\cite{Chevalley1935,Warning1935}.  Since the zero vector is one zero, there
+is a nonzero zero.  Exhaustive search over \eqref{eq:cw-projective-count}
+finds one.
+
+Lift this zero to $z\in L_W$.  Then $Q_i(z)=0$ and
+$B_{Q_i}(z,W)=0$, so $W\oplus\langle z\rangle$ is again common totally
+isotropic.  Iteration reaches dimension $r$.
+
+For the official parameters, one seed search and the $r-1$ extension steps
+each evaluate three seven-variable quadrics on at most
+$|\PP^6(\F_{127})|$ points.  The companion audit also charges uniform seed
+generation, recomputation of every polar-orthogonal space by dense
+elimination, the random chart, and success normalization.  The resulting
+preprocessing bounds at Levels I, III, and V are
+\[
+ 2^{63.545},\qquad2^{64.077},\qquad2^{64.501}
+\]
+Boolean gates.
+
+\subsection{Projectivization and Jacobian rank}
+
+We prove the claims in Corollary~\ref{cor:projective-target-slicing}.  For a
+nonzero common zero $z$ of $H_1,\ldots,H_{r-1}$, replacing $z$ by $\lambda z$
+multiplies every quadratic value by $\lambda^2$.  Some representative
+satisfies $H_0(\lambda z)=1$ exactly when $H_0(z)$ is a nonzero square.  In
+that case there are exactly two choices, $\lambda$ and $-\lambda$.
+
+Euler's identity gives $dH_i(z)(z)=2H_i(z)=0$ for $1\le i<r$, whereas
+$dH_0(z)(z)=2$.  The first $r-1$ Jacobian rows have rank $r-1$ exactly when
+their common kernel is the radial line $\langle z\rangle$.  In that case the
+last row is not in their span, so the affine Jacobian has rank $r$.
+Conversely, an invertible affine Jacobian forces the first $r-1$ rows to have
+rank $r-1$.  Finally, among the $q^r-1$ nonzero linear forms on $U$, exactly
+$q^{r-1}-1$ vanish at a fixed projective point.  A chart containing the point
+preserves nonsingularity and gives the square affine system used by the
+solver.
+
+\subsection{Second-moment root calculation}
+
+We give the full calculation behind
+Proposition~\ref{prop:direct-root-probability}.  The off-oil seed point belongs
+to $U$, so $U$ is not contained in $\widehat{\cO}$ and $d\le r-1$.  Let
+$S=U\setminus\widehat{\cO}$, and let $M$ count all roots of
+\eqref{eq:direct-residual} in $S$.  At any fixed $x\in S$,
+Lemma~\ref{lem:pullback-one-jet} gives
+\[
+ \Pr[x\text{ is a root}]=q^{-r}.
+\]
+Hence $\mathbb E[M]=|S|q^{-r}=\mu$.
+
+For two off-oil points, the evaluation functionals are independent unless the
+points are scalar multiples.  If $z=\lambda x$ and both solve
+\eqref{eq:direct-residual}, homogeneity and the last equation give
+$\lambda^2=1$.  The only dependent ordered pairs that can both solve the
+target are therefore $z=x$ and $z=-x$.  The other $q-3$ nontrivial base-field
+multiples have joint probability zero.  Every nonproportional ordered pair has
+joint probability $q^{-2r}$.  Consequently,
+\[
+ \mathbb E[M^2]
+ =2\mu+\mu^2-(q-1)\mu q^{-r}.
+\]
+
+Let $N$ count only roots with invertible Jacobian.  At a fixed root, the
+conditional derivative statement makes the Jacobian rows independent and
+uniform subject to Euler's relation.  The target vector is nonzero, so one
+column is fixed and nonzero while the other $r-1$ columns are uniform.  Thus
+\[
+ \Pr[J(x)\text{ invertible}\mid x\text{ is a root}]
+ =\pi_{r-1}(q),
+ \qquad
+ \mathbb E[N]=\mu\pi_{r-1}(q).
+\]
+Since $N^2\le M^2$, the second-moment inequality gives
+\[
+ \Pr[N>0]
+ \ge\frac{\mathbb E[N]^2}{\mathbb E[M^2]},
+\]
+which is \eqref{eq:direct-root-lower-bound}.  The right-hand side increases
+with $\mu$.  Using $\mu\ge1-q^{-1}$ and substituting the three values of $r$
+gives \eqref{eq:direct-root-number}.
+
+\subsection{Exact degree-three direct-forgery test}
+
+The companion program \texttt{QRUOV\_direct\_qr\_toy.py} instantiates the
+degree-three model over $\F_{3^3}$ and performs the public attack over $\F_3$.
+After building the isotropic subspace, it enumerates the projective roots of
+the remaining zero-target forms and recovers the affine scale from the final
+equation.  In the frozen $200$-key run with
+\[
+ (V,O,n,m,r,k)=(3,2,15,6,3,2),
+\]
+$199$ keys yielded a verified forgery within twelve outer trials.  Every
+returned vector passed both the base-field public map and an independent
+extension-field evaluator.  Of the $200$ final seed subspaces, $185$ were
+disjoint from the hidden oil space, while every selected seed point was off
+oil.  Seed-space disjointness is a sufficient production-scale guarantee, not
+a condition tested by the public algorithm.  This experiment is a correctness
+test, not a production benchmark.
 
 \section{Expanded-key certificate calculations}\label{app:expanded-certificates}
 

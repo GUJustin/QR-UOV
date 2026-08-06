@@ -630,121 +630,47 @@ two-dimensional spans, and Schwartz--Zippel.  The formulas and calculations
 appear in \cref{app:expanded-certificates}.
 \end{proof}
 
-\section{Projective target-orthogonal direct forgery}\label{sec:direct}
+\section{\texorpdfstring{Direct forgery in $m-4$ variables}{Direct forgery in m-4 variables}}\label{sec:direct}
 
-The directional attack uses QR-UOV's extension-field graph.  This section gives
-a second route that works directly with the official base-field verification
-map
+The direct attack works with the official base-field verification map
 \[
  \widehat P:\F_q^n\longrightarrow\F_q^m,
  \qquad n=v+m,
  \qquad q=127.
 \]
-It does not recover a key.  Given a nonzero target $y$, it constructs a public
-subspace on which three target equations disappear.  Full output normalization
-then leaves $m-4$ homogeneous zero-target equations in projective dimension
-$m-4$; one final equation only recovers the affine scale.  The square solver
-cores are
+Given a nonzero target $y$, the attack constructs an $(m-3)$-dimensional
+public subspace on which three zero-target equations vanish identically.  On
+this subspace, the remaining zero-target equations form a square projective
+system of dimension $m-4$.  The final nonzero-target equation only recovers
+the affine scale.  The resulting solver cores are
 \[
  50,\qquad74,\qquad101
 \]
 for Levels I, III, and V.
 
-The preceding affine dimensions $51,75,102$ coincide with the $\alpha=3$
-Hashimoto line already used in the QR-UOV specification's direct-attack
-analysis~\cite{Hashimoto2023,QRUOVSpec}.  We do not claim those dimensions as
-new.  The further one-variable reduction follows from two facts specific to
-the homogeneous verification problem: every target but one can be made zero,
-and the remaining zero equations are invariant under nonzero scalar
-multiplication.  The other new ingredients are a fixed-key seed bound, a
-finite Chevalley--Warning construction, a second-moment lower bound for an
-eligible nonsingular projective root, and a characteristic-$127$ solver ledger
-independent of WXL semi-regularity estimates.
+\begin{remark}[Relation to Hashimoto and the specification]\label{rem:direct-prior-art}
+The affine reduction to $m-3$ variables is prior art.  Hashimoto's
+underdetermined quadratic-system method and the QR-UOV specification already analyze these
+residual dimensions~\cite{Hashimoto2023,QRUOVSpec}.  Our additional reduction
+uses full target normalization and solves the homogeneous zero-target
+equations modulo scaling.  This removes one more variable, giving cores of
+dimension $m-4$.  We also give a finite Chevalley--Warning construction, a
+fixed-key seed bound, an explicit nonsingular-root probability for the
+degree-three pull-back, and a finite-characteristic solver cost.
+\end{remark}
 
 The algebraic reduction below is key by key.  Its probability calculation uses
-the independent-graph public-random model of \cref{def:direct-ideal}: the
+the independent-graph model of Definition~\ref{def:direct-ideal}: the
 hidden graph $G$ is independent of the product-uniform central coefficient
 pairs $(A_i,B_i)$.  This independence is needed only for the direct attack's
 average-case root analysis; the directional results continue to allow
-arbitrary $G$--$A$ correlation.  In the ideal-XOF and ideal-cipher models,
+arbitrary correlation between $G$ and $A$.  In the ideal-XOF and ideal-cipher models,
 official public and secret expansion have this independence whenever their
 independently sampled seeds differ.  \Cref{app:seeded-transfer} adds the
 seed-collision and buffer terms explicitly.  No such transfer is claimed for
 the fixed SHAKE or AES functions.
 
-\subsection{The pull-back still supplies full first-order randomness}
-
-The official degree-three pull-back produces a restricted family of base-field quadrics, not the set of all UOV quadrics over $\F_q$.  We therefore record the exact local property needed below.
-
-Let $E=K^{V+O}$, viewed as an $n=3(V+O)$ dimensional vector space over $\F_q$, and let $\widehat{\cO}\subset E$ be the hidden $m=3O$ dimensional base-field oil space.  In central coordinates, one public-random expanded form is obtained from
-\[
- p(v,o)=v^{\mathsf T}Av+2v^{\mathsf T}Bo
-\]
-with $A\in\Sym_V(K)$ and $B\in K^{V\times O}$ uniform.  The specification's pull-back evaluates a fixed nonzero $\F_q$-linear functional of $p(v,o)$.  Equivalently, after choosing a nonzero $\gamma\in K$, it has the form
-\begin{equation}\label{eq:trace-pullback}
- Q(v,o)=\Tr_{K/\F_q}\!\left(\gamma p(v,o)\right).
-\end{equation}
-The precise value of $\gamma$ depends on the chosen regular-representation basis and is irrelevant; nondegeneracy of the trace pairing is what matters.
-
-\begin{lemma}[Evaluation and one-jet surjectivity]\label{lem:pullback-one-jet}
-Let $x\in E\setminus\widehat{\cO}$, and let $U\subseteq E$ be an $\F_q$-linear subspace containing $x$.  For a uniform pull-back form $Q$ as in \eqref{eq:trace-pullback}:
-\begin{enumerate}
-\item $Q(x)$ is uniform in $\F_q$;
-\item the map
-\[
- Q\longmapsto\bigl(Q(x),dQ_x|_U\bigr)
-\]
-is onto
-\[
- \{(a,\lambda)\in\F_q\times U^*: \lambda(x)=2a\};
-\]
-consequently, conditioned on $Q(x)=a$, the derivative $dQ_x|_U$ is uniform in the displayed affine hyperplane;
-\item for $x,z\in E\setminus\widehat{\cO}$, the two evaluation functionals $Q\mapsto Q(x)$ and $Q\mapsto Q(z)$ are proportional over $\F_q$ only if $z=\lambda x$ for some $\lambda\in K$ with $\lambda^2\in\F_q$.  Since $[K:\F_q]=3$ is odd, this forces $\lambda\in\F_q$.
-\end{enumerate}
-\end{lemma}
-
-\begin{proof}
-Write $x=(v_x,o_x)$ in central $K$-coordinates.  Since $x$ is off oil, $v_x\ne0$.  Choose a $K$-linear functional $\varphi:E\to K$ with
-$\varphi|_{\widehat{\cO}}=0$ and $\varphi(x)=1$.  The map
-\[
- h\longmapsto\bigl(u\mapsto\Tr_{K/\F_q}(\gamma h(u))\bigr)
-\]
-from $K$-linear maps $E\to K$ to $\F_q$-linear maps $E\to\F_q$ is an isomorphism, by nondegeneracy of the trace pairing and equality of dimensions.
-
-Fix a desired pair $(c,\lambda)$ with $\lambda(x)=2c$.  Choose a $K$-linear $h$ whose trace functional restricts to $\lambda/2$ on $U$, and define
-\[
- b_h(u,w)=\varphi(u)h(w)+h(u)\varphi(w)-h(x)\varphi(u)\varphi(w).
-\]
-This symmetric $K$-bilinear form vanishes on
-$\widehat{\cO}\times\widehat{\cO}$ and satisfies $b_h(x,u)=h(u)$.  Hence
-\[
- p_h(u):=b_h(u,u),
- \qquad
- Q_h(u):=\Tr_{K/\F_q}(\gamma p_h(u))
-\]
-is a pull-back UOV form with
-\[
- Q_h(x)=\Tr(\gamma h(x))=c,
- \qquad
- d(Q_h)_x(u)=2\Tr(\gamma h(u))=\lambda(u)
- \quad(u\in U).
-\]
-This proves the first two claims.
-
-For the last claim, compare coefficients in central coordinates.  If the two evaluation functionals are proportional by $\rho\in\F_q^*$, nondegeneracy of the trace pairing gives
-\[
- v_zv_z^{\mathsf T}=\rho v_xv_x^{\mathsf T},
- \qquad
- v_zo_z^{\mathsf T}=\rho v_xo_x^{\mathsf T}.
-\]
-The first rank-one identity gives $v_z=\lambda v_x$ and $\lambda^2=\rho$ for some $\lambda\in K^*$.  The second then gives $o_z=\lambda o_x$, so $z=\lambda x$ and $\lambda^2\in\F_q$.  Finally,
-\[
- \gcd\bigl(2(q-1),q^3-1\bigr)=q-1
-\]
-because $q^2+q+1$ is odd.  Thus $\lambda^{q-1}=1$ and $\lambda\in\F_q$.
-\end{proof}
-
-\subsection{Normalize every target coordinate except one}
+\subsection{From the target to a projective system}
 
 If $y=0$, then $x=0$ is already a valid preimage, so only the nonzero case
 needs analysis.  Let $y\in\F_q^m$ be nonzero.  Choose a public matrix
@@ -765,8 +691,9 @@ zero because three quadrics have total degree six in seven variables.  Denote
 the first such point by $w$.
 
 The hidden oil space is not known to the attacker, so the algorithm cannot
-test whether $w$ is off oil.  The random seed subspace makes this unnecessary:
-with overwhelming probability it contains no nonzero oil vector at all.
+test whether $w$ is off oil.  The random seed subspace makes this test
+unnecessary; the next proposition bounds the failure probability for every
+fixed oil space.
 
 \begin{proposition}[A random seed misses every fixed oil space]\label{prop:off-oil-seed}
 Fix an arbitrary $m$-dimensional subspace $\widehat{\cO}\subset\F_q^n$ and
@@ -797,7 +724,7 @@ probability $(q^7-1)/(q^n-1)$.  A union bound proves
 pairs $(n,m)$.
 \end{proof}
 
-\subsection{A deterministic Chevalley--Warning extension}
+\paragraph{Constructing the isotropic subspace.}
 
 For a quadratic form $Q$ over a field of odd characteristic, write
 \[
@@ -805,7 +732,7 @@ For a quadratic form $Q$ over a field of odd characteristic, write
 \]
 for its polar bilinear form.  A subspace is \emph{totally isotropic} for $Q$ when $Q$ vanishes identically on it.
 
-\begin{theorem}[Common-isotropic extension from one seed point]\label{thm:cw-extension}
+\begin{theorem}[Building a common isotropic subspace]\label{thm:cw-extension}
 Let $Q_1,\ldots,Q_s$ be homogeneous quadrics on $\F_q^n$, and let $0\ne w$ satisfy $Q_i(w)=0$ for every $i$.  If
 \begin{equation}\label{eq:cw-feasibility}
  n\ge(s+1)r+s,
@@ -821,20 +748,15 @@ projective points.
 \end{theorem}
 
 \begin{proof}
-Suppose a $j$-dimensional common totally isotropic subspace $W$ containing $w$ has already been constructed.  Put
-\[
- L_W=\bigcap_{i=1}^s W^{\perp_{B_{Q_i}}}.
-\]
-The $sj$ orthogonality conditions give
-\[
- \dim(L_W/W)\ge n-(s+1)j.
-\]
-For $j\le r-1$, \eqref{eq:cw-feasibility} makes this dimension at least $2s+1$.  Choose any $(2s+1)$-dimensional subspace $S$ of the quotient.  The $s$ induced quadrics on $S$ have total degree $2s<2s+1$.  The Chevalley--Warning theorem says that their number of common zeros is divisible by the characteristic~\cite{Chevalley1935,Warning1935}.  Since the zero vector is one zero, there is a nonzero zero.  Enumerating \eqref{eq:cw-projective-count} finds one deterministically.
-
-Lift that zero to $z\in L_W$.  Then $Q_i(z)=0$ and $B_{Q_i}(z,W)=0$, so $W\oplus\langle z\rangle$ is again common totally isotropic.  Iterating reaches dimension $r$.
+At each step, intersect the polar-orthogonal spaces of the current isotropic
+subspace.  Condition \eqref{eq:cw-feasibility} leaves at least $2s+1$
+quotient dimensions, where Chevalley--Warning supplies a nonzero common zero
+of the induced $s$ quadrics~\cite{Chevalley1935,Warning1935}.  Lifting this
+zero extends the isotropic subspace by one dimension.  The complete dimension
+count appears in \cref{app:direct-proofs}.
 \end{proof}
 
-\begin{corollary}[Target-orthogonal affine reduction]\label{cor:generic-target-slicing}
+\begin{corollary}[Affine reduction after target normalization]\label{cor:generic-target-slicing}
 Let $P:\F_q^n\to\F_q^m$ be any homogeneous quadratic map, let $y\ne0$, and
 choose $1\le s<m$.  After an invertible output recombination sends $y$ to the
 last coordinate, a nonzero common zero of any $s$ of the first $m-1$
@@ -856,8 +778,9 @@ residual.
 The affine formulation leaves one variable that homogeneity makes redundant.
 The next corollary removes it exactly.
 
-\begin{corollary}[Projective target-orthogonal reduction]\label{cor:projective-target-slicing}
-Assume that $q$ is odd.  Under the hypotheses of \cref{cor:generic-target-slicing}, put $r=m-s$ and let
+\begin{corollary}[Projective reduction after target normalization]\label{cor:projective-target-slicing}
+Assume that $q$ is odd.  Under the hypotheses of
+Corollary~\ref{cor:generic-target-slicing}, put $r=m-s$ and let
 $U$ be the constructed $r$-dimensional subspace.  Normalize the target to
 $(0,\ldots,0,1)$ and write
 \[
@@ -893,20 +816,13 @@ $2^{m-s-1}$.
 \end{corollary}
 
 \begin{proof}
-For a nonzero common zero $z$ of $H_1,\ldots,H_{r-1}$, replacing $z$ by
-$\lambda z$ multiplies every quadratic value by $\lambda^2$.  Hence some
-representative satisfies $H_0(\lambda z)=1$ exactly when $H_0(z)$ is a nonzero
-square, and then there are exactly two choices $\lambda$ and $-\lambda$.
-
-Euler's identity gives $dH_i(z)(z)=2H_i(z)=0$ for $1\le i<r$, whereas
-$dH_0(z)(z)=2$.  The first $r-1$ Jacobian rows therefore have rank $r-1$
-exactly when their common kernel is the radial line $\langle z\rangle$; in
-that case the last row is not in their span and the affine Jacobian has rank
-$r$.  Conversely, an invertible affine Jacobian forces the first $r-1$ rows
-to have rank $r-1$.  Finally, among the $q^r-1$ nonzero linear forms on $U$,
-exactly $q^{r-1}-1$ vanish at a fixed projective point.  Dehomogenizing in a
-chart that contains the point preserves nonsingularity and gives the claimed
-square affine system.
+Homogeneity multiplies every quadratic value by $\lambda^2$ under
+$z\mapsto\lambda z$.  Thus $H_0$ can be scaled to one exactly when its value
+is a nonzero square.  Euler's identity identifies affine nonsingularity with
+projective nonsingularity after removing the radial direction.  Counting the
+linear forms that vanish at a fixed projective point gives the chart
+probability.  The full Jacobian argument appears in
+\cref{app:direct-proofs}.
 \end{proof}
 
 For the QR-UOV parameters, set $s=3$ and $r=m-3$.  The subspace condition is
@@ -921,19 +837,42 @@ The resulting projective solver dimensions are
 \begin{equation}\label{eq:official-projective-cores}
  k=r-1=m-4\in\{50,74,101\}.
 \end{equation}
-The seed root and the extension are both obtained by finite exhaustive
-searches, so this algebraic reduction is unconditional.  One seed search and
-the $r-1$ extension steps each evaluate three seven-variable quadrics on at
-most $|\PP^6(\F_{127})|$ points.  The companion audit additionally overcharges
-uniform seed generation, recomputation of every polar-orthogonal space by
-dense elimination, the random chart, and the complete success normalization.
-The resulting preprocessing bounds are
-\[
- 2^{63.545},\qquad2^{64.077},\qquad2^{64.501}
-\]
-Boolean gates, negligible beside every terminal solver estimate below.
+The seed root and every extension step use finite exhaustive search, so this
+reduction needs no existence oracle.  Even after overcharging the required
+linear algebra and search, preprocessing costs at most $2^{64.501}$ Boolean
+gates across the three profiles.  The complete ledger appears in
+\cref{app:direct-proofs}.
 
-\subsection{An eligible nonsingular projective root with constant probability}
+\subsection{Why a usable projective root exists}
+
+The degree-three pull-back does not produce every UOV quadric over $\F_q$.
+The root count therefore uses the exact local randomness that the pull-back
+does provide.  Let $E=K^{V+O}$, viewed over $\F_q$, and let
+$\widehat{\cO}\subset E$ be the hidden base-field oil space.  In central
+coordinates, each public-random pulled-back form has the form
+\begin{equation}\label{eq:trace-pullback}
+ Q(v,o)=\Tr_{K/\F_q}\!\left(\gamma
+ (v^{\mathsf T}Av+2v^{\mathsf T}Bo)\right)
+\end{equation}
+for fixed nonzero $\gamma\in K$ and uniform
+$A\in\Sym_V(K)$ and $B\in K^{V\times O}$.
+
+\begin{lemma}[Evaluation and first-derivative randomness]\label{lem:pullback-one-jet}
+Let $x\in E\setminus\widehat{\cO}$, and let $U\subseteq E$ contain $x$.  For a
+uniform form $Q$ from \eqref{eq:trace-pullback}, $Q(x)$ is uniform in $\F_q$.
+Conditioned on $Q(x)=a$, the derivative $dQ_x|_U$ is uniform among the linear
+forms $\lambda\in U^*$ satisfying $\lambda(x)=2a$.  Moreover, evaluation at
+two off-oil points is linearly dependent only when the points differ by a
+nonzero scalar in $\F_q$.
+\end{lemma}
+
+\begin{proof}
+Nondegeneracy of the trace pairing lets the central bilinear form prescribe
+every value and derivative allowed by Euler's identity.  Comparing the
+rank-one coefficient matrices at two points gives the last claim.  The full
+surjectivity and degree-three descent argument appears in
+\cref{app:direct-proofs}.
+\end{proof}
 
 Let $U$ be the subspace from \cref{thm:cw-extension}, and choose an $\F_q$-basis
 to identify $U$ with $\F_q^r$.  Under the normalization
@@ -979,47 +918,22 @@ For $q=127$ and each of $r=51,75,102$, this is at least
 \end{proposition}
 
 \begin{proof}
-The off-oil seed point belongs to $U$, so $U$ is not contained in
-$\widehat{\cO}$ and $d\le r-1$.  Let $S=U\setminus\widehat{\cO}$ and let $M$
-count all roots of \eqref{eq:direct-residual} in $S$.  For a fixed $x\in S$,
-\cref{lem:pullback-one-jet} gives
-\[
- \Pr[x\text{ is a root}]=q^{-r}.
-\]
-Hence $\mathbb E[M]=|S|q^{-r}=\mu$.
-
-For two off-oil points, the evaluation functionals are independent unless the
-points are scalar multiples.  If $z=\lambda x$ and both solve
-\eqref{eq:direct-residual}, homogeneity and the last equation give
-$\lambda^2=1$.  By \cref{lem:pullback-one-jet}, the only dependent ordered
-pairs that can both solve the target are therefore $z=x$ and $z=-x$; the
-other $q-3$ nontrivial base-field multiples have joint probability zero.  Every
-nonproportional ordered pair has joint probability $q^{-2r}$.  Consequently,
+The off-oil seed point gives $d\le r-1$.  Let $M$ count all off-oil roots of
+\eqref{eq:direct-residual}.  Lemma~\ref{lem:pullback-one-jet} gives
+$\mathbb E[M]=\mu$.  Pairing proportional and nonproportional points gives
 \begin{equation}\label{eq:root-second-moment}
  \mathbb E[M^2]
  =2\mu+\mu^2-(q-1)\mu q^{-r}.
 \end{equation}
-
-Let $N$ count only roots with invertible Jacobian.  At a fixed root $x$, the
-conditional one-jet statement makes the Jacobian rows independent and uniform
-subject only to Euler's relation $dQ_x(x)=2Q(x)$.  The target vector is
-nonzero, so one column is fixed and nonzero while the other $r-1$ columns are
-uniform.  Thus
-\[
- \Pr[J(x)\text{ invertible}\mid x\text{ is a root}]
- =\pi_{r-1}(q),
-\]
-and $\mathbb E[N]=\mu\pi_{r-1}(q)$.  Since $N^2\le M^2$, the second-moment
-inequality gives
-\[
- \Pr[N>0]
- \ge\frac{\mathbb E[N]^2}{\mathbb E[M^2]},
-\]
-which is \eqref{eq:direct-root-lower-bound}.  The right-hand side increases
-with $\mu$, so use $\mu\ge1-q^{-1}$ and substitute the three values of $r$.
+At a fixed root, the same lemma makes the Jacobian invertible with probability
+$\pi_{r-1}(q)$.  If $N$ counts these roots, then
+$\mathbb E[N]=\mu\pi_{r-1}(q)$ and $N^2\le M^2$.  The second-moment inequality
+now gives \eqref{eq:direct-root-lower-bound}; using
+$\mu\ge1-q^{-1}$ gives \eqref{eq:direct-root-number}.  The complete pair count
+appears in \cref{app:direct-proofs}.
 \end{proof}
 
-\begin{corollary}[Eligible projective-root probability]\label{cor:projective-root-probability}
+\begin{corollary}[Probability of a usable projective root]\label{cor:projective-root-probability}
 Under the same conditioning, the probability that the projective system
 \[
  H_1=\cdots=H_{r-1}=0\quad\text{in }\PP^{r-1}(\F_q)
@@ -1030,8 +944,9 @@ $p_*$ for every official profile.
 \end{corollary}
 
 \begin{proof}
-By \cref{cor:projective-target-slicing}, every affine nonsingular root of
-\eqref{eq:direct-residual} maps to an eligible nonsingular projective root;
+By Corollary~\ref{cor:projective-target-slicing}, every affine nonsingular root of
+\eqref{eq:direct-residual} maps to a nonsingular projective root with the
+required nonzero-square value;
 the two affine roots $z$ and $-z$ map to the same projective point.  Existence
 of an affine root therefore implies the displayed projective event.
 \end{proof}
@@ -1044,9 +959,9 @@ The seed-disjointness statement is fixed-key; the residual-root statement
 averages over the independent-graph idealized expansion model.  We do not
 claim that repeated invocations on every fixed seeded key are independent.
 
-\subsection{Verified projective direct forgery}
+\subsection{The verified attack}
 
-\begin{theorem}[Projective target-orthogonal QR-UOV forgery]\label{thm:verified-direct-forgery}
+\begin{theorem}[Verified QR-UOV direct forgery]\label{thm:verified-direct-forgery}
 Work in the independent-graph public-random model and the official degree-three
 pull-back.  For any nonzero target $y$, the following public algorithm has
 one-sided error.
@@ -1071,8 +986,9 @@ public map.
 \end{enumerate}
 Every returned vector is a valid signature preimage.  Over the
 independent-graph public-random key and the public attack coins, one complete
-invocation reaches an off-oil residual with a represented eligible
-$\F_q$-rational nonsingular projective root with probability at least
+invocation reaches an off-oil residual with a represented nonsingular
+$\F_q$-rational projective root whose last quadratic value is a nonzero square
+with probability at least
 \begin{equation}\label{eq:direct-total-success}
  (1-\epsilon_{\rm seed})p_*
  \left(1-\frac1q\right)
@@ -1091,13 +1007,13 @@ fixed-key Las Vegas restart factor.
 
 \begin{proof}
 The first $m-1$ target coordinates are zero.  By
-\cref{prop:off-oil-seed}, the seed subspace is disjoint from the hidden oil
+Proposition~\ref{prop:off-oil-seed}, the seed subspace is disjoint from the hidden oil
 space with probability at least $1-\epsilon_{\rm seed}$ for every fixed key.
 Chevalley--Warning then supplies an off-oil seed root, and
 \cref{thm:cw-extension} constructs the advertised subspace.  Conditional on
 the selected first three forms, the graph, the attack coins, and this off-oil
 seed point, the remaining transformed forms are still independent uniform
-pull-back forms.  \Cref{cor:projective-root-probability} supplies an eligible
+pull-back forms.  Corollary~\ref{cor:projective-root-probability} supplies a usable
 nonsingular projective root with probability at least $p_*$.  A random nonzero
 chart contains a fixed such root with probability greater than $1-1/q$.
 The finite-characteristic solver includes every root in the chart with the
@@ -1107,22 +1023,22 @@ all $m$ original public forms rejects every malformed or extraneous candidate,
 so the algorithm cannot output an invalid signature.
 \end{proof}
 
-\subsection{The fixed-output security scissors}
+\subsection{Why changing only the vinegar count cannot help}
 
-The direct reduction becomes especially informative when combined with the
-directional equivalent-key attack.  Let the quotient degree be $\ell$, so that
+Combining the direct reduction with directional equivalent-key recovery gives
+a bound for every vinegar dimension.  Let the quotient degree be $\ell$, so that
 \[
  n=\ell V+m.
 \]
-Applying \cref{cor:generic-target-slicing} with a general value of $s$ gives
+Applying Corollary~\ref{cor:generic-target-slicing} with a general value of $s$ gives
 the required $(m-s)$-dimensional common-isotropic subspace whenever
 \begin{equation}\label{eq:scissors-feasibility}
  \ell V\ge s(m-s).
 \end{equation}
-By \cref{cor:projective-target-slicing}, the corresponding nonzero-target
+By Corollary~\ref{cor:projective-target-slicing}, the corresponding nonzero-target
 solver core has dimension $m-s-1$.
 
-\begin{theorem}[Projective security scissors at fixed output count]\label{thm:security-scissors}
+\begin{theorem}[Fixed-output bound across all vinegar dimensions]\label{thm:security-scissors}
 Work over a field of odd characteristic.  Fix $m$ and quotient degree $\ell$.  For every nonzero target, within the two
 attack families analyzed in this paper an algebraic core of dimension at most
 $m-\ell-1$ is available for every integer vinegar count $V$:
@@ -1133,7 +1049,7 @@ More precisely:
 \begin{enumerate}
 \item if $V\le m-\ell-1$, directional equivalent-key recovery uses a square
 core of dimension $V$;
-\item if $V\ge m-\ell$, target-orthogonal slicing with $s=\ell$, followed by
+\item if $V\ge m-\ell$, the direct reduction with $s=\ell$, followed by
 projectivization, uses a square core of dimension $m-\ell-1$.
 \end{enumerate}
 These cases cover every integer $V$.  For QR-UOV, $\ell=3$, so the ceiling is
@@ -1149,14 +1065,15 @@ $V$-equation square recombination and the planted-root attack of
 \]
 which is \eqref{eq:scissors-feasibility} with $s=\ell$.  The affine direct
 residual has dimension $m-\ell$ and
-\cref{cor:projective-target-slicing} removes its radial coordinate, leaving
+Corollary~\ref{cor:projective-target-slicing} removes its radial coordinate, leaving
 core $m-\ell-1$.  Since consecutive integers $m-\ell-1$ and $m-\ell$ meet the
 two inequalities, no case is omitted.
 \end{proof}
 
 The theorem is an algebraic-core statement, not a claim that running time
 depends only on the number of variables.  For the official degree-three sets,
-\cref{prop:off-oil-seed,cor:projective-root-probability} supply the success
+Proposition~\ref{prop:off-oil-seed} and
+Corollary~\ref{cor:projective-root-probability} supply the success
 factors charged in the concrete ledger.  Its design implication is exact:
 once $V$ reaches $m-\ell$, increasing $V$ while holding $m$ fixed no longer
 enlarges the projective direct-forgery core.  Conversely, decreasing $V$ into
@@ -1164,39 +1081,10 @@ the other case makes directional recovery no larger than the same ceiling.
 Moving both attack lines therefore requires changing $m$ as well as $V$, or
 modifying the construction so that one reduction no longer applies.
 
-\subsection{Exact small-parameter execution}
-The companion program \texttt{QRUOV\_direct\_qr\_toy.py} instantiates the
-degree-three model over $\F_{3^3}$, generates independent extension-field UOV
-forms, pulls each back by an explicit trace, hides the oil space with a random
-extension-field change of variables, and performs the public attack entirely
-over $\F_3$.  It now executes the projective reduction itself: after building
-$U$, it enumerates the projective roots of the remaining zero-target forms and
-recovers the affine scale from the final equation.  In the frozen $200$-key run
-with
-\[
- (V,O,n,m,r,k)=(3,2,15,6,3,2),
-\]
-$199$ keys yielded a verified forgery within twelve outer trials.  Every
-returned vector passed both the base-field public map and an independent
-extension-field evaluator; the remaining key produced no candidate within the
-fixed trial budget.  $185$ of the $200$ final seed subspaces were disjoint from
-the hidden oil space, while all $200$ selected seed points were off oil.  The
-distinction is expected at this tiny field size: seed-space disjointness is a
-sufficient production-scale guarantee, not a condition that the public
-algorithm tests.  This is a correctness regression test, not a production
-benchmark.
-
-\begin{remark}[Relation to Hashimoto and the specification]\label{rem:direct-prior-art}
-The affine reduction to $m-3$ variables is prior art.  Hashimoto's
-underdetermined-MQ method and the QR-UOV specification already analyze those
-residual sizes~\cite{Hashimoto2023,QRUOVSpec}.  The exact projective quotient
-to $m-4$ variables is additional: it uses full target normalization, solves
-only the homogeneous zero-target equations modulo scaling, and lets the final
-nonzero-target equation reconstruct the affine representative.  The other
-upgrades are the finite Chevalley--Warning construction, fixed-key seed bound,
-explicit degree-three nonsingular-root probability, and finite-characteristic
-solver cost.
-\end{remark}
+The direct construction and the complete local-separator pipeline have both
+been executed on reduced parameters.  The exact traces and public replay
+checks appear in \cref{app:direct-proofs,app:reduced-implementation}; these are
+correctness tests, not full-parameter benchmarks.
 
 \section{Graph-direction and derivative-kernel recovery}\label{sec:recovery}
 

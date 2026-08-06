@@ -34,7 +34,7 @@ refinement places the Level I cost below its category target.
 | Introduction | Rewritten in Slice 4 | Original remains in the canonical source | The old section began with attack mechanics. The replacement builds the cryptographic context and prior attack landscape before stating the fixed-output thesis. |
 | Related work | Keep in shorter form | Full current text remains recoverable from the original | The main paper needs positioning, not a catalog. |
 | From the expanded key to universal forgery | Keep the model, graph identity, public map, certificate chain, and bounds used later | Keep the full pull-back and random-matrix calculations in the new certificate appendix | The attacks need the exact interface and bounds, but not every derivation. |
-| Projective target orthogonal direct forgery | Keep the reduction, root existence statement, reconstruction, and fixed output theorem | Move supporting probability and implementation proofs | This is one half of the central thesis. |
+| Direct forgery in `m - 4` variables | Keep target normalization, the constructive isotropic-subspace reduction, the usable-root bound, the verified attack, and the fixed-output theorem | Keep the local distribution, dimension-count, Jacobian, second-moment, preprocessing, and toy-execution details in `Direct-forgery proofs and preprocessing` | This is one half of the central thesis. The main paper now follows the attack in execution order. |
 | Graph direction and derivative kernel recovery | Keep the planted root, graph completion, and success statements | Move detailed density and condenser proofs | This is the other half of the central thesis. |
 | Jacobian localization | Keep the local condition and resulting solver hypothesis | Move the commutative algebra proof | The solver needs the result, not the full proof in the main paper. |
 | Finite characteristic root recovery | Keep the solver interface, cost, success probability, and verified recovery theorem | Move the product start, separator, lifting identities, proof crosswalk, and proofs | The main paper uses the solver as an attack component. |
@@ -80,6 +80,7 @@ It did not delete or move technical content to the supplement.
 | Independent projective smooth core route | Keep in the supplement. |
 | Finite field solver interfaces and verified restart | Keep in the supplement. |
 | Expanded key certificate calculations | Keep in the supplement. |
+| Direct-forgery proofs and preprocessing | Keep in the supplement. |
 | Official seeded expansion | Keep in the supplement. |
 | Optional identification with the planted oil space | Keep in the supplement. |
 | Alternative elimination and low space directions | Keep in the supplement. |
@@ -123,3 +124,11 @@ No mathematical result has been deleted.
   The complete pull-back calculation, rank distribution, pair-line count, and
   determinant argument now appear in `Expanded-key certificate calculations`
   in the supplement. No mathematical result or numerical bound was deleted.
+- Slice 6 replaced the 3,202-word direct-forgery section with a shorter attack
+  narrative. The main paper still contains target normalization, the exact
+  fixed-key seed bound, the constructive Chevalley--Warning theorem, the
+  `m - 4` projective reduction, the explicit root probability, the verified
+  attack, and the fixed-output theorem. The complete local-randomness proof,
+  extension count, Jacobian argument, second-moment calculation, preprocessing
+  ledger, and degree-three toy execution now appear in `Direct-forgery proofs
+  and preprocessing`. No mathematical result or numerical bound was deleted.
