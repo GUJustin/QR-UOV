@@ -395,311 +395,239 @@ unpriced existence oracle is hidden in the preprocessing.  Our use of this
 classical theorem is therefore algorithmic rather than a new finite-field
 existence result.
 
-\section{Expanded-key model and exact signing certificates}\label{sec:model}
+\section{From the expanded key to universal forgery}\label{sec:model}
 
-This section connects the algebra used by the attack to the official verification map.  There are two coordinate systems:
-\begin{itemize}
-\item the official base-field system over $\F_{127}$, in which signatures are verified; and
-\item a smaller extension-field system over $K=\F_{127^3}$, in which the hidden oil space and the attack are easier to describe.
-\end{itemize}
-The specification gives an exact, invertible pull-back between them.  We first recover and verify the hidden structure over $K$, then pull it back and check the resulting base-field factorization against the unchanged public key.  One invertible oil system then certifies that the recovered decomposition can sign every target.
+The direct attack works with the official base-field map, while equivalent-key
+recovery works first with its quotient-ring expansion.  Equivalent-key
+recovery is complete only after the recovered structure gives a base-field
+decomposition that can invert every verification target.  This section defines
+the expansion model used for average-case claims and gives the two public
+checks that turn a recovered graph into a universal forgery.
 
-The Round-2 $q=127$ parameter sets use quotient-ring degree $\ell=3$.  The specification has $v=\ell V$ base-field vinegar variables and $m=\ell O$ base-field oil variables and output coordinates.  After quotient-ring expansion, the attacker works with the same $m$ outputs as quadratic forms in only $N=V+O$ variables over
+\subsection{Coordinates, parameters, and expansion model}
+
+The Round-2 parameter sets use $q=127$ and quotient degree $\ell=3$.  The
+official map has $v=\ell V$ vinegar variables, $m=\ell O$ oil variables, and
+$m$ outputs over $\F_q$.  Its quotient-ring expansion has the same $m$ outputs
+in $N=V+O$ variables over
 \[
-K=\F_{q^\ell}=\F_{127^3},\qquad Q=|K|=127^3=2{,}048{,}383,
-\qquad \log_2 Q=20.966054\ldots.
+ K=\F_{q^\ell}=\F_{127^3},\qquad
+ Q=|K|=2{,}048{,}383,
+ \qquad \log_2 Q=20.966054\ldots.
 \]
-Thus $m$ denotes both the number of public output coordinates and the base-field oil dimension, whereas $O=m/\ell$ is the oil dimension over $K$.
-
-Let $\Phi_f:K\to\F_q^{\ell\times\ell}$ be the regular representation from the specification, and let $W_f\in\F_q^{\ell\times\ell}$ be its invertible symmetrizer.  Write $\phi$ for the blockwise inverse of $\Phi_f$, and write $W_f^{(a)}$ for the block-diagonal matrix with $a$ copies of $W_f$.
-
-The attack uses the expanded extension-field tuple
-\[
-P=(p_1,\ldots,p_m),\qquad p_i(x)=x^{\mathsf T}P_ix,
-\qquad x\in K^{N},
-\]
-where the symmetric matrices $P_i$ share a hidden totally isotropic $O$-space $\cO$:
-\begin{equation}\label{eq:isotropy}
-u^{\mathsf T}P_iw=0\qquad(u,w\in\cO,\ 1\le i\le m).
-\end{equation}
-The Round-2 sets analyzed in this paper are
+The three parameter sets are as follows.
 \begin{center}
 \begin{tabular}{@{}lrrrrrr@{}}
 \toprule
-Level & $q$ & $\ell$ & $v$ & $m$ & $V=v/\ell$ & $O=m/\ell$\\
+Level & $v$ & $m$ & $V$ & $O$ & $N$ & $e=m-V$\\
 \midrule
-I&127&3&156&54&52&18\\
-III&127&3&228&78&76&26\\
-V&127&3&306&105&102&35\\
+I&156&54&52&18&70&2\\
+III&228&78&76&26&102&2\\
+V&306&105&102&35&137&3\\
 \bottomrule
 \end{tabular}
 \end{center}
+We write $D=2^V$ for the B\'ezout degree of a smooth square core and
+$L_s=\F_{Q^s}$ for the solver's working field.  All concrete theorems below
+concern these three sets, for which $m<q$.
 
-\begin{center}
-\small
-\setlength{\tabcolsep}{5pt}
-\begin{tabularx}{0.94\textwidth}{@{}>{\bfseries}p{0.16\textwidth}X@{}}
-\toprule
-Symbol & Meaning \\
-\midrule
-$N=V+O$ & Number of extension-field variables. \\
-$e=m-V$ & Number of public equations not used in the square $V$-equation core. \\
-$D=2^V$ & B\'ezout degree of a smooth projective core. \\
-$L_s=\F_{Q^s}$ & Solver working field; the same field supplies slicing, recombination, and rational-root extraction. \\
-\bottomrule
-\end{tabularx}
-\end{center}
-
-All concrete theorems below concern these three sets, for which $m<q$.  The directional and projective equivalent-key analyses use \cref{def:ideal} and allow arbitrary correlation between the secret graph and the symmetric public blocks.  The direct-forgery root-counting theorem uses the stronger independent-graph specialization of \cref{def:direct-ideal}.  The fastest projective route has cost $\softO(2^V2^{(1+\varepsilon)(V-1)}3\log_2 127)$ for every fixed rational $\varepsilon>0$, while the graph-direction route uses the explicit locally closed finite-field theorem of Gim\'enez et al.  \Cref{app:seeded-transfer} gives separate ideal-XOF and ideal-cipher transfers for the two models and isolates the remaining fixed-primitive gap.
-
-\subsection{Public-random expansion model and relation to seeded expansion}
-
-\begin{definition}[Public-random expansion with an arbitrarily correlated secret graph]\label{def:ideal}
-First sample
+Write the expanded public tuple as
 \[
-(A_1,\ldots,A_m)\leftarrow\Sym_V(K)^m
+ P=(p_1,\ldots,p_m),\qquad
+ p_i(x)=x^{\mathsf T}P_ix,
+ \qquad
+ P_i=\begin{pmatrix}A_i&E_i\\E_i^{\trans}&C_i\end{pmatrix}.
 \]
-from the product-uniform distribution.  Conditional on the resulting tuple $A=(A_i)_i$, sample the secret graph $G\in K^{V\times O}$ according to an arbitrary conditional distribution.  Conditional on $(A,G)$, sample
-\[
-(E_1,\ldots,E_m)\leftarrow(K^{V\times O})^m
-\]
-from the product-uniform distribution, set each lower-right public block by the key-generation identity, and expose the resulting expanded public tuple.  Values are sampled once and reused consistently.  No independence between $G$ and $A$ is assumed.
+In normalized public coordinates, the hidden oil space is the graph
+\begin{equation}\label{eq:graph}
+ \cO=\left\{\binom{-Gc}{c}:c\in K^O\right\}.
+\end{equation}
+It is totally isotropic for every public form,
+\begin{equation}\label{eq:isotropy}
+ u^{\mathsf T}P_iw=0\qquad(u,w\in\cO,\ 1\le i\le m),
+\end{equation}
+exactly when
+\begin{equation}\label{eq:graphid}
+ C_i=G^{\trans}E_i+E_i^{\trans}G-G^{\trans}A_iG.
+\end{equation}
+The corresponding secret central form is
+\begin{equation}\label{eq:central}
+ F_i=\begin{pmatrix}A_i&B_i\\B_i^{\trans}&0\end{pmatrix},
+ \qquad
+ F_i(v,o)=v^{\trans}A_iv+2v^{\trans}B_io,
+ \qquad B_i=E_i-A_iG.
+\end{equation}
+
+\begin{definition}[Public-random expanded key]\label{def:ideal}
+Sample the symmetric blocks $A_1,\ldots,A_m$ independently and uniformly from
+$\Sym_V(K)$.  Conditional on $A=(A_i)_i$, sample the secret graph
+$G\in K^{V\times O}$ from any distribution.  Conditional on $(A,G)$, sample
+$E_1,\ldots,E_m$ independently and uniformly from $K^{V\times O}$, and set
+each $C_i$ by \eqref{eq:graphid}.  No independence between $G$ and $A$ is
+assumed.
 \end{definition}
 
 \begin{definition}[Independent-graph specialization]\label{def:direct-ideal}
-The \emph{independent-graph public-random model} is \cref{def:ideal} with the
-additional requirement that the marginal law of $G$ be independent of $A$.
-Equivalently, after centralization the product-uniform coefficient pairs
-$(A_i,B_i)_{1\le i\le m}$ are independent of $G$.  The marginal law of $G$
-may otherwise be arbitrary.
+The independent-graph model is Definition~\ref{def:ideal} with $G$ independent of $A$.
+The marginal distribution of $G$ may otherwise be arbitrary.
 \end{definition}
 
-\begin{proposition}[Exact central-block factorization under graph correlation]\label{prop:ideal-factorization}
-In the block notation of \eqref{eq:central}--\eqref{eq:graphid}, define
-\[
-B_i:=E_i-A_iG.
-\]
-Conditional on every fixed pair $(A,G)$, the tuple $(B_1,\ldots,B_m)$ is product-uniform and its conditional law does not depend on $(A,G)$.  Consequently, $B$ is independent of $(A,G)$, and the pairs $(A_i,B_i)_{1\le i\le m}$ are independent and uniform on $\Sym_V(K)\times K^{V\times O}$.  The graph $G$ may nevertheless remain arbitrarily correlated with $A$.  The lower-right public blocks $C_i$ are determined by \eqref{eq:graphid}.
+\begin{proposition}[Central blocks remain uniform]\label{prop:ideal-factorization}
+In Definition~\ref{def:ideal}, the blocks $B_i=E_i-A_iG$ are independent and uniform in
+$K^{V\times O}$, and $B=(B_i)_i$ is independent of $(A,G)$.  Hence the pairs
+$(A_i,B_i)_{1\le i\le m}$ are independent and uniform on
+$\Sym_V(K)\times K^{V\times O}$, although $G$ may remain correlated with $A$.
 \end{proposition}
 
 \begin{proof}
-Fix $(A,G)=(a,g)$.  For each $i$, the map
-\[
-E_i\longmapsto B_i=E_i-a_ig
-\]
-is a translation of the additive space $K^{V\times O}$ and hence a bijection.  It sends the product-uniform law of $E$ to the product-uniform law of $B$, independently of $(a,g)$.  Thus $B$ is independent of $(A,G)$.  Since $A$ itself is product-uniform, $(A_i,B_i)_i$ has the claimed product law.  The formula for $C_i$ is the key-generation block identity \eqref{eq:graphid}.
+For fixed $(A,G)$, each map $E_i\mapsto E_i-A_iG$ is a translation of
+$K^{V\times O}$.  It therefore preserves the uniform law and makes that law
+independent of $(A,G)$.  Independence of the $A_i$ and $E_i$ gives the stated
+product distribution.
 \end{proof}
 
-The directional and projective bad-key calculations depend on the central pairs $(A_i,B_i)$, uniform public slices, and fresh attack coins.  A secret coordinate change depending on $G$ maps a uniform public slice to a uniform central slice for every fixed key, so those calculations tolerate arbitrary $G$--$A$ correlation.  The direct-forgery reduction itself is also key by key, but its average-case residual-root theorem conditions on an off-oil point and then uses independence of $G$ from the central coefficient pairs; it is therefore stated under \cref{def:direct-ideal}.  \Cref{app:seeded-transfer} proves separate ideal-primitive transfers, including the public/secret seed-collision term needed for the independent-graph model.  All returned keys and signatures are verified against the unchanged public map, independently of any distributional model.
+The equivalent-key analyses use Definition~\ref{def:ideal}; their bad-key
+events depend on the uniform central pairs and on fresh attack coins, not on
+independence between $G$ and $A$.  The direct reduction is key by key, but its
+average-case residual-root theorem conditions on an off-oil point and then
+requires $G$ to be independent of the central coefficient pairs.  It therefore
+uses Definition~\ref{def:direct-ideal}.  The ideal-XOF and ideal-cipher
+transfers, and the gap for fixed SHAKE or AES, are stated in
+\cref{app:seeded-transfer}.  These models govern only the probability of
+finding a certificate.  Every returned key and signature is checked against
+the unchanged public map.
 
-\subsection{Central and public graph coordinates}
+\subsection{From a recovered graph to a signing key}
 
-In secret central coordinates $K^V\oplus K^O$,
-\begin{equation}\label{eq:central}
-F_i=\begin{pmatrix}A_i&B_i\\B_i^{\trans}&0\end{pmatrix},
-\qquad F_i(v,o)=v^{\trans}A_iv+2v^{\trans}B_io,
-\end{equation}
-with $A_i\in\Sym_V(K)$ and $B_i\in K^{V\times O}$ independent and uniform.  The planted oil space is $\cO_0=\{0\}\oplus K^O$.
-
-In normalized public coordinates the hidden space is a graph
-\begin{equation}\label{eq:graph}
-\cO=\left\{\binom{-Gc}{c}:c\in K^O\right\}.
-\end{equation}
-Writing
-\[
-P_i=\begin{pmatrix}A_i&E_i\\E_i^{\trans}&C_i\end{pmatrix},
-\]
-total isotropy is equivalent to
-\begin{equation}\label{eq:graphid}
-C_i=G^{\trans}E_i+E_i^{\trans}G-G^{\trans}A_iG.
-\end{equation}
-
-\begin{proposition}[Verified graph gives an exact expanded UOV decomposition]\label{prop:verified-key}
+\begin{proposition}[A verified graph gives an exact UOV decomposition]\label{prop:verified-key}
 Let $G'\in K^{V\times O}$ satisfy every identity \eqref{eq:graphid}, and put
 \[
-B_i'=E_i-A_iG',\qquad
-F_i'=\begin{pmatrix}A_i&B_i'\\ {B_i'}^{\trans}&0\end{pmatrix},\qquad
-S_{G'}=\begin{pmatrix}I_V&G'\\0&I_O\end{pmatrix}.
+ B_i'=E_i-A_iG',\qquad
+ F_i'=\begin{pmatrix}A_i&B_i'\\{B_i'}^{\trans}&0\end{pmatrix},\qquad
+ S_{G'}=\begin{pmatrix}I_V&G'\\0&I_O\end{pmatrix}.
 \]
-Then
-\[
-P_i=S_{G'}^{\trans}F_i'S_{G'}
-\qquad(1\le i\le m).
-\]
-Consequently, the specification's inverse pull-back gives an expanded base-field UOV decomposition of the unchanged verification map.
+Then $P_i=S_{G'}^{\trans}F_i'S_{G'}$ for every $i$.  The specification's
+invertible pull-back therefore gives matrices
+$\widehat P_i=\widehat S_{G'}^{\trans}\widehat F_i'\widehat S_{G'}$ over
+$\F_q$ for the unchanged verification map~\cite[Sec.~4.1]{QRUOVSpec}.
 \end{proposition}
 
 \begin{proof}
-Since
-\[
-S_{G'}^{-1}=\begin{pmatrix}I_V&-G'\\0&I_O\end{pmatrix},
-\]
-a direct block multiplication gives
-\[
-S_{G'}^{-\trans}P_iS_{G'}^{-1}
-=
-\begin{pmatrix}
-A_i&E_i-A_iG'\\
-E_i^{\trans}-{G'}^{\trans}A_i&
-C_i-{G'}^{\trans}E_i-E_i^{\trans}G'+{G'}^{\trans}A_iG'
-\end{pmatrix}.
-\]
-The lower-right block is zero by \eqref{eq:graphid}; the remaining blocks are exactly $F_i'$.  Rearranging proves the displayed factorization.
-
-To make the interface with the specification explicit, let hats denote the corresponding base-field matrices.  The forward pull-back of Section~4.1 of the specification has the form
-\[
-P_i=\phi\!\left((W_f^{(N)})^{-1}\widehat P_i\right),\qquad
-F_i'=\phi\!\left((W_f^{(N)})^{-1}\widehat F_i'\right),\qquad
-S_{G'}=\phi(\widehat S_{G'}).
-\]
-Hence the inverse pull-back sets
-\[
-\widehat P_i=W_f^{(N)}\phi^{-1}(P_i),\qquad
-\widehat F_i'=W_f^{(N)}\phi^{-1}(F_i'),\qquad
-\widehat S_{G'}=\phi^{-1}(S_{G'}).
-\]
-The pull-back identity in the specification converts the verified extension-field factorization into
-$\widehat P_i=\widehat S_{G'}^{\trans}\widehat F_i'\widehat S_{G'}$ for the unchanged base-field verification map~\cite[Sec.~4.1]{QRUOVSpec}.  These matrix identities publicly certify an exact expanded UOV decomposition.  Signing uses this base-field pull-back, not the extension-field tuple with only $O=m/3$ oil variables.  The separate test in \cref{prop:signing-witness} certifies that the decomposition can invert every target.
+Direct block multiplication gives the extension-field factorization because
+the lower-right block is zero exactly when \eqref{eq:graphid} holds.  Applying
+the specification's inverse pull-back gives the base-field factorization.  The
+full matrix calculation appears in \cref{app:expanded-certificates}.
 \end{proof}
 
-For an expanded base-field decomposition $\widehat P_i=\widehat S^{\mathsf T}\widehat F_i\widehat S$, write the central variables as $(a,o)\in\F_q^v\oplus\F_q^m$.  Because the oil--oil block of every $\widehat F_i$ is zero, fixing $a$ leaves a linear map in the oil variables.  Denote its matrix by
+For an expanded base-field decomposition
+$\widehat P_i=\widehat S^{\mathsf T}\widehat F_i\widehat S$, write the central
+variables as $(a,o)\in\F_q^v\oplus\F_q^m$.  Fixing $a$ makes the central map
+linear in $o$ because every oil-oil block is zero.  Define this linear map by
 \begin{equation}\label{eq:signing-matrix}
-\mathsf L_{\widehat F}(a)\in\F_q^{m\times m},
-\qquad
-\bigl(\mathsf L_{\widehat F}(a)o\bigr)_i
-:=\widehat F_i(a,o)-\widehat F_i(a,0).
+ \mathsf L_{\widehat F}(a)\in\F_q^{m\times m},
+ \qquad
+ \bigl(\mathsf L_{\widehat F}(a)o\bigr)_i
+ :=\widehat F_i(a,o)-\widehat F_i(a,0).
 \end{equation}
 
 \begin{proposition}[Public signing witness]\label{prop:signing-witness}
-If $\det\mathsf L_{\widehat F}(a)\ne0$, then $(\widehat F,\widehat S,a)$ is a publicly checkable signing certificate.  For every target $y\in\F_q^m$, one computes
+If $\det\mathsf L_{\widehat F}(a)\ne0$, then
+$(\widehat F,\widehat S,a)$ is a publicly checkable signing certificate.  For
+every target $y\in\F_q^m$, compute
 \[
-o=\mathsf L_{\widehat F}(a)^{-1}\bigl(y-\widehat F(a,0)\bigr),
-\qquad
-x=\widehat S^{-1}(a,o),
+ o=\mathsf L_{\widehat F}(a)^{-1}\bigl(y-\widehat F(a,0)\bigr),
+ \qquad
+ x=\widehat S^{-1}(a,o).
 \]
-and obtains $\widehat P(x)=y$.
+Then $\widehat P(x)=y$.
 \end{proposition}
 
 \begin{proof}
-Direct substitution gives $\widehat F(a,o)=y$, followed by $\widehat P(x)=\widehat F(\widehat Sx)=y$.  These signatures verify under the unchanged public map; matching the official signing distribution is neither needed nor claimed.
+Substitution gives $\widehat F(a,o)=y$ and then
+$\widehat P(x)=\widehat F(\widehat Sx)=y$.  The forged signatures need not
+match the honest signing distribution.
 \end{proof}
 
 \begin{corollary}[Key-only universal chosen-message forgery]\label{cor:universal-forgery}
-Given a publicly verified signing certificate from \cref{prop:signing-witness}, an attacker can forge an accepted \QRUOV{} signature on every chosen message without querying a signing oracle.  Concretely, for a message $M$, choose any allowed salt $r$, compute the official target
+A verified certificate from Proposition~\ref{prop:signing-witness} lets an attacker forge
+an accepted \QRUOV{} signature on every chosen message without a signing
+query.  Given a message $M$, choose any allowed salt $r$, compute
 \[
  \mu=\operatorname{SHAKE256}(\mathsf{seed}_{\rm pk}\mathbin\|\operatorname{BytesToBits}(M),512),
  \qquad y=\operatorname{Hash}(\mu,r),
 \]
-invert $y$ using \cref{prop:signing-witness}, and output $(r,x)$.  The official verifier accepts because $\widehat P(x)=\operatorname{Hash}(\mu,r)$.
+invert $y$ with Proposition~\ref{prop:signing-witness}, and output $(r,x)$.
 \end{corollary}
 
 \begin{proof}
-The specification's verifier recomputes $\mu$ and $\operatorname{Hash}(\mu,r)$ and accepts exactly when the public map evaluated at the signature vector equals that target~\cite[Secs.~4.2--4.3]{QRUOVSpec}.  \Cref{prop:signing-witness} inverts every target under the unchanged public map.  No distributional claim about the forged signature is needed for verification, and the secret seed is never recovered.
+The verifier accepts exactly when
+$\widehat P(x)=\operatorname{Hash}(\mu,r)$~\cite[Secs.~4.2--4.3]{QRUOVSpec}.
+The certificate inverts every target under this unchanged map.  It neither
+recovers nor uses the secret seed.
 \end{proof}
 
-Fix a nonzero $\xi\in\F_q^\ell$.  For each quotient-ring vinegar block $1\le j\le V$, let $a_j$ place $\xi$ in block $j$ and zero elsewhere, and set
+\subsection{Finding an invertible oil system}
+
+Fix nonzero $\xi\in\F_q^\ell$.  For each quotient-ring vinegar block $j$, let
+$a_j$ place $\xi$ in block $j$ and zero elsewhere, and set
 \[
-M_j:=\mathsf L_{\widehat F}(a_j)\in\F_q^{m\times m}.
+ M_j:=\mathsf L_{\widehat F}(a_j)\in\F_q^{m\times m}.
 \]
-For $0\le r\le m$, write
-\begin{equation}\label{eq:rank-probability}
-\varrho_r:=\Pr_{M\leftarrow\F_q^{m\times m}}[\rank M=r]
-=q^{-m^2}\prod_{i=0}^{r-1}\frac{(q^m-q^i)^2}{q^r-q^i}.
-\end{equation}
-In particular,
-\begin{equation}\label{eq:square-invertible}
- \pi_m:=\varrho_m=\prod_{k=1}^m(1-q^{-k}),
+Write
+\[
+ \pi_m:=\prod_{k=1}^m(1-q^{-k}),
  \qquad \sigma_m:=1-\pi_m.
-\end{equation}
-For the stronger fallback, define
-\begin{equation}\label{eq:pair-failure}
-\chi_m:=q^{-(m-1)}+(1-q^{-(m-1)})q^{-1},
-\qquad
-\zeta_{\rm pair}:=
-\varrho_{m-1}q^{-1}\chi_m
-+(1-\varrho_m-\varrho_{m-1})(1-\varrho_m).
-\end{equation}
+\]
 
-\begin{proposition}[Basis-first deterministic signing search]\label{prop:signing-search}
-For the planted decomposition in the public-random expansion model, the matrices
-$M_1,\ldots,M_V$ are independent and uniform in $\F_q^{m\times m}$.
-Consequently:
+\begin{proposition}[Basis-first signing search]\label{prop:signing-search}
+For the planted decomposition in Definition~\ref{def:ideal}, the matrices
+$M_1,\ldots,M_V$ are independent and uniform.  The following searches then
+give public signing certificates.
 \begin{enumerate}
-\item Testing the basis assignments $a_1,a_2,\ldots$ in order uses fewer than
-\[
- \pi_m^{-1}<1.008
-\]
-basis tests on average, stopping at the first success or after all $V$ tests.  It fails to find an invertible matrix exactly when all $V$ basis matrices are singular, an event of probability
-\begin{equation}\label{eq:basis-sign-failure}
- \eta_{\rm basis}:=\sigma_m^V,
-\end{equation}
-whose base-two logarithms at Levels I, III, and V are
-\[
--362.823,\qquad-530.280,\qquad-711.692.
-\]
+\item Testing basis assignments in order uses fewer than
+$\pi_m^{-1}<1.008$ tests on average.  Testing all $V$ fails with probability
+$\sigma_m^V$, whose base-two logarithms at Levels I, III, and V are
+$-362.823$, $-530.280$, and $-711.692$.
 
-\item Much shorter fixed lists already suffice at the category scale.  Testing the first
-\[
- b_{\rm sign}=22,\qquad31,\qquad40
-\]
-basis assignments at Levels I, III, and V fails with probabilities $\sigma_m^{b_{\rm sign}}$, whose base-two logarithms are
+\item Testing only the first $22$, $31$, and $40$ assignments at the three
+levels fails with base-two log probabilities
 \begin{equation}\label{eq:compact-sign-logs}
  -153.502,\qquad-216.298,\qquad-279.095.
 \end{equation}
 
-\item Pair the basis matrices as $(M_1,M_2),(M_3,M_4),\ldots$.  Let $\cE_{\rm sign}$ be the event that every designated pair span contains only singular matrices.  Then
+\item Pairing the basis matrices as $(M_1,M_2),(M_3,M_4),\ldots$ gives a
+deterministic fallback.  Let $\cE_{\rm sign}$ be the event that every chosen
+pair span contains only singular matrices.  Its probability satisfies
 \begin{equation}\label{eq:eta-sign}
- \Pr[\cE_{\rm sign}]
- \le \eta_{\rm sign}:=\zeta_{\rm pair}^{\lfloor V/2\rfloor},
+ \Pr[\cE_{\rm sign}]\le\eta_{\rm sign}.
 \end{equation}
-with base-two logarithms below
+Its base-two logarithms at Levels I, III, and V are below
 \[
--544.820,\qquad-796.276,\qquad-1068.687.
+ -544.820,\qquad-796.276,\qquad-1068.687.
 \]
-Outside $\cE_{\rm sign}$, a deterministic fallback succeeds after at most
-\begin{equation}\label{eq:signing-scan-count}
- V+\lfloor V/2\rfloor(q-1)
-\end{equation}
-oil-matrix tests: first test every $M_j$; if necessary, for each pair $(A,B)$ test $A+tB$ for all $t\in\F_q^\times$.  The basis tests already cover the two remaining projective points $A$ and $B$.
+Outside this event, testing every $M_j$ and then
+$A+tB$ for each chosen pair and $t\in\F_q^\times$ succeeds after at most
+$V+\lfloor V/2\rfloor(q-1)$ tests.
 \end{enumerate}
 
-For any fixed exact candidate, define its oil-matrix determinant polynomial
+For any exact candidate, define
 \[
-\Delta(c_1,\ldots,c_V):=\det\!\left(\sum_{j=1}^V c_jM_j\right).
+ \Delta(c_1,\ldots,c_V):=\det\!\left(\sum_{j=1}^V c_jM_j\right).
 \]
-Whenever $\Delta$ is nonzero, a uniform scalar-block vinegar assignment is invertible with probability at least $1-m/q$.  The corresponding expected numbers of assignments are at most
-\[
-\frac{q}{q-m}=1.740,\qquad2.592,\qquad5.773
-\]
-at Levels I, III, and V.  This last statement is key by key.  For a recovered candidate not known to be planted, every successful determinant test is still an exact public signing certificate.
+If $\Delta$ is nonzero, a uniform scalar-block vinegar assignment succeeds
+with probability at least $1-m/q$.  The expected numbers of assignments are
+at most $1.740$, $2.592$, and $5.773$ at the three levels.  This last claim is
+key by key, and every successful determinant test is an exact public
+certificate even for a candidate that is not planted.
 \end{proposition}
 
 \begin{proof}
-Write $b_{i,j,k}\in K=\F_{q^\ell}$ for entry $(j,k)$ of the planted extension-field block $B_i$.  Under the public-random experiment these elements are independent and uniform.  The $(i,k)$ block of the oil coefficient row produced by $a_j$ is
-\[
-2\xi^{\mathsf T}W_f\Phi_f(b_{i,j,k})\in\F_q^{1\times\ell}.
-\]
-The factor $2$ is invertible.  The $\F_q$-linear map
-\[
-K\longrightarrow\F_q^{1\times\ell},
-\qquad b\longmapsto \xi^{\mathsf T}W_f\Phi_f(b)
-\]
-is injective: if $b\ne0$, then $\Phi_f(b)$ is invertible, while $\xi^{\mathsf T}W_f\ne0$.  Equal dimensions make it an isomorphism.  Thus each $M_j$ is uniform, and distinct $j$ use disjoint entries of the independent blocks $B_i$; hence the $M_j$ are independent.
-
-A basis test succeeds with probability $\pi_m$.  Truncating a geometric random variable at $V$ gives expected test count
-\[
- \sum_{j=0}^{V-1}\sigma_m^j
- =\frac{1-\sigma_m^V}{\pi_m}<\pi_m^{-1}.
-\]
-Independence gives $\sigma_m^b$ for every fixed prefix of length $b$, yielding all displayed basis-list probabilities.
-
-It remains to bound one pair.  Let $A,B$ be independent uniform $m\times m$ matrices, and let $E_{A,B}$ be the event that their span contains no invertible matrix.  If $A$ is invertible, this event is impossible.  If $\rank A=m-1$, invertible left and right changes of basis reduce $A$ to $\operatorname{diag}(I_{m-1},0)$ without changing the distribution of $B$.  Write
-\[
-B=\begin{pmatrix}C&b\\ c^{\mathsf T}&d\end{pmatrix}.
-\]
-On $E_{A,B}$, the polynomial $\det(A+tB)$ vanishes for every $t\in\F_q$.  Its degree is at most $m<q$, so it is the zero polynomial.  Its linear coefficient is $d$, and, after $d=0$, its quadratic coefficient is $-c^{\mathsf T}b$.  These conditions have probability at most $q^{-1}\chi_m$.  If $\rank A\le m-2$, then $E_{A,B}$ implies that $B$ is singular, an event of probability $1-\varrho_m$.  Conditioning on the rank of $A$ gives $\Pr[E_{A,B}]\le\zeta_{\rm pair}$.  The designated pairs are independent, proving \eqref{eq:eta-sign}.
-
-The basis matrices and $A+tB$ for $t\in\F_q^\times$ enumerate every projective point on each designated pair line, so the deterministic scan succeeds whenever one pair span contains an invertible matrix.  Finally, $\Delta$ has total degree $m$.  If it is nonzero, Schwartz--Zippel gives success probability at least $1-m/q$ for a uniform coefficient vector.
+The specification's regular representation maps each independent uniform
+entry of the central block $B_i$ bijectively to one row block of $M_j$.  Thus
+the $M_j$ are independent and uniform.  The remaining statements follow from
+the exact rank distribution of a uniform matrix, a count of singular
+two-dimensional spans, and Schwartz--Zippel.  The formulas and calculations
+appear in \cref{app:expanded-certificates}.
 \end{proof}
 
 \section{Projective target-orthogonal direct forgery}\label{sec:direct}

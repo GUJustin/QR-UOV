@@ -86,7 +86,14 @@
 
 \appendix
 \section*{Appendix overview}
-The main body presents the direct forgery, directional equivalent-key recovery, characteristic-$127$ solver, and combined parameter consequences.  The first appendices retain an independent smooth-projective route and two solver cross-checks.  Later appendices cover seeded expansion, optional identification with the planted oil space, alternative low-space directions, and executable pseudocode.  These details are separated so that readers can understand the attack and its parameter implications before entering the algebraic-geometry audit.
+The main body presents the direct forgery, directional equivalent-key recovery,
+characteristic-$127$ solver, and combined parameter consequences.  The first
+appendices retain an independent smooth-projective route and two solver
+cross-checks.  Later appendices give the expanded-key certificate calculations,
+seeded expansion, optional identification with the planted oil space,
+alternative low-space directions, and executable pseudocode.  These details
+are separated so that readers can understand the attack and its parameter
+implications before entering the full audit.
 
 \section{Independent projective smooth-core route}\label{sec:projective}
 
@@ -978,6 +985,145 @@ Outside the key-level exceptional set, the projective discriminant and a determi
 
 
 
+
+\section{Expanded-key certificate calculations}\label{app:expanded-certificates}
+
+This section records the matrix and probability calculations behind
+Propositions~\ref{prop:verified-key} and~\ref{prop:signing-search}.  The main paper keeps the public
+certificate chain and the bounds used by later theorems.  The derivations are
+collected here so that the attack flow does not stop for specification-level
+pull-back formulas or random-matrix counting.
+
+\subsection{Exact pull-back to the official verification map}
+
+Let $G'\in K^{V\times O}$ satisfy every graph identity
+\eqref{eq:graphid}.  With the notation of Proposition~\ref{prop:verified-key},
+\[
+ S_{G'}^{-1}=\begin{pmatrix}I_V&-G'\\0&I_O\end{pmatrix}.
+\]
+A direct block multiplication gives
+\[
+S_{G'}^{-\mathsf T}P_iS_{G'}^{-1}
+=
+\begin{pmatrix}
+A_i&E_i-A_iG'\\
+E_i^{\mathsf T}-{G'}^{\mathsf T}A_i&
+C_i-{G'}^{\mathsf T}E_i-E_i^{\mathsf T}G'+{G'}^{\mathsf T}A_iG'
+\end{pmatrix}.
+\]
+The lower-right block is zero by \eqref{eq:graphid}; the remaining blocks are
+exactly $F_i'$.  Rearranging proves
+$P_i=S_{G'}^{\mathsf T}F_i'S_{G'}$.
+
+We next connect this identity to the official base-field map.  Let
+$\Phi_f:K\to\F_q^{\ell\times\ell}$ be the regular representation from the
+specification, let $W_f\in\F_q^{\ell\times\ell}$ be its invertible
+symmetrizer, and let $\phi$ be the blockwise inverse of $\Phi_f$.  Write
+$W_f^{(a)}$ for the block-diagonal matrix with $a$ copies of $W_f$.  If hats
+denote the corresponding base-field matrices, the forward pull-back of the
+specification has the form
+\[
+ P_i=\phi\!\left((W_f^{(N)})^{-1}\widehat P_i\right),\qquad
+ F_i'=\phi\!\left((W_f^{(N)})^{-1}\widehat F_i'\right),\qquad
+ S_{G'}=\phi(\widehat S_{G'}).
+\]
+Hence the inverse pull-back sets
+\[
+ \widehat P_i=W_f^{(N)}\phi^{-1}(P_i),\qquad
+ \widehat F_i'=W_f^{(N)}\phi^{-1}(F_i'),\qquad
+ \widehat S_{G'}=\phi^{-1}(S_{G'}).
+\]
+The pull-back identity converts the verified extension-field factorization
+into
+\[
+ \widehat P_i
+ =\widehat S_{G'}^{\mathsf T}\widehat F_i'\widehat S_{G'}
+\]
+for the unchanged base-field verification map~\cite[Sec.~4.1]{QRUOVSpec}.
+Signing uses this base-field pull-back, not the extension-field tuple with only
+$O=m/3$ oil variables.
+
+\subsection{Exact signing-search probabilities}
+
+Fix nonzero $\xi\in\F_q^\ell$.  For each quotient-ring vinegar block $j$, let
+$a_j$ place $\xi$ in block $j$ and zero elsewhere, and set
+$M_j=\mathsf L_{\widehat F}(a_j)$.  Write $b_{i,j,k}\in K$ for entry $(j,k)$
+of the planted extension-field block $B_i$.  The $(i,k)$ block of the oil
+coefficient row produced by $a_j$ is
+\[
+ 2\xi^{\mathsf T}W_f\Phi_f(b_{i,j,k})\in\F_q^{1\times\ell}.
+\]
+The factor $2$ is invertible.  The $\F_q$-linear map
+\[
+ K\longrightarrow\F_q^{1\times\ell},
+ \qquad b\longmapsto \xi^{\mathsf T}W_f\Phi_f(b)
+\]
+is injective.  If $b\ne0$, then $\Phi_f(b)$ is invertible and
+$\xi^{\mathsf T}W_f\ne0$.  Equal dimensions make the map an isomorphism.
+Each $M_j$ is therefore uniform, and distinct $j$ use disjoint entries of the
+independent blocks $B_i$.  This proves the independence claim in
+Proposition~\ref{prop:signing-search}.
+
+For $0\le r\le m$, the exact rank distribution of a uniform matrix is
+\begin{equation}\label{eq:app-rank-probability}
+ \varrho_r
+ :=\Pr_{M\leftarrow\F_q^{m\times m}}[\rank M=r]
+ =q^{-m^2}\prod_{i=0}^{r-1}\frac{(q^m-q^i)^2}{q^r-q^i}.
+\end{equation}
+In particular,
+\begin{equation}\label{eq:app-square-invertible}
+ \pi_m:=\varrho_m=\prod_{k=1}^m(1-q^{-k}),
+ \qquad \sigma_m:=1-\pi_m.
+\end{equation}
+A basis test succeeds with probability $\pi_m$.  Truncating the geometric
+random variable after $V$ tests gives expected test count
+\[
+ \sum_{j=0}^{V-1}\sigma_m^j
+ =\frac{1-\sigma_m^V}{\pi_m}<\pi_m^{-1}<1.008.
+\]
+Independence gives failure probability $\sigma_m^b$ for every fixed prefix of
+length $b$.  Taking $b=V$ or the shorter values $22$, $31$, and $40$ yields
+the basis-list probabilities stated in Proposition~\ref{prop:signing-search}.
+
+It remains to bound the deterministic pair-line fallback.  Define
+\begin{equation}\label{eq:app-pair-failure}
+ \chi_m:=q^{-(m-1)}+(1-q^{-(m-1)})q^{-1},
+ \qquad
+ \zeta_{\rm pair}
+ :=\varrho_{m-1}q^{-1}\chi_m
+ +(1-\varrho_m-\varrho_{m-1})(1-\varrho_m).
+\end{equation}
+Let $A,B$ be independent uniform $m\times m$ matrices, and let $E_{A,B}$ be
+the event that their span contains no invertible matrix.  If $A$ is
+invertible, this event is impossible.  If $\rank A=m-1$, invertible left and
+right changes of basis reduce $A$ to $\operatorname{diag}(I_{m-1},0)$ without
+changing the distribution of $B$.  Write
+\[
+ B=\begin{pmatrix}C&b\\c^{\mathsf T}&d\end{pmatrix}.
+\]
+On $E_{A,B}$, the polynomial $\det(A+tB)$ vanishes for every $t\in\F_q$.
+Its degree is at most $m<q$, so it is the zero polynomial.  Its linear
+coefficient is $d$.  After $d=0$, its quadratic coefficient is
+$-c^{\mathsf T}b$.  These conditions have probability at most
+$q^{-1}\chi_m$.  If $\rank A\le m-2$, then $E_{A,B}$ implies that $B$ is
+singular, an event of probability $1-\varrho_m$.  Conditioning on the rank of
+$A$ gives
+\[
+ \Pr[E_{A,B}]\le\zeta_{\rm pair}.
+\]
+The chosen pairs are independent.  Therefore
+\[
+ \eta_{\rm sign}=\zeta_{\rm pair}^{\lfloor V/2\rfloor},
+\]
+which gives the three numerical bounds in \eqref{eq:eta-sign}.
+
+The basis matrices and $A+tB$ for $t\in\F_q^\times$ enumerate every
+projective point on each chosen pair line.  The scan therefore succeeds
+whenever one pair span contains an invertible matrix and uses at most
+$V+\lfloor V/2\rfloor(q-1)$ tests.  Finally, the determinant polynomial
+$\Delta$ in Proposition~\ref{prop:signing-search} has total degree $m$.  If it is nonzero,
+Schwartz--Zippel gives success probability at least $1-m/q$ for a uniform
+coefficient vector.
 
 \section{Official seeded expansion: ideal primitives and fixed functions}\label{app:seeded-transfer}
 

@@ -33,7 +33,7 @@ refinement places the Level I cost below its category target.
 | --- | --- | --- | --- |
 | Introduction | Rewritten in Slice 4 | Original remains in the canonical source | The old section began with attack mechanics. The replacement builds the cryptographic context and prior attack landscape before stating the fixed-output thesis. |
 | Related work | Keep in shorter form | Full current text remains recoverable from the original | The main paper needs positioning, not a catalog. |
-| Expanded key model and signing certificates | Keep the model, public map, and certificate interface | Move distribution and certificate proofs | The attacks need the interface, but not every derivation. |
+| From the expanded key to universal forgery | Keep the model, graph identity, public map, certificate chain, and bounds used later | Keep the full pull-back and random-matrix calculations in the new certificate appendix | The attacks need the exact interface and bounds, but not every derivation. |
 | Projective target orthogonal direct forgery | Keep the reduction, root existence statement, reconstruction, and fixed output theorem | Move supporting probability and implementation proofs | This is one half of the central thesis. |
 | Graph direction and derivative kernel recovery | Keep the planted root, graph completion, and success statements | Move detailed density and condenser proofs | This is the other half of the central thesis. |
 | Jacobian localization | Keep the local condition and resulting solver hypothesis | Move the commutative algebra proof | The solver needs the result, not the full proof in the main paper. |
@@ -79,6 +79,7 @@ It did not delete or move technical content to the supplement.
 | --- | --- |
 | Independent projective smooth core route | Keep in the supplement. |
 | Finite field solver interfaces and verified restart | Keep in the supplement. |
+| Expanded key certificate calculations | Keep in the supplement. |
 | Official seeded expansion | Keep in the supplement. |
 | Optional identification with the planted oil space | Keep in the supplement. |
 | Alternative elimination and low space directions | Keep in the supplement. |
@@ -116,3 +117,9 @@ No mathematical result has been deleted.
   thesis, and four-part contribution overview. The detailed claim-status table
   moved to `Evidence and limitations`; every table row remains in the main
   paper. The original introduction remains in `QRUOV_strict_final.tex`.
+- Slice 5 replaced the 1,977-word expanded-key section with a 1,054-word
+  certificate chain. The main paper still defines both expansion models,
+  states every public check, and retains all signing-search bounds used later.
+  The complete pull-back calculation, rank distribution, pair-line count, and
+  determinant argument now appear in `Expanded-key certificate calculations`
+  in the supplement. No mathematical result or numerical bound was deleted.
