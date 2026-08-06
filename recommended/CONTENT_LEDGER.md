@@ -35,7 +35,7 @@ refinement places the Level I cost below its category target.
 | Related work | Keep in shorter form | Full current text remains recoverable from the original | The main paper needs positioning, not a catalog. |
 | From the expanded key to universal forgery | Keep the model, graph identity, public map, certificate chain, and bounds used later | Keep the full pull-back and random-matrix calculations in the new certificate appendix | The attacks need the exact interface and bounds, but not every derivation. |
 | Direct forgery in `m - 4` variables | Keep target normalization, the constructive isotropic-subspace reduction, the usable-root bound, the verified attack, and the fixed-output theorem | Keep the local distribution, dimension-count, Jacobian, second-moment, preprocessing, and toy-execution details in `Direct-forgery proofs and preprocessing` | This is one half of the central thesis. The main paper now follows the attack in execution order. |
-| Graph direction and derivative kernel recovery | Keep the planted root, graph completion, and success statements | Move detailed density and condenser proofs | This is the other half of the central thesis. |
+| Equivalent-key recovery from a planted root | Keep the public directional system, planted-root identity, exact graph completion, rank-density statement, and derivative-based oil-space recovery | Keep the multi-direction fallback, Wronskian proof, deterministic lists, exact list counts, and optimality argument in `Deterministic fallbacks for equivalent-key recovery` | This is the other half of the central thesis. The main paper now exposes the exact certificate chain from one root to a verified signing key. |
 | Jacobian localization | Keep the local condition and resulting solver hypothesis | Move the commutative algebra proof | The solver needs the result, not the full proof in the main paper. |
 | Finite characteristic root recovery | Keep the solver interface, cost, success probability, and verified recovery theorem | Move the product start, separator, lifting identities, proof crosswalk, and proofs | The main paper uses the solver as an attack component. |
 | Dense quadratic batching and flattened lifting | Keep one cost consequence | Move the construction and proof | This supports the ledger but is not part of the structural attack. |
@@ -80,6 +80,7 @@ It did not delete or move technical content to the supplement.
 | Independent projective smooth core route | Keep in the supplement. |
 | Finite field solver interfaces and verified restart | Keep in the supplement. |
 | Expanded key certificate calculations | Keep in the supplement. |
+| Deterministic fallbacks for equivalent-key recovery | Keep in the supplement. |
 | Direct-forgery proofs and preprocessing | Keep in the supplement. |
 | Official seeded expansion | Keep in the supplement. |
 | Optional identification with the planted oil space | Keep in the supplement. |
@@ -132,3 +133,12 @@ No mathematical result has been deleted.
   extension count, Jacobian argument, second-moment calculation, preprocessing
   ledger, and degree-three toy execution now appear in `Direct-forgery proofs
   and preprocessing`. No mathematical result or numerical bound was deleted.
+- Slice 7 replaced the 1,616-word directional-recovery section with a 724-word
+  certificate chain. The main paper still defines the public directional
+  system, proves that `Gc` is its planted root, gives the exact linear systems
+  that recover every column of `G`, states the rank probability used by the
+  verified theorem, and retains the derivative-kernel route. The complete
+  multi-direction fallback, Wronskian construction, deterministic list bounds,
+  numerical counts, and optimality argument now appear in `Deterministic
+  fallbacks for equivalent-key recovery`. No mathematical result or numerical
+  bound was deleted.

@@ -89,11 +89,12 @@
 The main body presents the direct forgery, directional equivalent-key recovery,
 characteristic-$127$ solver, and combined parameter consequences.  The first
 appendices retain an independent smooth-projective route and two solver
-cross-checks.  Later appendices give the direct-forgery proofs, expanded-key
-certificate calculations, seeded expansion, optional identification with the
-planted oil space, alternative low-space directions, and executable
-pseudocode.  These details are separated so that readers can understand the
-attack and its parameter implications before entering the full audit.
+cross-checks.  Later appendices give deterministic equivalent-key fallbacks,
+direct-forgery proofs, expanded-key certificate calculations, seeded
+expansion, optional identification with the planted oil space, alternative
+low-space directions, and executable pseudocode.  These details are separated
+so that readers can understand the attack and its parameter implications
+before entering the full audit.
 
 \section{Independent projective smooth-core route}\label{sec:projective}
 
@@ -985,6 +986,191 @@ Outside the key-level exceptional set, the projective discriminant and a determi
 
 
 
+
+\section{Deterministic fallbacks for equivalent-key recovery}\label{app:directional-fallbacks}
+
+The main paper proves that one directional root with full-rank derivative
+determines the hidden graph and states the rank probability used by the
+verified attack.  This section gives the exact public-random calculations, the
+fallback that combines roots with partial derivative rank, and a deterministic
+list of square subsystems.
+
+\subsection{Exact direction-rank calculations}
+
+For a fixed nonzero $c\in K^O$, Definition~\ref{def:ideal} makes each vector
+$B_ic$ uniform in $K^V$, independently across $i$.  Thus $\mathcal B(c)$ is a
+uniform $m\times V$ matrix and has full column rank with probability
+$\rho_{m,V}(Q)$ from \eqref{eq:rho-mv}.  A preselected coordinate direction
+therefore fails with probability $\tau_{m,V}(Q)$, whose base-two logarithm is
+\[
+ -62.898161,\qquad -62.898161,\qquad -83.864216
+\]
+at Levels I, III, and V.
+
+For the coordinate directions, the vectors $B_ie_j$ use separate columns of
+the independent matrices $B_i$.  Hence
+$\mathcal B(e_1),\ldots,\mathcal B(e_O)$ are independent.  This proves
+\eqref{eq:all-coordinate-directions-bad}; its base-two logarithms are
+\[
+ -1132.166907,\qquad-1635.352198,\qquad-2935.247544.
+\]
+
+\subsection{Combining roots with partial derivative rank}
+
+\begin{proposition}[Several directions can be combined]\label{prop:multi-direction-completion}
+Let $c_1,\ldots,c_r\in K^O$ and suppose that roots $x_j=Gc_j$ of the
+corresponding public direction systems have been found.  Stack their public
+completion matrices and right-hand sides:
+\[
+ \mathcal D_{\boldsymbol c}(\boldsymbol x)
+ :=\begin{pmatrix}\mathcal D_{c_1}(x_1)\\ \vdots\\ \mathcal D_{c_r}(x_r)\end{pmatrix},
+ \qquad
+ b_{\boldsymbol c,d}(\boldsymbol x)
+ :=\begin{pmatrix}b_{c_1,d}(x_1)\\ \vdots\\ b_{c_r,d}(x_r)\end{pmatrix}.
+\]
+If the stacked matrix has column rank $V$, then for every $d\in K^O$ the
+public system
+\[
+ \mathcal D_{\boldsymbol c}(\boldsymbol x)y
+ =b_{\boldsymbol c,d}(\boldsymbol x)
+\]
+has the unique solution $y=Gd$.  Thus complementary derivative information
+from several recovered roots determines the graph even when no individual
+direction has full rank.
+\end{proposition}
+
+\begin{proof}
+For each $j$, the proof of Proposition~\ref{prop:graph-direction-completion}
+shows that $Gd$ satisfies the $j$th block.  It therefore satisfies the stacked
+system.  Full column rank gives uniqueness.
+\end{proof}
+
+\subsection{A deterministic list of square systems}
+
+The directional system has $m$ equations in $V$ variables.  Trying every row
+subset gives $\binom mV$ square systems.  The following construction replaces
+that list with $V(m-V)+1$ public linear recombinations.
+
+Index the equations by $r=0,\ldots,m-1$.  For $0\le a<V$, write
+$(r)_a=r(r-1)\cdots(r-a+1)$, with $(r)_0=1$, and define
+\begin{equation}\label{eq:wronskian-condenser}
+ \mathsf C(t)_{a+1,r+1}:=(r)_a t^{r-a}
+ \qquad(t\in K),
+\end{equation}
+where the entry is zero when $r<a$.  The first $V$ columns are triangular with
+diagonal $0!,1!,\ldots,(V-1)!$.  They are nonsingular because
+$V-1<127=\operatorname{char}K$.
+
+\begin{lemma}[A one-parameter rank condenser]\label{lem:wronskian-condenser}
+Let $B\in K^{m\times V}$ have column rank $V$, where $m\le127$.  Then
+\begin{equation}\label{eq:wronskian-polynomial}
+ W_B(T):=\det\bigl(\mathsf C(T)B\bigr)
+\end{equation}
+is a nonzero polynomial of degree at most $V(m-V)$.
+\end{lemma}
+
+\begin{proof}
+For column $j$ of $B$, form
+$f_j(T)=\sum_{r=0}^{m-1}B_{r+1,j}T^r$.  The columns of $B$ are independent
+exactly when $f_1,\ldots,f_V$ are independent, and $\mathsf C(T)B$ is their
+ordinary Wronskian matrix.
+
+Choose a basis $g_1,\ldots,g_V$ of their span with distinct increasing degrees
+$0\le d_1<\cdots<d_V<m$.  Up to the nonzero product of their leading
+coefficients, the leading coefficient of their Wronskian is
+\[
+ \det\bigl((d_j)_a\bigr)_{0\le a<V,\,1\le j\le V}
+ =\prod_{i<j}(d_j-d_i).
+\]
+This value is nonzero because the $d_j$ are distinct and below $127$.  A
+change of basis only multiplies the Wronskian by a nonzero scalar.  Finally,
+\[
+ \deg W_B
+ \le \sum_{j=1}^V d_j-\frac{V(V-1)}2
+ \le V(m-V),
+\]
+where the last bound uses the $V$ largest distinct degrees below $m$.
+\end{proof}
+
+Conditional on $\rank\mathcal B(c)=V$, a uniform $t\leftarrow K$ therefore
+satisfies
+\begin{equation}\label{eq:random-recombination-success}
+ \Pr[\mathsf C(t)\mathcal B(c)\text{ is invertible}]
+ \ge1-\frac{V(m-V)}Q.
+\end{equation}
+
+\begin{corollary}[A short deterministic public list]\label{cor:deterministic-outer-list}
+Fix any public list of $V(m-V)+1$ distinct elements of $K$.  Whenever
+$\mathcal B(c)$ has column rank $V$, at least one $t$ on the list makes the
+square system
+\begin{equation}\label{eq:condensed-direction-system}
+ \mathsf C(t)\,(q_{1,c},\ldots,q_{m,c})^{\mathsf T}=0
+\end{equation}
+have the planted root as a nonsingular solution.
+
+For one coordinate direction, the list sizes at Levels I, III, and V are
+\[
+ 105,\qquad153,\qquad307.
+\]
+Scanning every coordinate direction uses
+\[
+ 1{,}890,\qquad3{,}978,\qquad10{,}745
+\]
+square systems and fails in the public-random model only with probability
+$\tau_{m,V}(Q)^O$.  Thus all outer choices can be deterministic.
+\end{corollary}
+
+\begin{proof}
+The polynomial in \eqref{eq:wronskian-polynomial} has degree at most
+$V(m-V)$ and cannot vanish at every point of a longer list.  At the planted
+root, the Jacobian of \eqref{eq:condensed-direction-system} is
+$-2\mathsf C(t)\mathcal B(c)$ by
+Proposition~\ref{prop:graph-direction-identity}.  The numerical counts use
+$m-V\in\{2,2,3\}$.
+\end{proof}
+
+\begin{corollary}[Category-scale deterministic direction lists]\label{cor:compact-direction-list}
+Use the first
+\[
+ r_{\rm dir}=3,\qquad4,\qquad4
+\]
+coordinate directions at Levels I, III, and V, and use the condenser list for
+each direction.  The resulting public lists contain
+\[
+315,\qquad612,\qquad1228
+\]
+square systems.  In the public-random model, the probability that none has the
+planted point as a nonsingular root is
+$\tau_{m,V}(Q)^{r_{\rm dir}}$, whose base-two logarithms are
+\begin{equation}\label{eq:compact-direction-logs}
+ -188.694,\qquad-251.593,\qquad-335.457.
+\end{equation}
+These bounds are below the three category exponents $143,207,272$.
+\end{corollary}
+
+\begin{proof}
+The coordinate-direction matrices are independent by
+Proposition~\ref{prop:graph-direction-density}.  If one of the selected
+matrices has full column rank,
+Corollary~\ref{cor:deterministic-outer-list} supplies a value with nonsingular
+planted Jacobian.  Multiplying the one-direction failure logarithm by
+$r_{\rm dir}$ gives \eqref{eq:compact-direction-logs}; multiplying the list
+lengths gives the displayed system counts.
+\end{proof}
+
+\begin{remark}[The list length is geometrically optimal]\label{rem:condenser-optimal}
+The Grassmannian of $V$-subspaces of an $m$-dimensional space has dimension
+$V(m-V)$.  For a fixed full-rank map $R:K^m\to K^V$, the subspaces on which
+$R$ is singular form a hyperplane section in Pl\"ucker coordinates.  Over an
+algebraic closure, at most $V(m-V)$ such sections always have a common point.
+Hence no family of at most $V(m-V)$ recombinations works for every full-rank
+$m\times V$ matrix after all field extensions.  The list above meets this
+lower bound exactly.
+\end{remark}
+
+Sampling one field element $t$ is convenient for the expected-cost theorem.
+The deterministic list removes that choice and is much smaller than the list
+of all $V$-row subsets.
 
 \section{Direct-forgery proofs and preprocessing}\label{app:direct-proofs}
 

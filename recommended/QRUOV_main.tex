@@ -1086,19 +1086,26 @@ been executed on reduced parameters.  The exact traces and public replay
 checks appear in \cref{app:direct-proofs,app:reduced-implementation}; these are
 correctness tests, not full-parameter benchmarks.
 
-\section{Graph-direction and derivative-kernel recovery}\label{sec:recovery}
+\section{Equivalent-key recovery from a planted root}\label{sec:recovery}
 
-The attack has two local endpoints.  The graph-direction endpoint is the stronger structural statement: one affine root determines the complete hidden graph by public linear algebra.  The derivative-kernel endpoint is retained for the faster projective route.  Both endpoints are followed by the same exact graph, pull-back, factorization, and signing checks.
+Fixing a public direction produces a quadratic system in only $V$ variables.
+The hidden graph gives this system a planted root.  If the derivative at that
+root has full rank, public linear algebra recovers every column of the graph.
+The attack then verifies the graph identities, the pull-back, the public-map
+factorization, and a signing witness.  A separate projective route recovers the
+same oil space directly from the common derivative kernel.
 
-\subsection{A public graph direction produces a planted root}
+\subsection{A public system with a planted root}
 
-Fix a direction $c\in K^O$.  Substitute the public oil coordinate $c$ and the negated vinegar coordinate $-x$ into the public form $P_i$:
+Fix $c\in K^O$.  Substitute the public oil coordinate $c$ and the negated
+vinegar coordinate $-x$ into each public form:
 \begin{equation}\label{eq:direction-system}
  q_{i,c}(x):=P_i(-x,c)
  =x^{\mathsf T}A_ix-2x^{\mathsf T}E_ic+c^{\mathsf T}C_ic,
  \qquad x\in K^V.
 \end{equation}
-The system $q_{1,c}=\cdots=q_{m,c}=0$ is public and has only $V$ variables.  Define the public $m\times V$ matrix
+The equations $q_{1,c}=\cdots=q_{m,c}=0$ are public.  Define their public
+derivative matrix by
 \begin{equation}\label{eq:direction-matrix}
  \mathcal D_c(x):=
  \begin{pmatrix}
@@ -1107,14 +1114,12 @@ The system $q_{1,c}=\cdots=q_{m,c}=0$ is public and has only $V$ variables.  Def
  (E_mc-A_mx)^{\mathsf T}
  \end{pmatrix}.
 \end{equation}
-Recall $B_i=E_i-A_iG$, and write $\mathcal B(c)$ for the matrix whose $i$th row is $(B_ic)^{\mathsf T}$.
+Recall that $B_i=E_i-A_iG$, and let $\mathcal B(c)$ have $i$th row
+$(B_ic)^{\mathsf T}$.
 
-\begin{proposition}[Graph-direction identity]\label{prop:graph-direction-identity}
-For every $c\in K^O$, the point
-\[
- x_c:=Gc
-\]
-is a common zero of the public system \eqref{eq:direction-system}.  More precisely, for every $z\in K^V$,
+\begin{proposition}[A planted root for every direction]\label{prop:graph-direction-identity}
+For every $c\in K^O$, the point $x_c=Gc$ is a common zero of
+\eqref{eq:direction-system}.  More precisely, for every $z\in K^V$,
 \begin{equation}\label{eq:direction-translate}
  q_{i,c}(Gc+z)=z^{\mathsf T}A_iz-2(B_ic)^{\mathsf T}z.
 \end{equation}
@@ -1127,210 +1132,119 @@ Consequently,
 \end{proposition}
 
 \begin{proof}
-Expand \eqref{eq:direction-system} at $x=Gc+z$.  Its constant term is
-\[
- c^{\mathsf T}(G^{\mathsf T}A_iG-G^{\mathsf T}E_i-E_i^{\mathsf T}G+C_i)c=0
-\]
-by \eqref{eq:graphid}.  Its linear term is
-$2z^{\mathsf T}(A_iG-E_i)c=-2(B_ic)^{\mathsf T}z$, proving \eqref{eq:direction-translate}.  The two matrix identities follow by differentiation and by $E_i-A_iG=B_i$.
+Expand \eqref{eq:direction-system} at $x=Gc+z$.  The graph identity
+\eqref{eq:graphid} makes the constant term zero, while the linear term is
+$-2(B_ic)^{\mathsf T}z$.  This proves \eqref{eq:direction-translate};
+differentiation gives the two matrix identities.
 \end{proof}
 
-\begin{proposition}[One regular direction determines the entire graph]\label{prop:graph-direction-completion}
-Let $c\in K^O$, let $x$ be a common zero of all the equations $q_{i,c}$, and suppose $\rank\mathcal D_c(x)=V$.  For $d\in K^O$, define
+\subsection{A root with full-rank derivative determines the graph}
+
+\begin{proposition}[Exact graph completion]\label{prop:graph-direction-completion}
+Let $x$ be a common zero of all equations $q_{i,c}$ and suppose
+$\rank\mathcal D_c(x)=V$.  For $d\in K^O$, define
 \begin{equation}\label{eq:direction-rhs}
  b_{c,d}(x)_i:=c^{\mathsf T}C_id-x^{\mathsf T}E_id
  \qquad(1\le i\le m).
 \end{equation}
-Then the overdetermined public system
+Then the public system
 \begin{equation}\label{eq:direction-completion-system}
  \mathcal D_c(x)y=b_{c,d}(x)
 \end{equation}
-has at most one solution $y\in K^V$.  If $x=Gc$, its unique solution is $y=Gd$.  Thus solving \eqref{eq:direction-completion-system} for the $O$ coordinate vectors $d=e_j$ recovers $G$ exactly.  Requiring every identity \eqref{eq:graphid} then gives a public polynomial-time certificate of a valid expanded UOV decomposition.
+has at most one solution $y\in K^V$.  If $x=Gc$, its solution is $y=Gd$.
+Solving \eqref{eq:direction-completion-system} for the $O$ coordinate vectors
+$d=e_j$ therefore recovers $G$ exactly.  Checking every identity
+\eqref{eq:graphid} then certifies a valid expanded UOV decomposition.
 \end{proposition}
 
 \begin{proof}
-Full column rank gives uniqueness.  For $x=Gc$, multiply \eqref{eq:graphid} on the left by $c^{\mathsf T}$ and on the right by $d$.  Rearrangement yields
+Full column rank gives uniqueness.  For $x=Gc$, multiply
+\eqref{eq:graphid} by $c^{\mathsf T}$ on the left and $d$ on the right.  The
+result is
 \[
  (E_ic-A_iGc)^{\mathsf T}Gd
  =c^{\mathsf T}C_id-(Gc)^{\mathsf T}E_id,
 \]
-which is exactly row $i$ of \eqref{eq:direction-completion-system}.  Hence $Gd$ is the unique solution.  The final identities are precisely the hypotheses of \cref{prop:verified-key}.
-\end{proof}
-
-\begin{proposition}[Several partial-rank directions can be combined]\label{prop:multi-direction-completion}
-Let $c_1,\ldots,c_r\in K^O$ and suppose that roots $x_j=Gc_j$ of the corresponding public direction systems have been found.  Stack their public completion matrices and right-hand sides:
-\[
- \mathcal D_{\boldsymbol c}(\boldsymbol x)
- :=\begin{pmatrix}\mathcal D_{c_1}(x_1)\\ \vdots\\ \mathcal D_{c_r}(x_r)\end{pmatrix},
- \qquad
- b_{\boldsymbol c,d}(\boldsymbol x)
- :=\begin{pmatrix}b_{c_1,d}(x_1)\\ \vdots\\ b_{c_r,d}(x_r)\end{pmatrix}.
-\]
-If the stacked matrix has column rank $V$, then for every $d\in K^O$ the public system
-\[
- \mathcal D_{\boldsymbol c}(\boldsymbol x)y=b_{\boldsymbol c,d}(\boldsymbol x)
-\]
-has the unique solution $y=Gd$.  Thus no individual direction needs full rank: enough complementary derivative information across several recovered direction roots also determines the whole graph.
-\end{proposition}
-
-\begin{proof}
-For each $j$, the proof of \cref{prop:graph-direction-completion} shows that $Gd$ satisfies the $j$th block of equations.  It therefore satisfies the stacked system.  Full column rank gives uniqueness.
+which is row $i$ of \eqref{eq:direction-completion-system}.  Hence $Gd$ is the
+unique solution.  The verified-key conclusion follows from
+\cref{prop:verified-key}.
 \end{proof}
 
 \begin{remark}[A compact attack certificate]\label{rem:graph-certificate}
-A successful graph-direction branch can be certified by the tuple $(c,x,G)$ together with one full-rank minor of $\mathcal D_c(x)$.  A verifier checks the $m$ equations $q_{i,c}(x)=0$, the $O$ linear systems \eqref{eq:direction-completion-system}, all $m$ graph identities, the inverse pull-back, and the signing witness.  No claim about the other roots or about completeness of the solver output enters this certificate.
+A successful branch is certified by $(c,x,G)$ and one full-rank minor of
+$\mathcal D_c(x)$.  A verifier checks the directional equations, the graph
+completion systems, all graph identities, the inverse pull-back, and a signing
+witness.  The certificate makes no claim about other roots or solver
+completeness.
 \end{remark}
 
-\subsection{How often a direction is regular, and how to choose a square core}
+\subsection{How often the derivative has full rank}
 
-Put
+Let
 \begin{equation}\label{eq:rho-mv}
  \rho_{m,V}(Q):=\prod_{a=0}^{V-1}(1-Q^{a-m}),
  \qquad
  \tau_{m,V}(Q):=1-\rho_{m,V}(Q).
 \end{equation}
-Thus $\rho_{m,V}(Q)$ is the full-column-rank probability of a uniform $m\times V$ matrix over $K$.
+Thus $\rho_{m,V}(Q)$ is the probability that a uniform $m\times V$ matrix over
+$K$ has full column rank.
 
-The direction system has $m$ equations but only $V$ variables.  The obvious deterministic reduction to a square system tries all $\binom mV$ row subsets.  The next lemma replaces that list by an optimal-size family of public linear combinations.
-
-Index the $m$ equations by $r=0,\ldots,m-1$.  For $0\le a<V$, write
-$(r)_a=r(r-1)\cdots(r-a+1)$, with $(r)_0=1$, and define
-\begin{equation}\label{eq:wronskian-condenser}
- \mathsf C(t)_{a+1,r+1}:=(r)_a t^{r-a}
- \qquad(t\in K),
-\end{equation}
-where the entry is zero when $r<a$.  The first $V$ columns of $\mathsf C(t)$ are triangular with diagonal $0!,1!,\ldots,(V-1)!$.  They are therefore nonsingular because $V-1<127=\operatorname{char}K$.
-
-\begin{lemma}[A one-parameter rank condenser]\label{lem:wronskian-condenser}
-Let $B\in K^{m\times V}$ have column rank $V$, where $m\le127$.  Then
-\begin{equation}\label{eq:wronskian-polynomial}
- W_B(T):=\det\bigl(\mathsf C(T)B\bigr)
-\end{equation}
-is a nonzero polynomial of degree at most $V(m-V)$.
-\end{lemma}
-
-\begin{proof}
-For column $j$ of $B$, form the polynomial
-$f_j(T)=\sum_{r=0}^{m-1}B_{r+1,j}T^r$.  The columns of $B$ are independent exactly when the polynomials $f_1,\ldots,f_V$ are independent, and $\mathsf C(T)B$ is their ordinary Wronskian matrix.
-
-Choose another basis $g_1,\ldots,g_V$ of their span with distinct increasing degrees
-$0\le d_1<\cdots<d_V<m$.  The leading coefficient of the Wronskian of the $g_j$ is, up to the nonzero product of their leading coefficients,
-\[
- \det\bigl((d_j)_a\bigr)_{0\le a<V,\,1\le j\le V}
- =\prod_{i<j}(d_j-d_i).
-\]
-This is nonzero in $K$ because all $d_j$ are distinct and below $127$.  A change of polynomial basis only multiplies the Wronskian by a nonzero scalar, so $W_B$ is nonzero.  Finally,
-\[
- \deg W_B
- \le \sum_{j=1}^V d_j-\frac{V(V-1)}2
- \le V(m-V),
-\]
-where the last bound uses the $V$ largest possible distinct degrees below $m$.
-\end{proof}
-
-\begin{proposition}[Key-by-key sampling and public-random density]\label{prop:graph-direction-density}
-For a fixed expanded key, suppose some $V\times V$ minor of $\mathcal B(c)$ is not the zero polynomial in $c$.  A fresh uniform $c\leftarrow K^O$ then satisfies $\rank\mathcal B(c)=V$ with probability at least
+\begin{proposition}[Rank of the planted derivative]\label{prop:graph-direction-density}
+For a fixed expanded key, suppose some maximal minor of $\mathcal B(c)$ is a
+nonzero polynomial in $c$.  A fresh uniform $c\leftarrow K^O$ then satisfies
 \begin{equation}\label{eq:random-direction-success}
- 1-\frac{V}{Q}.
+ \Pr[\rank\mathcal B(c)=V]\ge1-\frac VQ.
 \end{equation}
-Conditional on this event, a fresh uniform $t\leftarrow K$ makes
-$\mathsf C(t)\mathcal B(c)$ invertible with probability at least
-\begin{equation}\label{eq:random-recombination-success}
- 1-\frac{V(m-V)}{Q}.
-\end{equation}
-
-In the public-random model, $\mathcal B(c)$ is a uniform $m\times V$ matrix for every fixed nonzero $c\in K^O$.  In particular, one preselected coordinate direction fails with probability $\tau_{m,V}(Q)$, whose base-two logarithm is
-\[
- -62.898161,\qquad -62.898161,\qquad -83.864216
-\]
-at Levels I, III, and V.  More strongly, the $O$ coordinate-direction matrices
-$\mathcal B(e_1),\ldots,\mathcal B(e_O)$ are independent uniform matrices.  Therefore
+In the public-random model, $\mathcal B(c)$ is a uniform $m\times V$ matrix for
+every fixed nonzero $c$.  Moreover, the coordinate-direction matrices
+$\mathcal B(e_1),\ldots,\mathcal B(e_O)$ are independent, so
 \begin{equation}\label{eq:all-coordinate-directions-bad}
  \Pr\bigl[\rank\mathcal B(e_j)<V\text{ for every }j\bigr]
- =\tau_{m,V}(Q)^O,
+ =\tau_{m,V}(Q)^O.
 \end{equation}
-with base-two logarithms
-\[
- -1132.166907,\qquad-1635.352198,\qquad-2935.247544.
-\]
 \end{proposition}
 
 \begin{proof}
-Every maximal minor of $\mathcal B(c)$ is homogeneous of degree $V$ in $c$, so Schwartz--Zippel gives \eqref{eq:random-direction-success}.  Conditional on full rank, \cref{lem:wronskian-condenser} and the univariate root bound give \eqref{eq:random-recombination-success}.
-
-Under \cref{def:ideal}, each $B_i$ is an independent uniform linear map $K^O\to K^V$.  For fixed nonzero $c$, the vector $B_ic$ is uniform in $K^V$, independently across $i$.  For the coordinate directions, the vectors $B_ie_j$ use independent columns of the $B_i$, proving both the fixed-direction law and \eqref{eq:all-coordinate-directions-bad}.  The displayed values are exact evaluations of the rank formulas.
+Every maximal minor of $\mathcal B(c)$ is homogeneous of degree $V$, so
+Schwartz--Zippel gives \eqref{eq:random-direction-success}.  Under
+Definition~\ref{def:ideal}, each $B_i$ is an independent uniform linear map.
+This gives the fixed-direction law and independence across coordinate
+directions.  The exact rank calculations appear in
+\cref{app:directional-fallbacks}.
 \end{proof}
 
-\begin{corollary}[A short deterministic public list]\label{cor:deterministic-outer-list}
-Fix any public list of $V(m-V)+1$ distinct elements of $K$.  Whenever $\mathcal B(c)$ has column rank $V$, at least one $t$ on the list makes the square system
-\begin{equation}\label{eq:condensed-direction-system}
- \mathsf C(t)\,(q_{1,c},\ldots,q_{m,c})^{\mathsf T}=0
-\end{equation}
-have the planted root as a nonsingular solution.
+The verified attack later uses a fresh random linear recombination to select
+$V$ of the $m$ equations.  The supplement also gives a deterministic public
+list of only $V(m-V)+1$ recombinations, together with exact list sizes and
+failure probabilities for the official parameters
+(\cref{app:directional-fallbacks}).
 
-For one fixed coordinate direction, the list sizes at Levels I, III, and V are
-\[
- 105,\qquad153,\qquad307.
-\]
-Scanning all coordinate directions uses respectively
-\[
- 1{,}890,\qquad3{,}978,\qquad10{,}745
-\]
-square systems, and fails in the public-random model only with probability
-$\tau_{m,V}(Q)^O$.  Thus all outer choices can be deterministic; only the polynomial-system solver needs random coins.
-\end{corollary}
+\subsection{Recovering the oil space by linear algebra}
 
-\begin{proof}
-The determinant in \eqref{eq:wronskian-polynomial} has degree at most $V(m-V)$ and cannot vanish at every point of a longer distinct list.  At the planted root, the Jacobian of \eqref{eq:condensed-direction-system} is
-$-2\mathsf C(t)\mathcal B(c)$ by \cref{prop:graph-direction-identity}.  The numerical counts use $m-V\in\{2,2,3\}$.
-\end{proof}
-
-\begin{corollary}[Category-scale deterministic direction lists]\label{cor:compact-direction-list}
-Use the first
-\[
- r_{\rm dir}=3,\qquad4,\qquad4
-\]
-coordinate directions at Levels I, III, and V, and for each direction use the condenser list from \cref{cor:deterministic-outer-list}.  The resulting fully public lists contain
-\[
-315,\qquad612,\qquad1228
-\]
-square systems.  In the public-random model, the probability that none has the planted point as a nonsingular root is exactly $\tau_{m,V}(Q)^{r_{\rm dir}}$, with base-two logarithms
-\begin{equation}\label{eq:compact-direction-logs}
- -188.694,\qquad-251.593,\qquad-335.457.
-\end{equation}
-These bounds are already below the Level-I, Level-III, and Level-V category exponents $143,207,272$.  Scanning all $O$ coordinate directions gives the stronger probabilities in \eqref{eq:all-coordinate-directions-bad}.
-\end{corollary}
-
-\begin{proof}
-The coordinate-direction derivative matrices are independent by \cref{prop:graph-direction-density}.  If one of the first $r_{\rm dir}$ matrices has full column rank, \cref{cor:deterministic-outer-list} supplies a condenser value with nonsingular planted Jacobian.  Multiplying the one-direction failure logarithm by $r_{\rm dir}$ gives \eqref{eq:compact-direction-logs}; multiplying the per-direction list lengths $105,153,307$ gives the displayed system counts.
-\end{proof}
-
-\begin{remark}[The list length is geometrically optimal]\label{rem:condenser-optimal}
-The Grassmannian of $V$-subspaces of an $m$-dimensional space has dimension $V(m-V)$.  For any fixed full-rank linear map $R:K^m\to K^V$, the subspaces on which $R$ is singular form a hyperplane section in Pl\"ucker coordinates.  Over an algebraic closure, at most $V(m-V)$ such hyperplane sections always have a common point.  Hence no family of at most $V(m-V)$ linear recombinations can work for every full-rank $m\times V$ matrix after all field extensions.  The family in \cref{cor:deterministic-outer-list} meets this natural lower bound exactly.
-\end{remark}
-
-\paragraph{Randomized versus deterministic use.}
-Sampling one field element $t$ is convenient for the expected-cost theorem.  The short list in \cref{cor:deterministic-outer-list} removes that choice entirely and is far smaller than enumerating all $V$-row subsets.
-
-\subsection{Derivative-kernel recovery for the projective route}
-
-For a public common zero $x$, form
+The faster projective route from \cref{sec:projective} instead finds a public
+common zero $x$ on the oil space.  Form
 \[
 C_x=(P_1x\ \cdots\ P_mx)\in L^{(V+O)\times m}.
 \]
 
-\begin{lemma}[Derivative-kernel recovery]\label{lem:kernel}
-If $x\in\PP(\cO_L)$, then $\cO_L\subseteq\ker C_x^{\trans}$.  If $\rank C_x=V$, equality holds.
+\begin{lemma}[The common derivative kernel]\label{lem:kernel}
+If $x\in\PP(\cO_L)$, then $\cO_L\subseteq\ker C_x^{\trans}$.  If
+$\rank C_x=V$, equality holds.
 \end{lemma}
 
 \begin{proof}
-For $u\in\cO_L$, \eqref{eq:isotropy} gives $u^{\trans}P_ix=0$ for every $i$.  If $\rank C_x=V$, its transpose kernel has dimension $(V+O)-V=O$.
+For $u\in\cO_L$, \eqref{eq:isotropy} gives $u^{\trans}P_ix=0$ for every $i$.
+If $\rank C_x=V$, the kernel of its transpose has dimension
+$(V+O)-V=O$.
 \end{proof}
 
-At the oil point, a smooth restricted core has derivative rank $V$.  Total isotropy bounds the ambient derivative rank by the same value, so \cref{lem:kernel} recovers the complete oil space.  Row reduction into the public graph chart, Frobenius descent to $K$, verification of \eqref{eq:graphid}, and \cref{prop:verified-key} then recover the expanded decomposition.  Exact factorization certifies that decomposition, while \cref{prop:signing-search} supplies an invertible oil matrix whose inverse certifies target inversion.
-
-\paragraph{Optional identification with the planted oil space.}
-Neither endpoint needs uniqueness: the algorithm keeps every exactly verified candidate and tests all of them for a signing witness.  \Cref{app:uniqueness} separately shows that a second $K$-rational oil space is extraordinarily unlikely.  Outside that additional event, every accepted oil space is the planted one.
+At the planted oil point, smoothness of the restricted core gives derivative
+rank $V$.  The lemma therefore recovers the full oil space.  Row reduction,
+descent to $K$, and the checks from \cref{prop:verified-key,prop:signing-search}
+then produce a verified signing key.  The attack does not need the oil space to
+be unique: it keeps every exactly verified candidate with a signing witness.
+\Cref{app:uniqueness} separately bounds the probability of a second
+$K$-rational oil space.
 
 \section{Jacobian localization removes global regularity}\label{sec:local-geometry}
 
@@ -1342,7 +1256,9 @@ and put
 \begin{equation}\label{eq:local-jacobian-polynomial}
  h(x):=\det J_f(x).
 \end{equation}
-The graph-direction condition is local: if $\mathcal B(c)$ has full column rank and $R\mathcal B(c)$ is invertible, then \cref{prop:graph-direction-identity} gives
+The planted-root rank condition is local.  If $\mathcal B(c)$ has full column
+rank and $R\mathcal B(c)$ is invertible, then
+Proposition~\ref{prop:graph-direction-identity} gives
 \begin{equation}\label{eq:h-at-planted}
  h(Gc)=(-2)^V\det(R\mathcal B(c))\ne0.
 \end{equation}
