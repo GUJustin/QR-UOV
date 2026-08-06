@@ -4,7 +4,7 @@
 \usepackage{lmodern,microtype}
 \usepackage{amsmath,amssymb,amsthm,mathtools}
 \usepackage{booktabs,array,tabularx,longtable,multirow,float}
-\usepackage{enumitem,xcolor,url,listings,needspace,multicol}
+\usepackage{enumitem,xcolor,url,listings,needspace}
 \usepackage[hidelinks]{hyperref}
 \usepackage{xr-hyper}
 \usepackage[nameinlink,noabbrev,capitalise]{cleveref}
@@ -17,7 +17,7 @@
  pdftitle={New Attacks on QR-UOV Across Vinegar Dimensions: Direct Forgery and Equivalent-Key Recovery},
  pdfauthor={Justin Thaler, Kai Zhang, Scott Kominers, Quang Dao},
  pdfsubject={Projective direct forgery, verified equivalent-key recovery, and parameter implications for QR-UOV},
- pdfkeywords={QR-UOV,UOV,projective direct forgery,equivalent-key recovery,Chevalley-Warning,nonsingular roots,Karatsuba,symbolic homotopy,exact verification}}
+ pdfkeywords={QR-UOV,UOV,projective direct forgery,equivalent-key recovery,Chevalley-Warning,full-rank roots,Karatsuba,symbolic equation solving,exact verification}}
 
 \theoremstyle{definition}
 \newtheorem{theorem}{Theorem}[section]
@@ -84,172 +84,262 @@
 \maketitle
 
 \begin{abstract}
-Unbalanced Oil and Vinegar (UOV) offers short signatures and a simple signing
-procedure, but its public keys are large.  \QRUOV{} reduces this cost by
-arranging the public quadratic map in blocks that represent elements of a
-quotient ring, chosen in the recommended parameters to be a degree-three
-extension field.  NIST advanced \QRUOV{} to the third round of its Additional
-Digital Signatures process.  Existing analyses cost direct forgery and
-structural key recovery as separate attacks at fixed parameter sets.  This
-leaves open whether changing only the number of vinegar variables can make
-both attack paths harder while the output dimension remains fixed.
+\QRUOV{} is a structured variant of Unbalanced Oil and Vinegar (UOV) in the
+third round of NIST's Additional Digital Signatures process.  It keeps UOV's
+short signatures and simple signing procedure, but compresses its large public
+key by representing blocks of the public quadratic equations over a
+degree-three extension field.  Previous analyses study forgery and key
+recovery separately.  This leaves open whether changing the number of vinegar
+variables can make both attacks harder.
 
-In this paper, we prove that it cannot, as measured by the square nonlinear
-system passed to the root solver.  Let $m$ be the expanded output dimension and let $\ell$ be the
-quotient degree.  For every vinegar dimension $V$ and every nonzero
-verification target, one of two attacks has a solver core of dimension at most
-$m-\ell-1$.  When $V\leq m-\ell-1$, a regular solution of a $V$-variable
-directional system determines an equivalent signing key.  When
-$V\geq m-\ell$, a direct attack zeros $\ell$ target coordinates, constructs a
-common isotropic space for the corresponding quadrics, and uses homogeneity to
-remove one more variable.  For \QRUOV{}, $\ell=3$, so the bound is $m-4$ and
-the recommended parameter sets yield cores of dimensions $50$, $74$, and
-$101$.
+We prove that it cannot.  Let $m$ be the number of public equations and $\ell$
+the extension degree.  For every number $V$ of extension-field vinegar
+variables and every nonzero verification target, one attack reduces to solving
+at most $m-\ell-1$ nonlinear equations in the same number of variables.  When
+$V$ is small, this is an equivalent-key recovery system.  When $V$ is large,
+it is a direct-forgery system.  Changing $V$ therefore only shifts the system
+between key recovery and direct forgery.  In \QRUOV{},
+$\ell=3$, so the bound is $m-4$, or $50$, $74$, and $101$ variables for the
+three recommended parameter sets.
 
-We estimate the cost of these cores with a finite-characteristic symbolic
-solver that uses local, rather than global, branch separation.  In the inherited
-Boolean-gate model, the resulting costs are $140.384$, $191.027$, and $247.125$
-bits, below the corresponding category targets by $2.616$, $15.973$, and
-$24.875$ bits.  We also execute the complete attack pipeline on reduced
-parameters and obtain forgeries accepted by the unchanged public verifier.
-These experiments validate the algebraic composition at toy scale, not the
-full-parameter extrapolation.  The concrete estimates remain conditional on
-the stated characteristic-polynomial degree transfer, the fast online-product
-schedule, the public-random expansion model, and astronomical symbolic memory.
+We estimate the work by adapting a symbolic equation solver to \QRUOV{}'s base
+field and applying an existing Boolean-gate cost model.  It gives work factors
+of $2^{140.384}$, $2^{191.027}$, and $2^{247.125}$ gates, below the claimed
+security levels of $143$, $207$, and $272$ bits.  On smaller examples, our
+direct-forgery implementation runs from public input to a forged signature
+accepted by the verifier.  This confirms that the attack steps work together,
+not that the full-parameter attacks are practical.  The estimates depend on
+extrapolating the solver's behavior, the assumed cost of its polynomial
+arithmetic, and a pseudorandomness model for the expanded public key.  They
+also require an impractical amount of memory.
 \end{abstract}
 
 \section{Introduction}\label{sec:intro}
 
 NIST opened its Additional Digital Signatures process to broaden the set of
 post-quantum signatures beyond the structured-lattice schemes selected in its
-first standardization process.  Following the second round, NIST advanced nine
-candidates, including \QRUOV{}, to a third round of public analysis and
-permitted the teams to update their specifications and
-implementations~\cite{NISTRound3,NISTIR8610}.  \QRUOV{} is attractive in this
-setting because it retains the simple signing procedure and short signatures of
-Unbalanced Oil and Vinegar (UOV) while addressing UOV's main efficiency
-drawback: its large public key~\cite{QRUOVOriginal,QRUOVSpec}.
+first standardization process.  After the second round, NIST advanced nine
+candidates, including \QRUOV{}, to a third round of public analysis
+~\cite{NISTRound3,NISTIR8610}.  \QRUOV{} retains the short signatures and
+simple signing procedure of Unbalanced Oil and Vinegar (UOV) while reducing
+UOV's main efficiency cost: its large public key
+~\cite{QRUOVOriginal,QRUOVSpec}.
 
-Oil and Vinegar signatures hide a linear subspace on which the central
-quadratic map becomes easy to invert.  Kipnis and Shamir recovered this hidden
-structure in the balanced construction~\cite{KipnisShamir1998}.  Kipnis,
-Patarin, and Goubin responded with UOV, which uses more vinegar variables than
-oil variables~\cite{KPG1999}.  The vinegar-to-oil ratio is therefore a security
-parameter.
-Increasing it frustrates some key-recovery attacks, but it also gives a forger
-more freedom when solving the public equations.  Braeken, Wolf, and Preneel
-made this second effect explicit by identifying highly unbalanced regimes that
-are vulnerable to direct algebraic attacks~\cite{BraekenWolfPreneel2005}.
+UOV divides the secret coordinates into vinegar variables and oil variables.
+Its central quadratic equations contain no product of two oil variables.
+After choosing the vinegar variables, the signer can therefore solve a linear
+system for the oil variables.  A secret change of coordinates hides this
+division in the public equations.  Using more vinegar variables can make the
+hidden oil space harder to recover, but it also gives a direct forger more
+variables with which to solve the public equations
+~\cite{KipnisShamir1998,KPG1999,BraekenWolfPreneel2005}.
 
-Concretely, UOV publishes a quadratic map from $v+m$ variables to $m$ outputs
-over a finite field.  A secret change of coordinates reveals $v$
-\emph{vinegar variables and oil variables}, with $v$ of the former and $m$ of
-the latter.  The central equations
-contain no products of two oil variables.  Once the vinegar variables are
-fixed, signing reduces to a linear system in the oil variables.  The public
-key must nevertheless describe $m$ dense quadratic forms, each with
-quadratically many coefficients.  This cost motivated several
-structured variants, including field lifting and block-anti-circulant UOV
-~\cite{FieldLifting,BACUOV}.  The latter was broken by decomposing the
-reducible quotient-ring structure behind its public blocks
-~\cite{BACUOVAttack}.
+We next describe \QRUOV{} in the notation used throughout the paper.  Fix an
+odd prime power $q$ and an irreducible polynomial $f\in\F_q[X]$ of degree
+$\ell$.  Write
+\begin{equation}\label{eq:parameter-stack}
+ K:=\F_q[X]/(f)\cong\F_{q^\ell},\qquad
+ v=\ell V,\qquad m=\ell O,\qquad
+ N=V+O,\qquad n=v+m=\ell N.
+\end{equation}
+The verifier evaluates $m$ quadratic forms in $n$ variables over $\F_q$.
+The quotient representation groups these variables into $V$ vinegar blocks
+and $O$ oil blocks over $K$.  The number of output forms remains $m$, rather
+than falling to $O=m/\ell$.
 
-\QRUOV{} keeps the block-compression idea but represents the public matrices
-by elements of a quotient ring $\F_q[X]/(f)$ and chooses $f$ to be
-irreducible~\cite{QRUOVOriginal,QRUOVSpec}.  For the recommended parameters,
-$\deg f=\ell=3$, so the quotient ring is the field $\F_{q^3}$.  Irreducibility
-prevents the decomposition used against block-anti-circulant UOV, but it does
-not erase the extension-field description.  An attacker can still view the
-structured public key as a smaller UOV-like system with $V$ vinegar variables
-and $m/\ell$ oil variables over $\F_{q^\ell}$.  In the notation used throughout
-this paper, the expanded base-field dimension is
-\[
- n=\ell V+m.
-\]
-This description is the common starting point for the QR-UOV pull-back,
-lifting, and rectangular-MinRank analyses
-~\cite{QRUOVOriginal,FurueIkematsu}.  It also shows why changing $V$ affects
-two different attack surfaces at once.  It changes the underdetermination of
-the base-field verification equations and the dimension of the hidden
-extension-field system (\cref{sec:model}).
+For each output $i\in[m]$, the secret central matrix and the secret input
+transformation have the following form over $K$:
+\begin{equation}\label{eq:central}
+ F_i=\begin{pmatrix}A_i&B_i\\B_i^{\trans}&0\end{pmatrix},
+ \qquad
+ S_G=\begin{pmatrix}I_V&G\\0&I_O\end{pmatrix},
+ \qquad
+ P_i=S_G^{\trans}F_iS_G
+     =\begin{pmatrix}A_i&E_i\\E_i^{\trans}&C_i\end{pmatrix}.
+\end{equation}
+Here $G\in K^{V\times O}$ is secret,
+$E_i=A_iG+B_i$, and block multiplication gives
+\begin{equation}\label{eq:graphid}
+ C_i=G^{\trans}E_i+E_i^{\trans}G-G^{\trans}A_iG.
+\end{equation}
+The zero lower-right block of $F_i$ is the UOV condition.  For extension-field
+vinegar and oil coordinates $(z,c)\in K^V\times K^O$, it gives
+\begin{equation}\label{eq:central-evaluation}
+ F_i(z,c)=z^{\trans}A_iz+2z^{\trans}B_ic.
+\end{equation}
+Once $z$ is fixed, every central quadratic form is linear in $c$.
 
-Prior work follows the two attack surfaces separately.  Direct attacks reduce
-an underdetermined multivariate quadratic system before applying a polynomial
-solver~\cite{ThomaeWolf2012,FurueUnderdetermined2021,Hashimoto2023,JustGuess}.
-Key-recovery attacks instead search for the hidden oil space through
+The same matrices identify the hidden oil space in the public coordinates.
+It is the graph
+\begin{equation}\label{eq:graph}
+ \cO=S_G^{-1}(\{0\}^V\times K^O)
+     =\left\{\binom{-Gc}{c}:c\in K^O\right\}.
+\end{equation}
+Every public form vanishes on every pair of vectors from this space.  In
+matrix notation, this means
+\begin{equation}\label{eq:isotropy}
+ u^{\trans}P_iw=0
+ \qquad(u,w\in\cO,\ 1\le i\le m).
+\end{equation}
+Conversely, a matrix $G'$ defines a common oil graph for the public tuple
+exactly when it satisfies \eqref{eq:graphid} with $G'$ in place of $G$.
+Thus \eqref{eq:graphid} is the condition that any recovered oil graph must
+pass.
+
+We now convert the extension-field matrices into the base-field matrices used
+by the signer and verifier.  The regular representation
+$\Phi_f:K\to\F_q^{\ell\times\ell}$ maps an element $g\in K$ to the matrix for
+multiplication by $g$ on its $\ell$ base-field coefficients.  The map
+$\Phi_f^{(a,b)}$ applies this conversion to every block of a matrix in
+$K^{a\times b}$.  The specification also supplies a matrix $W_f$ that makes
+$W_f\Phi_f(g)$ symmetric for every $g\in K$.  Let $W_f^{(a)}$ contain $a$
+copies of $W_f$ on its diagonal.  The specification's conversion, which we
+call the \emph{pull-back}, gives the following base-field matrices:
+\begin{equation}\label{eq:official-pullback}
+ \widehat P_i=W_f^{(N)}\Phi_f^{(N,N)}(P_i),\qquad
+ \widehat F_i=W_f^{(N)}\Phi_f^{(N,N)}(F_i),\qquad
+ \widehat S_G=\Phi_f^{(N,N)}(S_G).
+\end{equation}
+The pull-back preserves the secret factorization, so
+\begin{equation}\label{eq:base-factorization}
+ \begin{aligned}
+ \widehat P_i&=\widehat S_G^{\trans}\widehat F_i\widehat S_G,\\
+ \widehat P(x)&:=(x^{\trans}\widehat P_1x,\ldots,
+ x^{\trans}\widehat P_mx),\\
+ \widehat F(z)&:=(z^{\trans}\widehat F_1z,\ldots,
+ z^{\trans}\widehat F_mz),
+ \qquad \widehat P(x)=\widehat F(\widehat S_Gx).
+ \end{aligned}
+\end{equation}
+A general $\ell\times\ell$ base-field block has $\ell^2$ entries, while
+$\Phi_f(g)$ is determined by the $\ell$ coefficients of $g\in K$.  The
+official public seed expands the blocks $A_i$ and $E_i$, the public key stores
+the remaining blocks $C_i$, and the secret seed expands $G$.  This is how
+\QRUOV{} compresses the dense UOV verification map without changing the map
+that the verifier evaluates~\cite{QRUOVOriginal,QRUOVSpec}.
+
+The signing equation will also be the interface for both attacks.  For a
+message $M$ and salt $r$, define the verification target
+\begin{equation}\label{eq:verification-target}
+ \mu=\operatorname{SHAKE256}(\mathsf{seed}_{\rm pk}
+       \mathbin\|\operatorname{BytesToBits}(M),512),
+ \qquad
+ y(M,r)=\operatorname{Hash}(\mu,r)\in\F_q^m.
+\end{equation}
+For a vinegar assignment $a\in\F_q^v$, define the oil coefficient matrix by
+\begin{equation}\label{eq:signing-matrix}
+ \mathsf L_{\widehat F}(a)\in\F_q^{m\times m},
+ \qquad
+ \bigl(\mathsf L_{\widehat F}(a)o\bigr)_i
+ :=\widehat F_i(a,o)-\widehat F_i(a,0).
+\end{equation}
+The right-hand side is linear in $o\in\F_q^m$ because the oil block of
+$\widehat F_i$ is zero.  The signer chooses $a$ and then samples $r$ until
+\begin{equation}\label{eq:honest-oil-system}
+ \mathsf L_{\widehat F}(a)o
+ =y(M,r)-\widehat F(a,0)
+\end{equation}
+has a solution~\cite[Sec.~4.2]{QRUOVSpec}.  It returns the signature $(r,x)$
+with $x=\widehat S_G^{-1}(a,o)$.  The verifier's acceptance condition is
+~\cite[Sec.~4.3]{QRUOVSpec}
+\begin{equation}\label{eq:verification-equation}
+ \widehat P(x)=y(M,r).
+\end{equation}
+
+The verifier equation exposes the two attack goals studied here.  Direct
+forgery fixes
+a nonzero target $y$ and finds one $x$ satisfying $\widehat P(x)=y$.
+Equivalent-key recovery finds any $G'$ satisfying \eqref{eq:graphid}, pulls
+the resulting central forms back to $\F_q$, and finds an $a$ for which
+$\mathsf L_{\widehat F}(a)$ is invertible.  The same linear system then signs
+every verification target.  Increasing the vinegar count can frustrate the
+second goal, but it makes the public system more underdetermined and can help
+the first.
+
+The public key still represents $m$ dense quadratic forms, each with
+quadratically many coefficients.  Field lifting and block-anti-circulant UOV
+are earlier approaches to compressing these coefficients
+~\cite{FieldLifting,BACUOV}; the latter was broken by decomposing the reducible
+quotient ring behind its public blocks~\cite{BACUOVAttack}.  \QRUOV{} avoids
+that decomposition by choosing $f$ irreducible, but the extension-field tuple
+$(P_1,\ldots,P_m)$ remains public after expansion.  This tuple underlies the
+QR-UOV pull-back and lifting attacks, as well as attacks that search a public
+linear space for low-rank matrices
+~\cite{QRUOVOriginal,FurueIkematsu}.
+
+Existing work studies the two consequences of changing $V$ separately.
+Direct attacks reduce the underdetermined public equations before invoking a
+polynomial solver
+~\cite{ThomaeWolf2012,FurueUnderdetermined2021,Hashimoto2023,JustGuess}.
+Structural attacks instead search for the hidden oil space through
 reconciliation, intersection, or MinRank equations
 ~\cite{DingEtAl2008,Beullens,FurueIkematsu,Suzuki}.  P\'ebereau showed that one
-suitable oil vector can suffice to recover an equivalent UOV key and stated
-the resulting parameter tradeoff directly: a larger variable-to-equation
-ratio helps against key recovery but hurts against forgery
-~\cite{Pebereau}.  The original \QRUOV{} paper reflects the same division when
-it chooses the vinegar count mainly against pull-back and lifting
-reconciliation attacks, while choosing the output count against direct
-forgery~\cite{QRUOVOriginal}.
+suitable oil vector can determine an equivalent UOV key and made the parameter
+tension explicit: more variables can impede key recovery while helping
+forgery~\cite{Pebereau}.  The original \QRUOV{} analysis similarly chooses the
+vinegar count mainly against structural attacks and the output count against
+direct forgery~\cite{QRUOVOriginal}.  The specification and the team's latest
+security response evaluate these attacks at fixed recommended parameter sets
+~\cite{QRUOVSpec,QRUOVResponse2026}.  They do not give one bound covering every
+integer $V$ while $m$ and $\ell$ remain fixed.
 
-The \QRUOV{} specification and the team's latest security response cost these
-attack families at fixed parameter sets~\cite{QRUOVSpec,QRUOVResponse2026}.
-What the prior analyses do not provide is a single bound covering every
-integer $V$ while $m$ and the quotient degree remain fixed.  We give such a
-bound by connecting a directional equivalent-key system to a projective direct
-system.  We measure both by the number of variables in the square nonlinear
-system passed to the root solver, which we call the \emph{solver core}.
-
-This brings us to the question that governs the paper:
+We call a nonlinear system \emph{square} when it has the same number of
+equations and variables.  We compare the two attack families by counting the
+variables in the square system passed to the root solver.  This brings us to
+the question that governs the paper:
 \begin{quote}
 \noindent\textbf{Question.}
-\emph{Can \QRUOV{} raise the nonlinear solver cores of both attacks above
-$m-4$ by changing only the vinegar count while keeping the output dimension
-and quotient degree fixed?}
+\emph{Can \QRUOV{} force both attack reductions to use square nonlinear
+systems with more than $m-4$ variables by changing only the vinegar count
+while keeping the output dimension and quotient degree fixed?}
 \end{quote}
 
 \subsection{Our results and technical overview}\label{sec:intro-results}
 
-We answer this question negatively.  Our main result is the following
-fixed-output algebraic ceiling:
+We answer this question negatively.  Our main result is the following bound
+for a fixed number $m$ of public equations:
 \begin{quote}
 \centering
-\textbf{\emph{For every vinegar count and every nonzero verification target,
-one of two complementary attacks on \QRUOV{} has solver core dimension at most
-$m-4$.}}
+\textbf{\emph{For every vinegar count and nonzero verification target,
+either direct forgery or equivalent-key recovery reduces to a square nonlinear
+system in \mbox{at most~$m-4$ variables}.}}
 \end{quote}
 The statement, formalized in \cref{thm:security-scissors}, concerns the
-algebraic bottleneck shared by the two attacks.  It does not assert that their
-running time or memory usage depends only on this dimension.
+shared nonlinear system.  It does not assert that total running time or
+memory depends only on this dimension.
 
-\paragraph{Projective direct forgery.}
-For a fixed nonzero target, a public output transformation makes three target
-coordinates zero.  We use Chevalley--Warning to construct an
-$(m-3)$-dimensional subspace on which the corresponding three quadratic forms
-vanish.  The remaining zero-target equations restrict to homogeneous
-quadrics, and quotienting their common scaling turns the residual problem into
-a square projective system of dimension $m-4$.  For the three recommended
-parameter sets, this gives solver cores of dimensions $50$, $74$, and $101$
-(\cref{thm:verified-direct-forgery,rem:direct-prior-art}).  The construction
-uses public attack coins, and every returned vector is checked against the
-unchanged public verification map.  A solver failure can therefore force a
-retry, but it cannot produce an accepted false signature
+\paragraph{Direct forgery.}
+For a fixed nonzero target, we first change the public output coordinates so
+that all but one target coordinate are zero.  We then use
+Chevalley--Warning to construct an $(m-3)$-dimensional subspace on which three
+of the corresponding quadratic forms vanish.  The remaining zero-target
+equations are homogeneous, so multiplying a solution by a nonzero scalar does
+not change them.  Fixing this common scale leaves the same number of equations
+and variables, namely $m-4$.  The dimensions are $50$, $74$, and $101$ for
+the three recommended parameter sets
+(Theorem~\ref{thm:verified-direct-forgery} and
+Remark~\ref{rem:direct-prior-art}).  The attack uses only public randomness,
+and the verifier checks every returned vector against the original public map
 (\cref{sec:direct}).
 
-\paragraph{Directional equivalent-key recovery.}
+\paragraph{Equivalent-key recovery.}
 In extension-field coordinates, the hidden oil space is the graph of a linear
-map $G$.  Fixing a public direction $c$ produces a system of $m$ quadrics in
-$V$ variables with the planted root $Gc$.  If the derivative at a recovered
-root has full rank, public graph identities determine all of $G$.  Exact
-pull-back and signing checks then certify an equivalent key that signs every
-target accepted by the verifier
+map $G$.  Fixing a public oil vector $c$ produces $m$ public quadratic
+equations in $V$ variables.  The secret graph guarantees that $Gc$ is a root,
+although the attacker does not know this root in advance.  If the matrix of
+first derivatives has full rank at a recovered root, public linear equations
+determine all of $G$.  The pull-back and signing checks then certify another
+secret key that signs every target accepted by the verifier
 (\cref{thm:verified-directional-recovery}).  P\'ebereau established the
 equivalent-key endpoint from one suitable oil vector~\cite{Pebereau}; our
 contribution is a public polynomial-system mechanism for finding and certifying
 the required information in \QRUOV{}.
 
-\paragraph{The fixed-output security scissors.}
-The direct and directional routes respond oppositely to $V$.  When
-$V\leq m-\ell-1$, directional recovery already has a core of dimension at most
-$m-\ell-1$.  When $V\geq m-\ell$, target-orthogonal slicing with $\ell$
-equations followed by projectivization gives a direct core of that same
-dimension.  Since these cases cover every integer $V$, the combined algebraic
-core satisfies
+\paragraph{Why vinegar-only retuning cannot help.}
+The direct-forgery and key-recovery routes respond oppositely to $V$.  When
+$V\leq m-\ell-1$, key recovery uses at most $m-\ell-1$ variables.
+When $V\geq m-\ell$, the direct reduction and fixing the common scale use exactly
+$m-\ell-1$.  These cases cover every integer $V$, so
 \[
  r_{\mathrm{attack}}(V)\leq m-\ell-1.
 \]
@@ -260,59 +350,50 @@ increase $m$, or change the construction so that one of the reductions no
 longer applies.
 
 \paragraph{Concrete estimates and executable evidence.}
-To cost these cores, we adapt a nonsingular-root homotopy to characteristic
-$127$, batch the dense quadratic lifting operations, choose sparse working
-fields, and replace global branch separation by a local separator for one
-eligible target branch.  In the inherited Boolean-gate model, the resulting
-diagnostic costs are
+The reductions above still leave large nonlinear systems.  To estimate the
+work required to solve them, we adapt an exact symbolic equation solver to
+the base field of characteristic $127$.  The solver starts from equations
+whose roots are known, changes them gradually into the attack equations, and
+tracks the roots through this change.  We also account for its polynomial
+arithmetic over extension fields.  Under the specification's Boolean-gate
+cost convention, the resulting estimates are
 $\mathbf{2^{140.384}}$, $2^{191.027}$, and $2^{247.125}$ gates at Levels I,
 III, and V, respectively.  These rows lie $2.616$, $15.973$, and $24.875$ bits
 below their category targets (\cref{tab:combined-costs}).  The Level-I row is a
-candidate model-based break, not a practical computation: it depends on the
-stated characteristic-polynomial degree transfer and fast online-product
-schedule, and the direct symbolic representation has prohibitive memory
-requirements (\cref{sec:concrete-solver,sec:security}).
+candidate break only within this cost model.  It depends on extrapolating a
+degree bound to the exact attack equations and on an unimplemented fast
+polynomial multiplication schedule.  The symbolic representation also needs
+an impractical amount of memory (\cref{sec:concrete-solver,sec:security}).
 
-The reduced-parameter implementation executes the complete local-separator
-pipeline from public inputs and returns signatures accepted by the unchanged
-verifier over two toy fields.  This experiment checks that the algebraic
-components compose, but it does not benchmark or validate the full-parameter
-symbolic schedule (\cref{sec:evidence-limitations}).  The direct and
-directional reductions, the fixed-output scissors, and verification of every
-returned signature or key are algebraic statements.  The root-density
-arguments use the stated public-random or ideal-primitive models, while the
-finite gate rows remain conditional symbolic estimates.  We keep these claim
-boundaries explicit throughout the paper.
+On smaller examples, the direct-forgery implementation runs from public input
+to a forged signature accepted by the verifier over two small fields.  This
+checks that the attack steps work together, but it does not validate the
+full-parameter cost estimate (\cref{sec:evidence-limitations}).  The algebraic
+reductions and final verification are exact.  The success probabilities use
+the stated random-key models, and the gate counts remain model-based
+estimates.
 
 \paragraph{Organization.}
-\Cref{sec:related} positions the two attacks against prior work.
-\Cref{sec:model} connects the extension-field description to the official
-verification map.  \Cref{sec:direct} proves the projective direct forgery and
-the fixed-output scissors, while
-\cref{sec:recovery,sec:local-geometry,sec:finite-char-solver} develop and verify
-directional recovery.  \Cref{sec:concrete-solver} gives the concrete solver
-refinements, and \cref{sec:evidence-limitations,sec:security} separate the
-evidence, assumptions, cost, memory, and parameter consequences.
+\Cref{sec:related,sec:model} give the prior-work and specification context.
+\Cref{sec:direct,sec:recovery} prove the two reductions and the fixed-output
+bound.  The remaining sections give the root solver, concrete estimates,
+evidence, limitations, and parameter consequences.
 
 \section{Related work}\label{sec:related}
 
 \paragraph{From Oil and Vinegar to \QRUOV{}.}
-Kipnis and Shamir broke the balanced Oil and Vinegar construction by
-recovering its hidden linear structure~\cite{KipnisShamir1998}.  Kipnis,
-Patarin, and Goubin then introduced UOV with more vinegar variables
-~\cite{KPG1999}.  Subsequent
-analysis showed that this imbalance must be chosen against both structural
-attacks and the increasingly underdetermined public system
-~\cite{BraekenWolfPreneel2005}.  Efforts to reduce UOV's public key include
-field lifting and block-anti-circulant matrices~\cite{FieldLifting,BACUOV}.
-The attack on block-anti-circulant UOV traces its weakness to a reducible
-quotient polynomial~\cite{BACUOVAttack}.  \QRUOV{} replaces that polynomial
-with an irreducible one and develops the resulting quotient-ring construction
-and its pull-back and lifting analyses~\cite{QRUOVOriginal}.  We take this
-compressed construction as fixed and study what remains possible when only
-its vinegar dimension changes.
+UOV was introduced after the balanced construction's hidden linear structure
+was recovered; its vinegar imbalance must be chosen against both structural
+attacks and an increasingly underdetermined public system
+~\cite{KipnisShamir1998,KPG1999,BraekenWolfPreneel2005}.  Field lifting and
+block-anti-circulant matrices compress the public key
+~\cite{FieldLifting,BACUOV}, but the latter construction was broken through
+its reducible quotient polynomial~\cite{BACUOVAttack}.  \QRUOV{} instead uses
+an irreducible quotient and analyzes the resulting pull-back and lifting
+attacks~\cite{QRUOVOriginal}.  We hold this construction fixed and vary only
+its vinegar dimension.
 
-\paragraph{Direct attacks on underdetermined MQ.}
+\paragraph{Direct attacks on underdetermined quadratic systems.}
 Thomae and Wolf reduce an underdetermined quadratic system to a smaller square
 system before invoking a generic solver~\cite{ThomaeWolf2012}.  Furue,
 Nakamura, and Takagi improve the range in which this reduction applies, and
@@ -325,15 +406,17 @@ $51,75,102$ are therefore prior art.  The later ``Just Guess'' algorithm
 pushes more of the computation into exhaustive search.  It improves the
 quantum estimates for QR-UOV, but it does not improve the team's classical
 Hashimoto estimates~\cite{JustGuess,QRUOVResponse2026}.  Our direct attack
-starts from the same affine dimensions, but full target normalization makes
-the residual equations homogeneous.  Passing to projective space removes the
-common scale and gives the smaller square cores $50,74,101$.
+starts from the same dimensions.  We change the output coordinates so that
+the remaining target equations are homogeneous, which means that solutions
+are defined only up to a common nonzero scale.  Fixing that scale removes one
+variable and gives systems in $50,74,101$ variables.
 
 \paragraph{Recovering the hidden oil space.}
 The Kipnis--Shamir attack searches directly for the secret linear structure
 ~\cite{KipnisShamir1998}.  Reconciliation expresses membership in the oil
-space as quadratic equations, while Beullens' intersection attack uses the
-intersection of transformed oil spaces to reduce the search
+space as quadratic equations.  Beullens' intersection attack instead compares
+several transformed copies of the oil space and uses their intersections to
+reduce the search
 ~\cite{DingEtAl2008,Beullens}.  P\'ebereau strengthens the endpoint: for the
 practical UOV parameters he analyzes, one suitable oil vector is enough to
 recover an equivalent key in polynomial time~\cite{Pebereau}.  We do not claim this
@@ -347,10 +430,12 @@ key (\cref{sec:recovery}).
 The original QR-UOV analysis applies reconciliation and intersection after
 pulling the block matrices back to the quotient field or lifting the public
 map to an extension field~\cite{QRUOVOriginal}.  Furue and Ikematsu instead
-form a rectangular-MinRank instance from the same extension-field structure
+encode the same structure as the problem of finding a low-rank matrix in a
+public linear space
 ~\cite{FurueIkematsu}.  Suzuki et al. extend the admissible target ranks and
-connect this method to the singular geometry used by other UOV attacks
-~\cite{Suzuki}.  More recent symmetric-algebra and truncated-ring methods
+connect this method to the singular points used by other UOV attacks
+~\cite{Suzuki}.  More recent methods derive higher-degree algebraic relations
+using symmetric powers or truncated polynomial rings.  These relations
 improve key recovery for some UOV parameter sets
 ~\cite{JinEtAl2026,FurueIkematsu2026}.  For the recommended QR-UOV sets, the
 truncated-ring calculation gives no improvement because the characteristic
@@ -360,56 +445,50 @@ works sharpen individual key-recovery costs at fixed parameters.  None gives a
 bound that joins key recovery to direct forgery for every vinegar dimension.
 
 \paragraph{Parameter tradeoffs and common UOV frameworks.}
-P\'ebereau states the qualitative tradeoff that motivates our theorem:
-increasing the variable-to-equation ratio strengthens UOV against key recovery
-and weakens it against forgery, while decreasing the ratio has the opposite
-effect~\cite{Pebereau}.  The original QR-UOV paper makes the same point through
-its parameter selection, assigning the vinegar count to reconciliation and
-the output count to direct forgery~\cite{QRUOVOriginal}.  Li, Guo, and Ding
-later describe QR-UOV, MAYO, and SNOVA through a common tensor-product
-framework and reduce QR-UOV key-recovery accounting to an extension-field UOV
-instance~\cite{LiGuoDing2025}.  We do not claim the qualitative tradeoff or the
-extension-field view.  Our result is the exact two-case statement that every
-integer $V$ leaves either a direct-forgery core or an equivalent-key core of
-dimension at most $m-\ell-1$, with the direct side reaching this bound only
-after projectivization (\cref{thm:security-scissors}).
+P\'ebereau and the original QR-UOV parameter analysis already state the
+qualitative tension between key recovery and forgery
+~\cite{Pebereau,QRUOVOriginal}.  Li, Guo, and Ding describe QR-UOV, MAYO, and
+SNOVA in one algebraic framework and show that QR-UOV key-recovery costs can
+be analyzed as UOV over the extension field~\cite{LiGuoDing2025}.  We claim neither the
+tradeoff nor the extension-field view.  Our result is the exact two-case bound:
+every integer $V$ leaves either the direct or equivalent-key reduction with at
+most $m-\ell-1$ variables, and the direct reduction reaches this bound only
+after fixing the common scale (\cref{thm:security-scissors}).
 
 \paragraph{Polynomial-system solving.}
-The arbitrary-core engine is the nonsingular-solutions homotopy of Safey El
-Din and Schost~\cite{SafeySchost2018}, building on symbolic homotopy and
-geometric-resolution methods~\cite{Schost2003,GiustiLecerfSalvy2001}.  We
-replace the start-system and separator choices responsible for its published
-characteristic restriction.  The appendices retain independent checks using
-the near-quadratic solver of van der Hoeven--Lecerf and a locally closed
-Kronecker algorithm~\cite{vdHL,Gimenez2026}.  These methods cost the square
-cores produced by our reductions; they do not supply the QR-UOV reductions or
-the fixed-output theorem.
+We estimate root-finding costs with the exact symbolic algorithm of Safey El
+Din and Schost~\cite{SafeySchost2018}.  It connects an easy system with known
+roots to the target system and follows those roots as the connecting parameter
+changes~\cite{Schost2003,GiustiLecerfSalvy2001}.  We change the easy starting
+system and the linear form used to distinguish roots so that the algorithm
+works in characteristic $127$.  The supplement checks the result against two
+other exact solvers~\cite{vdHL,Gimenez2026}.  These solvers estimate the cost
+of the systems produced by our attacks.  They do not produce either QR-UOV
+reduction or the fixed-output theorem.
 
 \paragraph{Chevalley--Warning.}
 The direct reduction uses the classical fact that, when the sum of the degrees
 is smaller than the number of variables, the number of common zeros over a
 finite field is divisible by the characteristic~\cite{Chevalley1935,Warning1935}.
 Applied to three quadrics in seven variables, it guarantees a nonzero extension
-vector.  Exhaustive projective search makes the theorem constructive, so no
-unpriced existence oracle is hidden in the preprocessing.  Our use of this
-classical theorem is therefore algorithmic rather than a new finite-field
-existence result.
+vector.  Exhaustive search over nonzero vectors up to scalar multiplication
+makes the theorem constructive, so the preprocessing does not assume that a
+common zero is available for free.  Our use of this classical theorem is
+therefore algorithmic rather than a new finite-field existence result.
 
-\section{From the expanded key to universal forgery}\label{sec:model}
+\section{From a recovered graph to signatures on any message}\label{sec:model}
 
-The direct attack works with the official base-field map, while equivalent-key
-recovery works first with its quotient-ring expansion.  Equivalent-key
-recovery is complete only after the recovered structure gives a base-field
-decomposition that can invert every verification target.  This section defines
-the expansion model used for average-case claims and gives the two public
-checks that turn a recovered graph into a universal forgery.
+The direct attack can check a proposed signature by evaluating the public map
+$\widehat P$.  Key recovery has two additional obligations.  A recovered
+graph must reproduce the same public map, and its oil system must let the
+attacker solve for every verification target.  This section states the random
+key models used only for success probabilities, then gives public checks for
+both obligations.
 
-\subsection{Coordinates, parameters, and expansion model}
+\subsection{Parameters and expansion models}
 
-The Round-2 parameter sets use $q=127$ and quotient degree $\ell=3$.  The
-official map has $v=\ell V$ vinegar variables, $m=\ell O$ oil variables, and
-$m$ outputs over $\F_q$.  Its quotient-ring expansion has the same $m$ outputs
-in $N=V+O$ variables over
+The Round-2 parameter sets specialize \eqref{eq:parameter-stack} to $q=127$
+and $\ell=3$.  Thus
 \[
  K=\F_{q^\ell}=\F_{127^3},\qquad
  Q=|K|=2{,}048{,}383,
@@ -427,38 +506,18 @@ V&306&105&102&35&137&3\\
 \bottomrule
 \end{tabular}
 \end{center}
-We write $D=2^V$ for the B\'ezout degree of a smooth square core and
-$L_s=\F_{Q^s}$ for the solver's working field.  All concrete theorems below
-concern these three sets, for which $m<q$.
+We write $D=2^V$ for B\'ezout's general upper bound on the number of isolated
+roots of $V$ quadratic equations in $V$ variables.  We write $L_s=\F_{Q^s}$ for an
+extension field used by the equation solver.  All concrete theorems below
+concern these three sets, for which $m<q$.  The matrices
+$A_i,B_i,E_i,C_i$, the graph $G$, and the oil space $\cO$ retain the meanings
+in \eqref{eq:central} to \eqref{eq:isotropy}.
 
-Write the expanded public tuple as
-\[
- P=(p_1,\ldots,p_m),\qquad
- p_i(x)=x^{\mathsf T}P_ix,
- \qquad
- P_i=\begin{pmatrix}A_i&E_i\\E_i^{\trans}&C_i\end{pmatrix}.
-\]
-In normalized public coordinates, the hidden oil space is the graph
-\begin{equation}\label{eq:graph}
- \cO=\left\{\binom{-Gc}{c}:c\in K^O\right\}.
-\end{equation}
-It is totally isotropic for every public form,
-\begin{equation}\label{eq:isotropy}
- u^{\mathsf T}P_iw=0\qquad(u,w\in\cO,\ 1\le i\le m),
-\end{equation}
-exactly when
-\begin{equation}\label{eq:graphid}
- C_i=G^{\trans}E_i+E_i^{\trans}G-G^{\trans}A_iG.
-\end{equation}
-The corresponding secret central form is
-\begin{equation}\label{eq:central}
- F_i=\begin{pmatrix}A_i&B_i\\B_i^{\trans}&0\end{pmatrix},
- \qquad
- F_i(v,o)=v^{\trans}A_iv+2v^{\trans}B_io,
- \qquad B_i=E_i-A_iG.
-\end{equation}
+For the probability calculations, we replace the seeded expansion by the
+following explicit distribution on expanded keys.  The algebraic attacks and
+all final verification checks do not depend on this replacement.
 
-\begin{definition}[Public-random expanded key]\label{def:ideal}
+\begin{definition}[Random expanded-key model]\label{def:ideal}
 Sample the symmetric blocks $A_1,\ldots,A_m$ independently and uniformly from
 $\Sym_V(K)$.  Conditional on $A=(A_i)_i$, sample the secret graph
 $G\in K^{V\times O}$ from any distribution.  Conditional on $(A,G)$, sample
@@ -467,7 +526,7 @@ each $C_i$ by \eqref{eq:graphid}.  No independence between $G$ and $A$ is
 assumed.
 \end{definition}
 
-\begin{definition}[Independent-graph specialization]\label{def:direct-ideal}
+\begin{definition}[Independent-graph model]\label{def:direct-ideal}
 The independent-graph model is Definition~\ref{def:ideal} with $G$ independent of $A$.
 The marginal distribution of $G$ may otherwise be arbitrary.
 \end{definition}
@@ -486,18 +545,22 @@ independent of $(A,G)$.  Independence of the $A_i$ and $E_i$ gives the stated
 product distribution.
 \end{proof}
 
-The equivalent-key analyses use Definition~\ref{def:ideal}; their bad-key
-events depend on the uniform central pairs and on fresh attack coins, not on
-independence between $G$ and $A$.  The direct reduction is key by key, but its
-average-case residual-root theorem conditions on an off-oil point and then
-requires $G$ to be independent of the central coefficient pairs.  It therefore
-uses Definition~\ref{def:direct-ideal}.  The ideal-XOF and ideal-cipher
-transfers, and the gap for fixed SHAKE or AES, are stated in
-\cref{app:seeded-transfer}.  These models govern only the probability of
-finding a certificate.  Every returned key and signature is checked against
-the unchanged public map.
+The equivalent-key analysis uses the first model.  Its failure events depend
+on the uniform central matrices and on fresh public attack randomness, but not
+on independence between $G$ and $A$.  The direct reduction is valid for every
+key.  Its average success probability, however, requires $G$ to be independent
+of the central coefficients and therefore uses the second model.  The
+supplement explains when idealized random functions or ideal ciphers justify
+these distributions and why the argument does not automatically transfer to
+the fixed SHAKE or AES functions (\cref{app:seeded-transfer}).  These models
+affect only the probability of finding a candidate.  Every returned key and
+signature is checked against the original public map.
 
 \subsection{From a recovered graph to a signing key}
+
+The graph identities are useful because they can be checked using only public
+matrices.  Passing these checks reconstructs a central UOV map for the same
+public key.
 
 \begin{proposition}[A verified graph gives an exact UOV decomposition]\label{prop:verified-key}
 Let $G'\in K^{V\times O}$ satisfy every identity \eqref{eq:graphid}, and put
@@ -507,7 +570,7 @@ Let $G'\in K^{V\times O}$ satisfy every identity \eqref{eq:graphid}, and put
  S_{G'}=\begin{pmatrix}I_V&G'\\0&I_O\end{pmatrix}.
 \]
 Then $P_i=S_{G'}^{\trans}F_i'S_{G'}$ for every $i$.  The specification's
-invertible pull-back therefore gives matrices
+invertible base-field conversion therefore gives matrices
 $\widehat P_i=\widehat S_{G'}^{\trans}\widehat F_i'\widehat S_{G'}$ over
 $\F_q$ for the unchanged verification map~\cite[Sec.~4.1]{QRUOVSpec}.
 \end{proposition}
@@ -519,27 +582,16 @@ the specification's inverse pull-back gives the base-field factorization.  The
 full matrix calculation appears in \cref{app:expanded-certificates}.
 \end{proof}
 
-For an expanded base-field decomposition
-$\widehat P_i=\widehat S^{\mathsf T}\widehat F_i\widehat S$, write the central
-variables as $(a,o)\in\F_q^v\oplus\F_q^m$.  Fixing $a$ makes the central map
-linear in $o$ because every oil-oil block is zero.  Define this linear map by
-\begin{equation}\label{eq:signing-matrix}
- \mathsf L_{\widehat F}(a)\in\F_q^{m\times m},
- \qquad
- \bigl(\mathsf L_{\widehat F}(a)o\bigr)_i
- :=\widehat F_i(a,o)-\widehat F_i(a,0).
-\end{equation}
-
 \begin{proposition}[Public signing witness]\label{prop:signing-witness}
 If $\det\mathsf L_{\widehat F}(a)\ne0$, then
 $(\widehat F,\widehat S,a)$ is a publicly checkable signing certificate.  For
-every target $y\in\F_q^m$, compute
-\[
+every target $y\in\F_q^m$, the unique solution to
+\begin{equation}\label{eq:universal-inversion}
  o=\mathsf L_{\widehat F}(a)^{-1}\bigl(y-\widehat F(a,0)\bigr),
  \qquad
- x=\widehat S^{-1}(a,o).
-\]
-Then $\widehat P(x)=y$.
+ x=\widehat S^{-1}(a,o)
+\end{equation}
+satisfies $\widehat P(x)=y$.
 \end{proposition}
 
 \begin{proof}
@@ -548,25 +600,21 @@ $\widehat P(x)=\widehat F(\widehat Sx)=y$.  The forged signatures need not
 match the honest signing distribution.
 \end{proof}
 
-\begin{corollary}[Key-only universal chosen-message forgery]\label{cor:universal-forgery}
+\begin{corollary}[Forging any chosen message without signing queries]\label{cor:universal-forgery}
 A verified certificate from Proposition~\ref{prop:signing-witness} lets an attacker forge
 an accepted \QRUOV{} signature on every chosen message without a signing
-query.  Given a message $M$, choose any allowed salt $r$, compute
-\[
- \mu=\operatorname{SHAKE256}(\mathsf{seed}_{\rm pk}\mathbin\|\operatorname{BytesToBits}(M),512),
- \qquad y=\operatorname{Hash}(\mu,r),
-\]
-invert $y$ with Proposition~\ref{prop:signing-witness}, and output $(r,x)$.
+query.  Given a message $M$, choose any allowed salt $r$, form $y(M,r)$ by
+\eqref{eq:verification-target}, invert it with
+Proposition~\ref{prop:signing-witness}, and output $(r,x)$.
 \end{corollary}
 
 \begin{proof}
-The verifier accepts exactly when
-$\widehat P(x)=\operatorname{Hash}(\mu,r)$~\cite[Secs.~4.2--4.3]{QRUOVSpec}.
-The certificate inverts every target under this unchanged map.  It neither
-recovers nor uses the secret seed.
+The certificate satisfies the verifier equation
+\eqref{eq:verification-equation} for every target.  It neither recovers nor
+uses the secret seed.
 \end{proof}
 
-\subsection{Finding an invertible oil system}
+\subsection{Finding vinegar values with an invertible oil system}
 
 Fix nonzero $\xi\in\F_q^\ell$.  For each quotient-ring vinegar block $j$, let
 $a_j$ place $\xi$ in block $j$ and zero elsewhere, and set
@@ -578,8 +626,11 @@ Write
  \pi_m:=\prod_{k=1}^m(1-q^{-k}),
  \qquad \sigma_m:=1-\pi_m.
 \]
+$\pi_m$ is the probability that a uniform $m\times m$ matrix over $\F_q$ is
+invertible.  We first test vinegar assignments supported on one quotient-ring
+block.  This makes the search both public and inexpensive.
 
-\begin{proposition}[Basis-first signing search]\label{prop:signing-search}
+\begin{proposition}[Searching basis vinegar assignments]\label{prop:signing-search}
 For the planted decomposition in Definition~\ref{def:ideal}, the matrices
 $M_1,\ldots,M_V$ are independent and uniform.  The following searches then
 give public signing certificates.
@@ -614,11 +665,14 @@ For any exact candidate, define
 \[
  \Delta(c_1,\ldots,c_V):=\det\!\left(\sum_{j=1}^V c_jM_j\right).
 \]
-If $\Delta$ is nonzero, a uniform scalar-block vinegar assignment succeeds
+The coefficients $(c_1,\ldots,c_V)$ correspond to the vinegar assignment
+$a=(c_1\xi,\ldots,c_V\xi)$.  If $\Delta$ is nonzero, a uniform assignment of
+this form succeeds
 with probability at least $1-m/q$.  The expected numbers of assignments are
 at most $1.740$, $2.592$, and $5.773$ at the three levels.  This last claim is
 key by key, and every successful determinant test is an exact public
-certificate even for a candidate that is not planted.
+certificate even when the recovered graph differs from the original secret
+graph.
 \end{proposition}
 
 \begin{proof}
@@ -632,17 +686,15 @@ appear in \cref{app:expanded-certificates}.
 
 \section{\texorpdfstring{Direct forgery in $m-4$ variables}{Direct forgery in m-4 variables}}\label{sec:direct}
 
-The direct attack works with the official base-field verification map
-\[
- \widehat P:\F_q^n\longrightarrow\F_q^m,
- \qquad n=v+m,
- \qquad q=127.
-\]
-Given a nonzero target $y$, the attack constructs an $(m-3)$-dimensional
+The direct attack starts from the verifier equation
+\eqref{eq:verification-equation} over $\F_q$, with $q=127$ and
+$n=v+m$.  Given a nonzero target $y$, it constructs an $(m-3)$-dimensional
 public subspace on which three zero-target equations vanish identically.  On
-this subspace, the remaining zero-target equations form a square projective
-system of dimension $m-4$.  The final nonzero-target equation only recovers
-the affine scale.  The resulting solver cores are
+this subspace, the remaining zero-target equations are homogeneous.  Their
+solutions are therefore defined up to multiplication by a nonzero scalar.
+Fixing this scale leaves $m-4$ equations in $m-4$ variables.  The final
+nonzero-target equation recovers the omitted scale.  The resulting systems
+have dimensions
 \[
  50,\qquad74,\qquad101
 \]
@@ -653,22 +705,24 @@ The affine reduction to $m-3$ variables is prior art.  Hashimoto's
 underdetermined quadratic-system method and the QR-UOV specification already analyze these
 residual dimensions~\cite{Hashimoto2023,QRUOVSpec}.  Our additional reduction
 uses full target normalization and solves the homogeneous zero-target
-equations modulo scaling.  This removes one more variable, giving cores of
-dimension $m-4$.  We also give a finite Chevalley--Warning construction, a
-fixed-key seed bound, an explicit nonsingular-root probability for the
-degree-three pull-back, and a finite-characteristic solver cost.
+equations modulo scaling.  This removes one more variable, giving systems of
+dimension $m-4$.  We also give a finite construction of the required
+subspace, bound its failure probability for every fixed key, prove a lower
+bound on the probability of a root with invertible Jacobian, and estimate the
+cost over the base field of characteristic $127$.
 \end{remark}
 
 The algebraic reduction below is key by key.  Its probability calculation uses
 the independent-graph model of Definition~\ref{def:direct-ideal}: the
-hidden graph $G$ is independent of the product-uniform central coefficient
+hidden graph $G$ is independent of the independent uniform central coefficient
 pairs $(A_i,B_i)$.  This independence is needed only for the direct attack's
-average-case root analysis; the directional results continue to allow
-arbitrary correlation between $G$ and $A$.  In the ideal-XOF and ideal-cipher models,
-official public and secret expansion have this independence whenever their
-independently sampled seeds differ.  \Cref{app:seeded-transfer} adds the
-seed-collision and buffer terms explicitly.  No such transfer is claimed for
-the fixed SHAKE or AES functions.
+average success analysis.  The equivalent-key results continue to allow
+arbitrary correlation between $G$ and $A$.  In idealized models where SHAKE is
+a random function or AES is an ideal cipher, independently sampled and
+distinct public and secret seeds give the required independence.
+\Cref{app:seeded-transfer} accounts for seed collisions and finite output
+lengths.  We do not claim that fixed SHAKE or AES automatically has the same
+distribution.
 
 \subsection{From the target to a projective system}
 
@@ -680,20 +734,21 @@ whose last row has inner product one with $y$.  Then
  T_yy=(0,\ldots,0,1)^{\mathsf T}.
 \end{equation}
 Write $Q_1,\ldots,Q_m$ for the corresponding output recombinations of the
-public forms.  Since $T_y$ is fixed by $y$ and invertible, product-uniform
-public forms remain product-uniform in the public-random expanded-key model.
+public forms.  Since $T_y$ is fixed by $y$ and invertible, independent uniform
+public forms remain independent and uniform in the random expanded-key model.
 
 Only $Q_1,Q_2,Q_3$ are used to construct the attack subspace.  Choose a
-uniformly random seven-dimensional subspace $S_0\subset E$, restrict these
-three forms to $S_0$, and exhaustively test the points of
+uniformly random seven-dimensional subspace $S_0\subset\F_q^n$ and restrict
+these three forms to $S_0$.  The attacker then tests all nonzero vectors in
+$S_0$ up to scalar multiplication, namely the points of
 $\PP(S_0)\simeq\PP^6(\F_q)$.  Chevalley--Warning guarantees a nonzero common
 zero because three quadrics have total degree six in seven variables.  Denote
 the first such point by $w$.
 
 The hidden oil space is not known to the attacker, so the algorithm cannot
-test whether $w$ is off oil.  The random seed subspace makes this test
-unnecessary; the next proposition bounds the failure probability for every
-fixed oil space.
+test whether $w$ lies outside it.  We call such a point \emph{off oil}.  The
+random seed subspace makes this test unnecessary; the next proposition bounds
+the failure probability for every fixed oil space.
 
 \begin{proposition}[A random seed misses every fixed oil space]\label{prop:off-oil-seed}
 Fix an arbitrary $m$-dimensional subspace $\widehat{\cO}\subset\F_q^n$ and
@@ -706,7 +761,7 @@ choose a uniform seven-dimensional subspace $S_0\subset\F_q^n$.  Then
    \frac{q^7-1}{q^n-1}.
 \end{equation}
 Consequently, except with probability at most $\epsilon_{\rm seed}$ over
-public attack coins, every nonzero common zero found inside $S_0$ is off oil.
+the attack's public randomness, every nonzero common zero found inside $S_0$ is off oil.
 For the three official profiles,
 \begin{equation}\label{eq:seed-oil-numbers}
  \log_2\epsilon_{\rm seed}
@@ -748,8 +803,9 @@ projective points.
 \end{theorem}
 
 \begin{proof}
-At each step, intersect the polar-orthogonal spaces of the current isotropic
-subspace.  Condition \eqref{eq:cw-feasibility} leaves at least $2s+1$
+At each step, use linear equations to restrict to vectors $z$ satisfying
+$B_{Q_i}(u,z)=0$ for every current basis vector $u$ and every selected form
+$Q_i$.  Condition \eqref{eq:cw-feasibility} leaves at least $2s+1$
 quotient dimensions, where Chevalley--Warning supplies a nonzero common zero
 of the induced $s$ quadrics~\cite{Chevalley1935,Warning1935}.  Lifting this
 zero extends the isotropic subspace by one dimension.  The complete dimension
@@ -775,8 +831,10 @@ the constructed subspace and have zero target, leaving the stated affine
 residual.
 \end{proof}
 
-The affine formulation leaves one variable that homogeneity makes redundant.
-The next corollary removes it exactly.
+The affine formulation still counts a common scalar that does not change any
+homogeneous zero-target equation.  A projective point $[z]$ records a nonzero
+vector $z$ only up to multiplication by a nonzero scalar.  The next corollary
+uses this viewpoint to fix the scale and remove one variable exactly.
 
 \begin{corollary}[Projective reduction after target normalization]\label{cor:projective-target-slicing}
 Assume that $q$ is odd.  Under the hypotheses of
@@ -801,8 +859,8 @@ $[z]\in\PP(U)$ satisfying
 \end{equation}
 and $H_0(z)$ a nonzero square in $\F_q$;
 \item a solution of \eqref{eq:projective-affine-pair} has invertible affine
-Jacobian if and only if its projective point is nonsingular for
-\eqref{eq:projective-zero-system}; and
+Jacobian if and only if the Jacobian of
+\eqref{eq:projective-zero-system} has full rank at its projective point; and
 \item after choosing a uniform nonzero linear form $L\in U^*$, the chart
 $L(z)=1$ turns \eqref{eq:projective-zero-system} into $r-1$ quadrics in
 $r-1$ affine variables.  Any fixed projective root lies in this chart with
@@ -811,15 +869,16 @@ probability
  1-\frac{q^{r-1}-1}{q^r-1}>1-\frac1q.
 \]
 \end{enumerate}
-Thus the square solver core has dimension $m-s-1$ and geometric degree at most
-$2^{m-s-1}$.
+Thus the system has $m-s-1$ equations in $m-s-1$ variables.  B\'ezout's
+theorem bounds its number of isolated roots by $2^{m-s-1}$.
 \end{corollary}
 
 \begin{proof}
 Homogeneity multiplies every quadratic value by $\lambda^2$ under
 $z\mapsto\lambda z$.  Thus $H_0$ can be scaled to one exactly when its value
-is a nonzero square.  Euler's identity identifies affine nonsingularity with
-projective nonsingularity after removing the radial direction.  Counting the
+is a nonzero square.  Euler's identity shows that the affine Jacobian is
+invertible exactly when the projective Jacobian has full rank after removing
+the common scaling direction.  Counting the
 linear forms that vanish at a fixed projective point gives the chart
 probability.  The full Jacobian argument appears in
 \cref{app:direct-proofs}.
@@ -840,16 +899,17 @@ The resulting projective solver dimensions are
 The seed root and every extension step use finite exhaustive search, so this
 reduction needs no existence oracle.  Even after overcharging the required
 linear algebra and search, preprocessing costs at most $2^{64.501}$ Boolean
-gates across the three profiles.  The complete ledger appears in
+gates across the three profiles.  The complete cost calculation appears in
 \cref{app:direct-proofs}.
 
-\subsection{Why a usable projective root exists}
+\subsection{Why the reduced system has a usable root}
 
-The degree-three pull-back does not produce every UOV quadric over $\F_q$.
-The root count therefore uses the exact local randomness that the pull-back
-does provide.  Let $E=K^{V+O}$, viewed over $\F_q$, and let
+The structured degree-three conversion does not produce uniformly random
+quadratic forms over $\F_q$.  We therefore prove the exact randomness property
+needed for the root count instead of treating the reduced equations as random.
+Let $E=K^{V+O}$, viewed over $\F_q$, and let
 $\widehat{\cO}\subset E$ be the hidden base-field oil space.  In central
-coordinates, each public-random pulled-back form has the form
+coordinates, each form in the random expanded-key model has the form
 \begin{equation}\label{eq:trace-pullback}
  Q(v,o)=\Tr_{K/\F_q}\!\left(\gamma
  (v^{\mathsf T}Av+2v^{\mathsf T}Bo)\right)
@@ -857,7 +917,7 @@ coordinates, each public-random pulled-back form has the form
 for fixed nonzero $\gamma\in K$ and uniform
 $A\in\Sym_V(K)$ and $B\in K^{V\times O}$.
 
-\begin{lemma}[Evaluation and first-derivative randomness]\label{lem:pullback-one-jet}
+\begin{lemma}[Randomness of values and first derivatives]\label{lem:pullback-one-jet}
 Let $x\in E\setminus\widehat{\cO}$, and let $U\subseteq E$ contain $x$.  For a
 uniform form $Q$ from \eqref{eq:trace-pullback}, $Q(x)$ is uniform in $\F_q$.
 Conditioned on $Q(x)=a$, the derivative $dQ_x|_U$ is uniform among the linear
@@ -870,7 +930,8 @@ nonzero scalar in $\F_q$.
 Nondegeneracy of the trace pairing lets the central bilinear form prescribe
 every value and derivative allowed by Euler's identity.  Comparing the
 rank-one coefficient matrices at two points gives the last claim.  The full
-surjectivity and degree-three descent argument appears in
+calculation of all possible values and derivatives, including the conversion
+from the degree-three field, appears in
 \cref{app:direct-proofs}.
 \end{proof}
 
@@ -881,7 +942,7 @@ to identify $U$ with $\F_q^r$.  Under the normalization
  H_j=Q_{3+j}|_U\quad(1\le j\le r-1),
  \qquad H_0=Q_m|_U.
 \]
-The affine residual is
+The remaining affine system is
 \begin{equation}\label{eq:direct-residual}
  H_1(z)=\cdots=H_{r-1}(z)=0,
  \qquad H_0(z)=1,
@@ -891,20 +952,21 @@ The projective solver uses only the first $r-1$ equations; $H_0$ filters and
 scales their projective roots.
 
 The next statement gives an explicit success probability rather than assuming
-that a random-looking square system has a root.  Let
+that a system which looks random has a root.  Let
 \begin{equation}\label{eq:pi-r-direct}
  \pi_{r-1}(q)=\prod_{j=1}^{r-1}(1-q^{-j}).
 \end{equation}
 
-\begin{proposition}[Affine nonsingular-root probability]\label{prop:direct-root-probability}
-Condition on the selected forms, the attack coins used to construct $U$, and
+\begin{proposition}[Probability of an affine root with invertible Jacobian]\label{prop:direct-root-probability}
+Condition on the selected forms, the public randomness used to construct $U$, and
 an off-oil seed point.  Put
 \[
  d=\dim_{\F_q}(U\cap\widehat{\cO}),
  \qquad
  \mu=1-q^{d-r}.
 \]
-Then $d\le r-1$.  Over the independent remaining public-random QR-UOV forms,
+Then $d\le r-1$.  Over the independent remaining forms in the random
+expanded-key model,
 the probability that \eqref{eq:direct-residual} has an $\F_q$-rational root
 with invertible $r\times r$ Jacobian is at least
 \begin{equation}\label{eq:direct-root-lower-bound}
@@ -938,33 +1000,41 @@ Under the same conditioning, the probability that the projective system
 \[
  H_1=\cdots=H_{r-1}=0\quad\text{in }\PP^{r-1}(\F_q)
 \]
-has a nonsingular point $[z]$ for which $H_0(z)$ is a nonzero square is at
+has a point $[z]$ with full-rank projective Jacobian for which $H_0(z)$ is a nonzero square is at
 least the bound in \eqref{eq:direct-root-lower-bound}, and hence at least
 $p_*$ for every official profile.
 \end{corollary}
 
 \begin{proof}
-By Corollary~\ref{cor:projective-target-slicing}, every affine nonsingular root of
-\eqref{eq:direct-residual} maps to a nonsingular projective root with the
+By Corollary~\ref{cor:projective-target-slicing}, every affine root of
+\eqref{eq:direct-residual} with invertible Jacobian maps to a projective root
+with full-rank Jacobian and the
 required nonzero-square value;
 the two affine roots $z$ and $-z$ map to the same projective point.  Existence
 of an affine root therefore implies the displayed projective event.
 \end{proof}
 
-The factor $1/p_*=3.0643169600\ldots$ costs $1.615566$ bits in the
-work-to-success ratio.  A random chart adds less than
-$\log_2(127/126)=0.011405$ bits.  Unlike a Poisson heuristic, the root bound
-follows from the QR-UOV pull-back distribution and a second-moment argument.
-The seed-disjointness statement is fixed-key; the residual-root statement
-averages over the independent-graph idealized expansion model.  We do not
-claim that repeated invocations on every fixed seeded key are independent.
+The factor $1/p_*=3.0643169600\ldots$ adds $1.615566$ bits to the expected
+cost.  A random chart adds less than
+$\log_2(127/126)=0.011405$ bits.  The root bound is proved from the QR-UOV
+distribution by a second-moment argument.  The probability that the initial
+subspace avoids the oil space holds for every fixed key.  The later root
+probability averages over the independent-graph model.  We do not claim that
+repeated attacks on every fixed seeded key behave independently.
 
 \subsection{The verified attack}
 
+A projective chart fixes the common scale by choosing a nonzero linear form
+$L$ and requiring $L=1$.  With this terminology, the complete direct attack
+is as follows.  The root solver also applies a random linear form to label its
+candidate roots.  We call this form a \emph{separator} when the roots that the
+algorithm must distinguish receive different labels.
+
 \begin{theorem}[Verified QR-UOV direct forgery]\label{thm:verified-direct-forgery}
-Work in the independent-graph public-random model and the official degree-three
+Work in the independent-graph random expanded-key model and the official degree-three
 pull-back.  For any nonzero target $y$, the following public algorithm has
-one-sided error.
+one-sided error: it may fail to find a forgery, but it never returns an invalid
+one.
 \begin{enumerate}
 \item Normalize the target to $(0,\ldots,0,1)$ as in
 \eqref{eq:target-normalization}.
@@ -972,23 +1042,22 @@ one-sided error.
 projective points, and take a nonzero common zero of the first three forms.
 \item Use \cref{thm:cw-extension} to construct an $(m-3)$-dimensional common
 totally isotropic subspace for those forms.
-\item Choose a uniform nonzero chart form $L$ on that subspace.  Dehomogenize
-the $m-4$ remaining zero-target quadrics in the chart $L=1$ and apply
+\item Choose a uniform nonzero chart form $L$ on that subspace.  Substitute
+$L=1$ in the $m-4$ remaining zero-target quadrics, and apply
 \cref{thm:finite-char-nonsingular} to the resulting square system in
 \[
  k=m-4
 \]
 variables.
-\item For each represented $\F_q$-rational root, recover its projective point,
+\item For each $\F_q$-rational root returned by the solver, recover its projective point,
 test whether the last quadratic value is a nonzero square, scale to make that
 value one, reverse the public transformations, and evaluate the unchanged
 public map.
 \end{enumerate}
-Every returned vector is a valid signature preimage.  Over the
-independent-graph public-random key and the public attack coins, one complete
-invocation reaches an off-oil residual with a represented nonsingular
-$\F_q$-rational projective root whose last quadratic value is a nonzero square
-with probability at least
+Every returned vector is a valid signature preimage.  Over the random
+expanded-key model and the attack's public randomness, one complete invocation
+reaches a reduced system with a root over $\F_q$ whose Jacobian is invertible
+and whose last quadratic value is a nonzero square with probability at least
 \begin{equation}\label{eq:direct-total-success}
  (1-\epsilon_{\rm seed})p_*
  \left(1-\frac1q\right)
@@ -1000,9 +1069,9 @@ where $k'/\F_q$ is the solver working extension.  Taking
  [k':\F_q]=15,\qquad22,\qquad30
 \]
 at Levels I, III, and V gives the finite costs reported in
-\cref{sec:security}.  The inverse of \eqref{eq:direct-total-success} is used as
-a conservative work-to-success normalization; it is not asserted to be a
-fixed-key Las Vegas restart factor.
+\cref{sec:security}.  We multiply the cost of one invocation by the inverse of
+\eqref{eq:direct-total-success}.  This is a conservative expected-attempt
+factor, not a claim that retries on every fixed key are independent.
 \end{theorem}
 
 \begin{proof}
@@ -1011,21 +1080,22 @@ Proposition~\ref{prop:off-oil-seed}, the seed subspace is disjoint from the hidd
 space with probability at least $1-\epsilon_{\rm seed}$ for every fixed key.
 Chevalley--Warning then supplies an off-oil seed root, and
 \cref{thm:cw-extension} constructs the advertised subspace.  Conditional on
-the selected first three forms, the graph, the attack coins, and this off-oil
+the selected first three forms, the graph, the public randomness, and this off-oil
 seed point, the remaining transformed forms are still independent uniform
-pull-back forms.  Corollary~\ref{cor:projective-root-probability} supplies a usable
-nonsingular projective root with probability at least $p_*$.  A random nonzero
-chart contains a fixed such root with probability greater than $1-1/q$.
-The finite-characteristic solver includes every root in the chart with the
-separator probability in \eqref{eq:direct-total-success}.  Square testing and
+pull-back forms.  Corollary~\ref{cor:projective-root-probability} supplies a
+usable projective root with full-rank Jacobian with probability at least
+$p_*$.  A random nonzero chart contains a fixed such root with probability
+greater than $1-1/q$.  The solver of \cref{sec:finite-char-solver} includes
+every root in the chart with the separator probability in
+\eqref{eq:direct-total-success}.  Square testing and
 scaling recover the associated affine solutions exactly.  Re-evaluation of
-all $m$ original public forms rejects every malformed or extraneous candidate,
+all $m$ original public forms rejects every invalid candidate,
 so the algorithm cannot output an invalid signature.
 \end{proof}
 
 \subsection{Why changing only the vinegar count cannot help}
 
-Combining the direct reduction with directional equivalent-key recovery gives
+Combining the direct reduction with equivalent-key recovery gives
 a bound for every vinegar dimension.  Let the quotient degree be $\ell$, so that
 \[
  n=\ell V+m.
@@ -1036,66 +1106,72 @@ the required $(m-s)$-dimensional common-isotropic subspace whenever
  \ell V\ge s(m-s).
 \end{equation}
 By Corollary~\ref{cor:projective-target-slicing}, the corresponding nonzero-target
-solver core has dimension $m-s-1$.
+square system has $m-s-1$ variables.
 
 \begin{theorem}[Fixed-output bound across all vinegar dimensions]\label{thm:security-scissors}
 Work over a field of odd characteristic.  Fix $m$ and quotient degree $\ell$.  For every nonzero target, within the two
-attack families analyzed in this paper an algebraic core of dimension at most
-$m-\ell-1$ is available for every integer vinegar count $V$:
+attack families analyzed in this paper a square system in at most
+$m-\ell-1$ variables is available for every integer vinegar count $V$:
 \begin{equation}\label{eq:scissors-bound}
  r_{\rm attack}(V)\le m-\ell-1.
 \end{equation}
 More precisely:
 \begin{enumerate}
-\item if $V\le m-\ell-1$, directional equivalent-key recovery uses a square
-core of dimension $V$;
-\item if $V\ge m-\ell$, the direct reduction with $s=\ell$, followed by
-projectivization, uses a square core of dimension $m-\ell-1$.
+\item if $V\le m-\ell-1$, equivalent-key recovery uses a square
+system in $V$ variables;
+\item if $V\ge m-\ell$, the direct reduction with $s=\ell$, followed by fixing
+the common scale, uses a square system in $m-\ell-1$ variables.
 \end{enumerate}
 These cases cover every integer $V$.  For QR-UOV, $\ell=3$, so the ceiling is
 $m-4$.
 \end{theorem}
 
 \begin{proof}
-In the first case, $V<m$, so the $m$ directional equations admit a
+In the first case, $V<m$, so the $m$ key-recovery equations admit a
 $V$-equation square recombination and the planted-root attack of
-\cref{sec:recovery} has core $V\le m-\ell-1$.  In the second case,
+\cref{sec:recovery} has at most $V\le m-\ell-1$ variables.  In the second case,
 \[
  \ell V\ge\ell(m-\ell),
 \]
 which is \eqref{eq:scissors-feasibility} with $s=\ell$.  The affine direct
-residual has dimension $m-\ell$ and
-Corollary~\ref{cor:projective-target-slicing} removes its radial coordinate, leaving
-core $m-\ell-1$.  Since consecutive integers $m-\ell-1$ and $m-\ell$ meet the
+system has dimension $m-\ell$ and
+Corollary~\ref{cor:projective-target-slicing} removes the common-scale
+coordinate, leaving $m-\ell-1$ variables.  Since consecutive integers
+$m-\ell-1$ and $m-\ell$ meet the
 two inequalities, no case is omitted.
 \end{proof}
 
-The theorem is an algebraic-core statement, not a claim that running time
-depends only on the number of variables.  For the official degree-three sets,
+The theorem bounds the number of variables in the nonlinear system.  It does
+not claim that running time depends only on this number.  For the official degree-three sets,
 Proposition~\ref{prop:off-oil-seed} and
 Corollary~\ref{cor:projective-root-probability} supply the success
-factors charged in the concrete ledger.  Its design implication is exact:
+factors charged in the concrete cost calculation.  Its design implication is exact:
 once $V$ reaches $m-\ell$, increasing $V$ while holding $m$ fixed no longer
-enlarges the projective direct-forgery core.  Conversely, decreasing $V$ into
-the other case makes directional recovery no larger than the same ceiling.
+enlarges the projective direct-forgery system.  Conversely, decreasing $V$ into
+the other case makes key recovery no larger than the same ceiling.
 Moving both attack lines therefore requires changing $m$ as well as $V$, or
 modifying the construction so that one reduction no longer applies.
 
-The direct construction and the complete local-separator pipeline have both
+The direct construction and the complete attack have both
 been executed on reduced parameters.  The exact traces and public replay
 checks appear in \cref{app:direct-proofs,app:reduced-implementation}; these are
 correctness tests, not full-parameter benchmarks.
 
 \section{Equivalent-key recovery from a planted root}\label{sec:recovery}
 
-Fixing a public direction produces a quadratic system in only $V$ variables.
-The hidden graph gives this system a planted root.  If the derivative at that
-root has full rank, public linear algebra recovers every column of the graph.
-The attack then verifies the graph identities, the pull-back, the public-map
-factorization, and a signing witness.  A separate projective route recovers the
-same oil space directly from the common derivative kernel.
+The second attack uses a root guaranteed by the hidden key structure.  Such a
+guaranteed but unknown root is often called a \emph{planted root}.  Fixing an
+oil vector $c\in K^O$ turns the hidden graph point
+$(-Gc,c)\in\cO$ into the planted root $Gc$ of public quadratic equations in
+$V$ variables.  If the matrix of first derivatives has full rank at that root,
+public linear algebra recovers every column of $G$.  The attack then checks
+\eqref{eq:graphid}, applies the pull-back \eqref{eq:official-pullback}, verifies
+the factorization \eqref{eq:base-factorization}, and finds a signing witness
+for \eqref{eq:universal-inversion}.  The end of this section records a second
+way to recover the same oil space from the derivatives at a projective oil
+point.
 
-\subsection{A public system with a planted root}
+\subsection{Public equations with a hidden root}
 
 Fix $c\in K^O$.  Substitute the public oil coordinate $c$ and the negated
 vinegar coordinate $-x$ into each public form:
@@ -1104,8 +1180,9 @@ vinegar coordinate $-x$ into each public form:
  =x^{\mathsf T}A_ix-2x^{\mathsf T}E_ic+c^{\mathsf T}C_ic,
  \qquad x\in K^V.
 \end{equation}
-The equations $q_{1,c}=\cdots=q_{m,c}=0$ are public.  Define their public
-derivative matrix by
+The equations $q_{1,c}=\cdots=q_{m,c}=0$ are public.  Because the choice of
+$c$ fixes one direction in the oil coordinates, we call these the
+\emph{fixed-direction equations}.  Define their public derivative matrix by
 \begin{equation}\label{eq:direction-matrix}
  \mathcal D_c(x):=
  \begin{pmatrix}
@@ -1140,6 +1217,10 @@ differentiation gives the two matrix identities.
 
 \subsection{A root with full-rank derivative determines the graph}
 
+A root $x$ for one oil vector $c$ gives only one graph value.  When the
+derivative matrix has full column rank, the same public equations determine
+the graph value on every other oil vector and therefore determine all of $G$.
+
 \begin{proposition}[Exact graph completion]\label{prop:graph-direction-completion}
 Let $x$ be a common zero of all equations $q_{i,c}$ and suppose
 $\rank\mathcal D_c(x)=V$.  For $d\in K^O$, define
@@ -1167,12 +1248,12 @@ result is
 \]
 which is row $i$ of \eqref{eq:direction-completion-system}.  Hence $Gd$ is the
 unique solution.  The verified-key conclusion follows from
-\cref{prop:verified-key}.
+Proposition~\ref{prop:verified-key}.
 \end{proof}
 
 \begin{remark}[A compact attack certificate]\label{rem:graph-certificate}
-A successful branch is certified by $(c,x,G)$ and one full-rank minor of
-$\mathcal D_c(x)$.  A verifier checks the directional equations, the graph
+A successful candidate is certified by $(c,x,G)$ and one full-rank minor of
+$\mathcal D_c(x)$.  A verifier checks the fixed-direction equations, the graph
 completion systems, all graph identities, the inverse pull-back, and a signing
 witness.  The certificate makes no claim about other roots or solver
 completeness.
@@ -1180,7 +1261,9 @@ completeness.
 
 \subsection{How often the derivative has full rank}
 
-Let
+We now bound the probability that the planted root passes the full-rank test.
+The following quantity is the exact full-rank probability for a uniform
+$m\times V$ matrix over $K$.  Let
 \begin{equation}\label{eq:rho-mv}
  \rho_{m,V}(Q):=\prod_{a=0}^{V-1}(1-Q^{a-m}),
  \qquad
@@ -1195,7 +1278,7 @@ nonzero polynomial in $c$.  A fresh uniform $c\leftarrow K^O$ then satisfies
 \begin{equation}\label{eq:random-direction-success}
  \Pr[\rank\mathcal B(c)=V]\ge1-\frac VQ.
 \end{equation}
-In the public-random model, $\mathcal B(c)$ is a uniform $m\times V$ matrix for
+In the random expanded-key model, $\mathcal B(c)$ is a uniform $m\times V$ matrix for
 every fixed nonzero $c$.  Moreover, the coordinate-direction matrices
 $\mathcal B(e_1),\ldots,\mathcal B(e_O)$ are independent, so
 \begin{equation}\label{eq:all-coordinate-directions-bad}
@@ -1219,10 +1302,12 @@ list of only $V(m-V)+1$ recombinations, together with exact list sizes and
 failure probabilities for the official parameters
 (\cref{app:directional-fallbacks}).
 
-\subsection{Recovering the oil space by linear algebra}
+\subsection{An alternative recovery from a projective oil point}
 
-The faster projective route from \cref{sec:projective} instead finds a public
-common zero $x$ on the oil space.  Form
+The supplement gives a separate route that finds a nonzero point $x$ on the
+oil space, considered only up to a common scalar
+(\cref{sec:projective}).  Let $L/K$ be the field over which this point is
+found.  From $x$, form the public matrix
 \[
 C_x=(P_1x\ \cdots\ P_mx)\in L^{(V+O)\times m}.
 \]
@@ -1238,30 +1323,39 @@ If $\rank C_x=V$, the kernel of its transpose has dimension
 $(V+O)-V=O$.
 \end{proof}
 
-At the planted oil point, smoothness of the restricted core gives derivative
-rank $V$.  The lemma therefore recovers the full oil space.  Row reduction,
-descent to $K$, and the checks from \cref{prop:verified-key,prop:signing-search}
+When the derivatives at $x$ have rank $V$, the lemma recovers the entire oil
+space as a kernel.  Row reduction, recovery of a basis over $K$, and the
+checks from Propositions~\ref{prop:verified-key}
+and~\ref{prop:signing-search}
 then produce a verified signing key.  The attack does not need the oil space to
 be unique: it keeps every exactly verified candidate with a signing witness.
 \Cref{app:uniqueness} separately bounds the probability of a second
 $K$-rational oil space.
 
-\section{The solver needs only a full-rank Jacobian}\label{sec:local-geometry}
+\section{Why one root with invertible Jacobian is enough}\label{sec:local-geometry}
 
-Fix $c\in K^O$ and a public recombination $R\in K^{V\times m}$.  Let
+The exact solver used below comes with algebraic conditions on the complete
+solution set.  At first sight, these conditions are stronger than what the
+attack can prove.  The attack knows only that the planted root has an
+invertible Jacobian.  This section shows that the solver may restrict its
+attention to the set where the Jacobian is invertible, so singular roots and
+components elsewhere are irrelevant.
+
+Fix $c\in K^O$ and combine the $m$ public equations into $V$ equations using a
+public matrix $R\in K^{V\times m}$.  Denote the resulting equations by
 \[
  f=(f_1,\ldots,f_V)^{\mathsf T}:=R(q_{1,c},\ldots,q_{m,c})^{\mathsf T}
 \]
-and put
+and let $h$ be the determinant of their Jacobian:
 \begin{equation}\label{eq:local-jacobian-polynomial}
  h(x):=\det J_f(x).
 \end{equation}
-The root solver used in the next section asks that the equations form a
-regular sequence and that every prefix ideal be radical, but only after
-localization.  Taking $h$ as the localization polynomial removes every point
-where the Jacobian is singular.
+Working only where $h\ne0$ is called \emph{localization at $h$}: algebraically,
+we allow division by powers of $h$.  This removes every point where the
+Jacobian is singular.  On the remaining set, the equations satisfy the two
+technical conditions required by the solver.
 
-\begin{lemma}[Localization gives a reduced regular sequence]\label{lem:jacobian-localization}
+\begin{lemma}[Solver conditions where the Jacobian is invertible]\label{lem:jacobian-localization}
 Let $k$ be a perfect field, let $f_1,\ldots,f_V\in k[x_1,\ldots,x_V]$, and let $h=\det J_f$.  In the localization
 \[
  S_h:=k[x_1,\ldots,x_V]_h,
@@ -1269,9 +1363,13 @@ Let $k$ be a perfect field, let $f_1,\ldots,f_V\in k[x_1,\ldots,x_V]$, and let $
 the sequence $f_1,\ldots,f_V$ is regular.  For every $1\le s\le V$, the ideal $(f_1,\ldots,f_s)S_h$ is radical.
 \end{lemma}
 
+Here regular means that the equations cut the dimension by one at each step.
+Radical means that their common zeros carry no repeated algebraic
+multiplicity.  The lemma applies these statements only on the set $h\ne0$.
+
 The proof appears at the start of the finite-field solver appendix in the
 technical supplement.  It applies the Jacobian criterion to each prefix and
-then uses the complete-intersection criterion in the regular ring $S_h$.
+then uses the complete-intersection criterion in $S_h$.
 
 If $\mathcal B(c)$ has full column rank and $R\mathcal B(c)$ is invertible,
 Proposition~\ref{prop:graph-direction-identity} gives
@@ -1279,29 +1377,43 @@ Proposition~\ref{prop:graph-direction-identity} gives
  h(Gc)=(-2)^V\det(R\mathcal B(c))\ne0.
 \end{equation}
 
-\begin{corollary}[Only the planted simple root is needed]\label{cor:local-hypotheses}
-If $\mathcal B(c)$ has full column rank and $R\mathcal B(c)$ is invertible, then $Gc$ belongs to the locally closed set
+\begin{corollary}[The solver conditions hold near the planted root]\label{cor:local-hypotheses}
+If $\mathcal B(c)$ has full column rank and $R\mathcal B(c)$ is invertible,
+then $Gc$ belongs to the set defined by the equations and inequality
 \[
  \{f_1=\cdots=f_V=0,\ h\ne0\}.
 \]
-The input tuple $(f_1,\ldots,f_V,h)$ satisfies hypotheses (H1)--(H2) of the locally closed Kronecker algorithm of Gim\'enez et al.~\cite{Gimenez2026}.  These conclusions are independent of every root and irreducible component contained in $h=0$.
+The input tuple $(f_1,\ldots,f_V,h)$ satisfies hypotheses (H1)--(H2) of the
+solver of Gim\'enez et al.~\cite{Gimenez2026}, which accepts equations together
+with the inequality $h\ne0$.  These conclusions are independent of every root
+and algebraic component contained in $h=0$.
 \end{corollary}
 
 \begin{proof}
-Equation \eqref{eq:h-at-planted} puts the planted root in the open set.  Lemma~\ref{lem:jacobian-localization} gives exactly the two algebraic conditions required after localization.
+Equation \eqref{eq:h-at-planted} puts the planted root in the open set.
+Lemma~\ref{lem:jacobian-localization} gives exactly the two algebraic
+conditions required after localization.
 \end{proof}
 
-Thus this recovery route needs local smoothness at the planted root, not global
-smoothness of the projective core.  Singular roots and components contained in
-$h=0$ do not affect the conclusion.
+Thus the attack needs an invertible Jacobian at the planted root.  It does not
+need the Jacobian to be invertible at every root or on every component of the
+full system.
 
 
-\section{Finite-characteristic nonsingular-root recovery}\label{sec:finite-char-solver}
+\section{Finding roots over the QR-UOV base field}\label{sec:finite-char-solver}
 
-The directional reduction does not need a description of every component of the square core.  It needs one isolated root at which the Jacobian is invertible.  This section adapts the symbolic-homotopy algorithm of Safey El Din and Schost to that exact task in characteristic $127$.
+The equivalent-key attack needs one isolated root at which the Jacobian is
+invertible.  It does not need all roots or a description of every algebraic
+component.  We use the exact symbolic solver of Safey El Din and Schost for
+this task~\cite{SafeySchost2018}.  The solver connects an easy system whose
+roots are known to the target equations and follows each root as the
+connecting parameter changes.  We call the path followed by one root a
+\emph{branch}.  This section adapts the solver to characteristic $127$ and
+states exactly what it returns.
 
-\subsection{The solver target and its degree parameters}
-Let $k$ be a perfect field and let
+\subsection{The roots sought by the solver}
+All finite fields are perfect, which allows the Jacobian to detect repeated
+roots.  Let $k$ be any perfect field and let
 \[
  f=(f_1,\ldots,f_V)\in k[X_1,\ldots,X_V]^V
 \]
@@ -1316,160 +1428,50 @@ Every point in $Z_{\rm ns}(f)$ is isolated.  B\'ezout's theorem gives
  \qquad
  C_0:=2^V+V2^{V-1}=2^{V-1}(V+2).
 \end{equation}
-Here $C$ bounds the number of isolated roots, while $C_0$ bounds the degree of the one-parameter homotopy curve.  Rational reconstruction of a degree-$C_0$ curve uses coefficients through precision $2C_0$; the lifting ledger below therefore runs to that precision.  The second formula is the coefficient sum of
-$(\vartheta_0+2\vartheta)^V$ after discarding $\vartheta_0^2$ and $\vartheta^{V+1}$, exactly as in the multihomogeneous degree definition of Safey El Din and Schost~\cite{SafeySchost2018}.
+Here $C$ bounds the number of isolated roots.  The solver represents the paths
+from the easy system to the target as an algebraic curve in one connecting
+parameter, and $C_0$ bounds the degree of that curve.  Recovering a rational
+function of degree $C_0$ requires power-series coefficients through precision
+$2C_0$.  This precision determines the main cost below.  The supplement gives
+the multihomogeneous degree calculation that yields the formula for $C_0$.
 
-The published algorithm starts from a product system with known simple roots, follows its $C$ branches symbolically, specializes at the target fiber, and removes singular outputs by a Jacobian-based \textsc{Clean} operation.  Its large-characteristic hypothesis supports the particular finite families used for the start and the separator.  We replace both families.
+The published algorithm starts from a product of univariate equations with
+known simple roots and follows at most $C$ branches to the target equations.
+It then discards outputs whose target Jacobian is not invertible.  The algorithm
+also uses the separator introduced in \cref{sec:direct} to assign a scalar
+value to each root.
+The published proof uses a lower bound on the field characteristic only to
+construct the starting equations and this separator.  We replace both
+constructions.
 
-\subsection{A simple product start over any sufficiently large finite field}
+\subsection{Why the solver works over the QR-UOV base field}
 
-\begin{lemma}[Vandermonde product start]\label{lem:ff-vandermonde-start}
-Let $k'$ contain $2V$ distinct elements $a_1,\ldots,a_{2V}$.  For $a\in k'$, put
-\begin{equation}\label{eq:La}
- L_a(X):=X_1+aX_2+\cdots+a^{V-1}X_V+a^V,
-\end{equation}
-and, for $1\le i\le V$, set
-\begin{equation}\label{eq:vandermonde-start}
- g_i(X):=L_{a_{2i-1}}(X)L_{a_{2i}}(X).
-\end{equation}
-Then $g=(g_1,\ldots,g_V)$ has exactly $C=2^V$ affine roots over $k'$.  Every root is simple.  A zero-dimensional parametrization of all roots can be constructed in $O(V^2C)$ operations in $k'$.
-\end{lemma}
+Safey El Din and Schost's published characteristic bound enters through two
+finite families: the easy starting system and the separator
+~\cite{SafeySchost2018}.  We replace the start by a Vandermonde product system
+with exactly $2^V$ explicit simple roots, which requires only $2V$ distinct
+field elements.  We replace the integer-indexed separator family by a uniform
+linear form.  At most $C^2$ choices cause two roots to receive the same value,
+so a uniform choice works with probability at least $1-C^2/|k'|$.
 
-\begin{proof}
-Choose one node $b_i\in\{a_{2i-1},a_{2i}\}$ from each pair.  The equations
-$L_{b_1}=\cdots=L_{b_V}=0$ have coefficient matrix
-\[
- \begin{pmatrix}
- 1&b_1&\cdots&b_1^{V-1}\\
- \vdots&\vdots&&\vdots\\
- 1&b_V&\cdots&b_V^{V-1}
- \end{pmatrix},
-\]
-which is Vandermonde and invertible.  Hence the choice gives one solution.
+All remaining steps use exact field operations and power-series lifting.  They
+do not divide by factorials or by any value that could vanish specifically in
+characteristic $127$.  The technical supplement gives both constructions,
+the lifting identities, and a step-by-step comparison with the published
+algorithm.
 
-At that solution, the monic polynomial
-\[
- T^V+X_VT^{V-1}+\cdots+X_2T+X_1
-\]
-has $b_1,\ldots,b_V$ as its roots.  It therefore vanishes at none of the $V$ unchosen nodes.  Consequently the solution satisfies exactly one factor in each product $g_i$, and different choices give different solutions.  Conversely, any common zero of the products must choose at least one factor from each pair.  It cannot satisfy both factors in one pair, because that would give at least $V+1$ distinct roots of the displayed monic polynomial.  Thus there are exactly $2^V$ roots.
-
-At a root, row $i$ of the Jacobian of $g$ is the Vandermonde row belonging to the chosen node, multiplied by the nonzero value of the unchosen factor.  The Jacobian is therefore an invertible Vandermonde matrix times an invertible diagonal matrix.  Enumerating the $2^V$ choices and forming the corresponding degree-$V$ polynomials gives the stated $O(V^2C)$ bound.
-\end{proof}
-
-This construction uses no division by an integer and no condition on the characteristic beyond the existence of $2V$ distinct field elements.  For the QR-UOV working extensions below, this condition is trivial.
-
-\subsection{A full random separator}
-A primitive linear form must separate finitely many branch values and avoid finitely many leading-coefficient vectors.  The published proof draws from a short integer-indexed family; that is the source of its second characteristic bound.  Sampling the entire dual space is simpler over a finite extension.
-
-\begin{lemma}[Separator over a finite extension]\label{lem:full-random-separator}
-Let $A$ be a domain containing the finite field $k'$, and let
-$z_1,\ldots,z_s\in A^V$ be nonzero.  For a uniform
-$\lambda=(\lambda_1,\ldots,\lambda_V)\leftarrow(k')^V$,
-\begin{equation}\label{eq:separator-bound}
- \Pr\bigl[\lambda\cdot z_j=0\text{ for some }j\bigr]
- \le \frac{s}{|k'|}.
-\end{equation}
-In particular, if $s\le C^2$, the separator succeeds with probability at least
-$1-C^2/|k'|$.
-\end{lemma}
-
-\begin{proof}
-Fix a nonzero vector $z$.  Choose an index $h$ with $z_h\ne0$.  After the other $V-1$ coefficients of $\lambda$ are fixed, at most one value of $\lambda_h\in k'$ can make $\lambda\cdot z=0$: two such values would give a nonzero scalar in $k'$ annihilating the nonzero domain element $z_h$.  Thus one vector is killed with probability at most $1/|k'|$.  A union bound proves the claim.
-\end{proof}
-
-Safey El Din and Schost identify at most $C^2$ vectors that a well-separating form must avoid: differences between start roots, differences between relevant target specializations, and leading-coefficient vectors of branches~\cite[Lem.~14 and Rem.~15]{SafeySchost2018}.  \Cref{lem:full-random-separator} therefore replaces their integer family without changing the success criterion.
-
-\subsection{The lifting identities do not require large characteristic}
-For completeness, we isolate the two local identities used by precision doubling.  They work over a commutative ring and do not divide by factorials or by the characteristic.
-
-\begin{lemma}[Newton--Hensel precision doubling]\label{lem:ring-newton-hensel}
-Let $R$ be a commutative ring, let $I\subset R$ be an ideal, and let
-$F\in R[X_1,\ldots,X_V]^V$.  Suppose
-\[
- F(x)\equiv0\pmod{I^m}
-\]
-and that $J_F(x)$ is invertible modulo $I^m$.  Put
-\begin{equation}\label{eq:ring-newton-update}
- x^+:=x-J_F(x)^{-1}F(x)\pmod{I^{2m}}.
-\end{equation}
-Then $F(x^+)\equiv0\pmod{I^{2m}}$.
-\end{lemma}
-
-\begin{proof}
-The correction $h=x^+-x$ lies in $I^m$.  Polynomial Taylor expansion gives
-\[
- F(x+h)=F(x)+J_F(x)h+R_2(x,h),
-\]
-where every monomial in $R_2$ contains at least two coordinates of $h$.  Hence
-$R_2(x,h)\in I^{2m}$.  The first two terms cancel by \eqref{eq:ring-newton-update}.  No denominator is used.
-\end{proof}
-
-\begin{lemma}[First-order change of primitive parameter]\label{lem:primitive-renormalization}
-Work modulo $T^{2m}$.  Let $Q(T,U)$ be monic in $U$, let
-$X(T,U)\in(R[T,U]/(T^{2m},Q))^V$, and let $\lambda$ be linear.  Suppose
-\[
- e(T,U):=\lambda(X(T,U))-U\in T^mR[T,U]/(T^{2m},Q).
-\]
-Define
-\begin{equation}\label{eq:primitive-update}
- X^*:=X-(\partial_U X)e,
- \qquad
- Q^*:=Q-(\partial_U Q)e.
-\end{equation}
-Then the change of parameter $U_{\rm old}=U-e(T,U)$ represents the same lifted branches modulo $T^{2m}$, and
-\begin{equation}\label{eq:primitive-restored}
- \lambda(X^*)\equiv U\pmod{(T^{2m},Q^*)}.
-\end{equation}
-\end{lemma}
-
-\begin{proof}
-Because $e\in T^m$, substitution of $U-e$ into any polynomial is, modulo $T^{2m}$, its first-order Taylor expansion.  This gives exactly \eqref{eq:primitive-update}.  Moreover
-\[
- \lambda(X^*)-U
- =e-(\partial_U\lambda(X))e
- =-(\partial_U e)e.
-\]
-Differentiation in $U$ does not change $T$-adic order, so $\partial_Ue\in T^m$ and the product lies in $T^{2m}$.  Again, the argument uses no integer denominator.
-\end{proof}
-
-\subsection{Proof crosswalk for the finite-characteristic solver}
-
-\begin{proposition}[Where the published characteristic bound is used]\label{prop:characteristic-crosswalk}
-For a square system of quadrics over a finite perfect field, replace the start construction in Safey El Din--Schost Lemma~7 by \cref{lem:ff-vandermonde-start}, and replace the separator family in their Lemma~14 by \cref{lem:full-random-separator}.  The remaining correctness proof of their \textsc{NonsingularSolutions} algorithm applies over the extension field without a further lower bound on the characteristic.
-\end{proposition}
-
-\begin{proof}
-We follow the proof in the order in which its ingredients are used.
-
-\proofstep{Start fiber.}
-The original lower bound
-$\operatorname{char}k\ge\sum_i d_i$ ensures that its integer-indexed affine forms are distinct and that the product start has the full multihomogeneous root count with invertible Jacobian.  \Cref{lem:ff-vandermonde-start} supplies the same three facts directly: degree two, exactly $C$ explicit roots, and a simple start fiber.
-
-\proofstep{Homotopy curve.}
-The homotopy is
-\[
- H(T,X)=(1-T)g(X)+Tf(X).
-\]
-The published construction saturates by the $X$-Jacobian determinant.  Lazard's lemma and the multihomogeneous degree bound then give a one-dimensional curve of degree at most $C_0$.  These arguments require the simple start just established, not an ordering of integers inside the field.
-
-\proofstep{Target specialization.}
-The target system can have fewer than $C$ isolated nonsingular roots and may have singular or positive-dimensional components.  The published proof handles this by generalized power series, explicitly because ordinary Puiseux series are not sufficient in arbitrary characteristic~\cite[Sec.~3.4]{SafeySchost2018}.  Its valuation and specialization lemmas therefore already cover the finite-field setting.
-
-\proofstep{Precision doubling and primitive normalization.}
-The global lifting step is Newton--Hensel lifting of a geometric resolution.  Its local identities are \cref{lem:ring-newton-hensel,lem:primitive-renormalization}; interpolation and polynomial arithmetic use inverses guaranteed by the simple fiber and separating form.  No factorial or characteristic-dependent scalar is introduced.
-
-\proofstep{Separator and cleaning.}
-The published well-separating condition is avoidance of at most $C^2$ nonzero vectors.  \Cref{lem:full-random-separator} supplies it with probability at least $1-C^2/|k'|$.  Finally, the published \textsc{Clean} call removes every point where the target Jacobian vanishes.  As noted in its Remark~15, every output is therefore a subset of the nonsingular target roots; a bad separator may omit roots or cause failure, but cannot introduce an invalid point.
-
-These replacements cover the two uses of the integer-indexed finite families.  All other steps are field algebra, generalized-power-series specialization, or Jacobian cleaning over the perfect extension field.
-\end{proof}
-
-\begin{theorem}[Nonsingular roots in characteristic $127$]\label{thm:finite-char-nonsingular}
-Let $k$ be a finite field and let $f=(f_1,\ldots,f_V)$ be affine quadrics over $k$, represented by a straight-line program of size $L$.  Let $k'/k$ be a finite extension containing at least $2V$ elements.  There is a randomized algorithm with the following properties.
+\begin{theorem}[Roots with invertible Jacobian in characteristic $127$]\label{thm:finite-char-nonsingular}
+Let $k$ be a finite field and let $f=(f_1,\ldots,f_V)$ be affine quadrics over
+$k$, represented by an arithmetic circuit of size $L$.  Let $k'/k$ be a
+finite extension containing at least $2V$ elements.  There is a randomized
+algorithm with the following properties.
+Here $\widetilde O$ suppresses factors that are polynomial in logarithms of
+the displayed quantities.
 
 \begin{enumerate}
 \item Every returned point belongs to $Z_{\rm ns}(f)$.
-\item Every point of $Z_{\rm ns}(f)$ is represented in the output with probability at least
+\item Every point of $Z_{\rm ns}(f)$ is included in the output representation
+with probability at least
 \begin{equation}\label{eq:finite-char-success}
  1-\frac{C^2}{|k'|}.
 \end{equation}
@@ -1481,20 +1483,40 @@ Let $k$ be a finite field and let $f=(f_1,\ldots,f_V)$ be affine quadrics over $
 \end{equation}
 operations in $k'$.
 \end{enumerate}
-In particular, $|k'|\ge8C^2$ gives one-invocation inclusion probability at least $7/8$.
+In particular, $|k'|\ge8C^2$ gives an inclusion probability of at least $7/8$
+in one invocation.
 \end{theorem}
 
 \begin{proof}
-Run the symbolic-homotopy algorithm of Safey El Din and Schost with the start from \cref{lem:ff-vandermonde-start} and a uniform full separator from \cref{lem:full-random-separator}.  \Cref{prop:characteristic-crosswalk} gives correctness over $k'$.  The well-separating event has probability at least \eqref{eq:finite-char-success}; on that event the published specialization recovers every isolated nonsingular target branch.  The final \textsc{Clean} step proves item~1 on every branch, including branches with a bad separator.
+Run the symbolic solver with the Vandermonde start and uniform
+separator described above.  The construction and proof crosswalk in the
+technical supplement show that the remaining steps introduce no further
+characteristic bound.  The separator succeeds with probability at least
+\eqref{eq:finite-char-success}; on that event the published specialization
+recovers every isolated target root with invertible Jacobian.  Its final \textsc{Clean}
+step removes every point with singular target Jacobian, even after a bad
+separator.
 
-For $V$ quadrics in one block, the multihomogeneous quantities in the published Proposition~5 are exactly $C$ and $C_0$ from \eqref{eq:C-C0}; the sum of degrees is $2V$.  The new start costs $O(V^2C)$ and does not change the dominant lifting term.  Substitution into that proposition gives \eqref{eq:published-slp-specialization}.
+For $V$ quadrics in one block, the degree quantities in the published
+Proposition~5 are exactly $C$ and $C_0$ from \eqref{eq:C-C0}, and the sum of
+degrees is $2V$.  The new starting system costs $O(V^2C)$ and does not change
+the dominant lifting term.  Applying that proposition gives
+\eqref{eq:published-slp-specialization}.
 \end{proof}
 
-\begin{remark}[One-sided failure is enough for cryptanalysis]\label{rem:one-sided-enough}
-The original solver paper notes that it cannot cheaply certify completeness of a generic output.  QR-UOV does not need such a certificate.  We impose every unrecombined directional equation, require a $K$-rational root, complete the graph, and verify the unchanged public map.  An omitted planted root causes a restart.  An extraneous or malformed candidate is rejected.
+\begin{remark}[The attack needs validity, not a complete root list]\label{rem:one-sided-enough}
+The original solver paper notes that it cannot cheaply certify that a generic
+output contains every root.  QR-UOV does not need such a certificate.  We
+check every original fixed-direction equation, require the root coordinates to lie
+in $K$, complete the graph, and verify the unchanged public map.  An omitted
+planted root causes a restart.  A candidate that is not a valid root or key is
+rejected.
 \end{remark}
 
-\subsection{End-to-end verified directional recovery}
+\subsection{Complete equivalent-key attack}
+
+We now combine the fixed-direction equations, the root solver, graph completion,
+and the public signing test into one attack.
 
 For a random $V\times m$ matrix $R$ over $K$, put
 \[
@@ -1516,19 +1538,25 @@ The values are
 \end{equation}
 at Levels I, III, and V.
 
-\begin{theorem}[Verified directional equivalent-key recovery]\label{thm:verified-directional-recovery}
+\begin{theorem}[Verified equivalent-key recovery]\label{thm:verified-directional-recovery}
 Let a fixed expanded \QRUOV{} public key have a valid graph decomposition $G$.  Suppose
 \begin{enumerate}
 \item some maximal minor of $\mathcal B(c)$ is a nonzero polynomial in $c$; and
-\item the recovered planted decomposition has a nonzero signing determinant polynomial $\Delta$ from \cref{prop:signing-search}.
+\item the recovered planted decomposition has a nonzero signing determinant polynomial $\Delta$ from Proposition~\ref{prop:signing-search}.
 \end{enumerate}
-Then the following Las Vegas algorithm returns a publicly verified functional equivalent key.
+Then the following algorithm eventually returns another signing key for the
+same public key.  It never returns an incorrect key and repeats with fresh
+randomness when an attempt fails.
 
 \begin{enumerate}
 \item Sample $c\leftarrow K^O$ and $R\leftarrow K^{V\times m}$.
 \item Run \cref{thm:finite-char-nonsingular} on $f_{c,R}$ over $K'$ from \eqref{eq:r-choice}.
-\item Intersect the returned parametrization with all $m$ original directional equations and with the $K$-rational locus.
-\item For every retained root $x$, run the graph completion of \cref{prop:graph-direction-completion}; require all graph identities, the inverse pull-back, exact public-map factorization, and a signing witness.
+\item Keep only roots that solve all $m$ original fixed-direction equations and
+whose coordinates lie in $K$.
+\item For every retained root $x$, run the graph completion of
+Proposition~\ref{prop:graph-direction-completion}.  Require all graph
+identities, the inverse pull-back, exact public-map factorization, and a
+signing witness.
 \item Return the first accepted key; otherwise restart with fresh public coins.
 \end{enumerate}
 
@@ -1546,42 +1574,79 @@ The expected numbers of full solver invocations are at most
  \qquad1.0000561,
  \qquad1.0202201.
 \end{equation}
-Every returned key is correct, regardless of whether failed solver invocations were complete.
+Every returned key is correct, regardless of whether failed solver invocations
+included every root.
 \end{theorem}
 
 \begin{proof}
-By \cref{prop:graph-direction-density}, a random direction has full planted derivative with probability at least $1-V/Q$.  Conditional on that event, $R\mathcal B(c)$ is uniform square, so it is invertible with probability $\mu_V(Q)$.  The planted point is then an isolated nonsingular root of $f_{c,R}$ by \cref{prop:graph-direction-identity}.  \Cref{thm:finite-char-nonsingular} includes it with probability at least $1-2^{2V}/Q^r$.
+By Proposition~\ref{prop:graph-direction-density}, a random direction gives a
+full-rank derivative at the planted root with probability at least $1-V/Q$.
+Conditional on that event, $R\mathcal B(c)$ is a uniform square matrix, so it
+is invertible with probability $\mu_V(Q)$.  Proposition~\ref{prop:graph-direction-identity}
+then makes the planted point an isolated root of $f_{c,R}$ with invertible
+Jacobian.  Theorem~\ref{thm:finite-char-nonsingular} includes it with
+probability at least $1-2^{2V}/Q^r$.
 
-The all-equation and rational-root filters retain the planted point.  \Cref{prop:graph-direction-completion} reconstructs $G$, and \cref{prop:verified-key,prop:signing-search} supply the exact factorization and signing certificate.  Conversely, any candidate that fails an original equation, completion equation, graph identity, pull-back identity, factorization check, or oil-matrix test is rejected.  This proves zero-error acceptance.  Fresh restarts and \eqref{eq:directional-invocation-success} give the geometric tail and the numerical expectations.
+The filters for the original equations and for coordinates in $K$ retain the
+planted point.  Proposition~\ref{prop:graph-direction-completion} reconstructs
+$G$, and Propositions~\ref{prop:verified-key} and~\ref{prop:signing-search}
+supply the exact factorization and signing certificate.  Conversely, the
+algorithm rejects a candidate that fails any original equation, graph
+completion equation, graph identity, pull-back identity, factorization check,
+or oil-matrix test.  Thus every accepted key is correct.  Retrying with fresh
+randomness and using \eqref{eq:directional-invocation-success} gives the
+numerical expectations above.
 \end{proof}
 
-\begin{corollary}[Public-random key density]\label{cor:directional-public-random}
-In the public-random expanded-key model, the probability that every coordinate direction has deficient planted derivative is
+\begin{corollary}[Probability that all public choices fail]\label{cor:directional-public-random}
+In the random expanded-key model, the probability that every coordinate
+direction has deficient planted derivative is
 $\tau_{m,V}(Q)^O$, with base-two logarithms
 \[
  -1132.166907,\qquad-1635.352198,\qquad-2935.247544.
 \]
-The probability that the deterministic pair-line signing search fails has base-two logarithm below
+The probability that the deterministic signing search over pairs of basis
+matrices fails has base-two logarithm below
 \[
  -544.820,\qquad-796.276,\qquad-1068.687.
 \]
-Outside their union, a deterministic scan of coordinate directions and signing witnesses contains a successful outer branch; only the internal nonsingular-root solver requires random coins.
+Outside their union, a deterministic scan of coordinate directions and
+signing witnesses includes a successful choice.  Only the internal root solver
+requires randomness.
 \end{corollary}
 
 \begin{proof}
-Combine \cref{prop:graph-direction-density,prop:signing-search}.  The two exceptional events need not be independent; a union bound suffices.
+Combine Propositions~\ref{prop:graph-direction-density}
+and~\ref{prop:signing-search}.  The two exceptional events need not be
+independent, so a union bound suffices.
 \end{proof}
 
-\section{Concrete solver refinements and the Level-I estimate}\label{sec:concrete-solver}
+\section{Concrete cost of the symbolic solver}\label{sec:concrete-solver}
 
-The generic root solver does not by itself fix the concrete cost.  This section first states the resulting candidate bound.  It then gives the arithmetic choices and branch filters used by the final ledger: batched dense lifting, sparse working fields, local separation, and exact Frobenius descent.  The section ends with the root-success bound and the finite Level-I ledger.
+The preceding theorem gives an asymptotic cost, but a concrete estimate also
+depends on how the solver represents and multiplies large polynomials.  This
+section states the resulting estimate first.  It then explains the choices
+that change the final number: evaluating all quadratic equations together,
+using extension fields with sparse defining polynomials, distinguishing only
+the root that may yield a forgery, and testing exactly whether that root lies
+in the base field.  The section ends with the success probability and the
+complete Level-I cost.
 
-\subsection{Candidate local-separator bound}\label{sec:local-separator-upgrade}
+\subsection{Resulting conditional cost estimate}\label{sec:local-separator-upgrade}
 
-Let $q=127$, $a=m-4$, $C=2^a$, and $C_0=2^{a-1}(a+2)$ as in the parent attack.  The supplied audit optimizes the extension degree over certified sparse irreducible polynomials.
+Let $q=127$, $a=m-4$, $C=2^a$, and $C_0=2^{a-1}(a+2)$ as in the direct
+attack.  We compute the cost for several extension fields whose sparse
+defining polynomials are proved irreducible, then select the least expensive
+degree.
 
-\begin{theorem}[Candidate local-separator bound]\label{thm:headline}
-Assume the public-random model, homotopy degree bound, and Boolean-gate conventions of the preceding direct-attack construction and the split-before-lift refinement developed here.  Replace global separation by the local conditions in \cref{sec:local}, accept only simple linear target factors, and use the exact descent test in \cref{sec:frob}.  Then the retry-aware diagnostic costs are those in \cref{tab:headline}.  In particular, Level I costs
+\begin{theorem}[Conditional Boolean-gate estimate]\label{thm:headline}
+Assume the random expanded-key model, the degree bound for the curve followed
+by the solver, the polynomial multiplication costs stated below, and the
+specification's Boolean-gate convention.  Require the separator to distinguish
+only a root that passes the forgery tests, as justified in \cref{sec:local},
+and use the exact base-field test in \cref{sec:frob}.  After accounting for
+failed attempts, the estimated costs are those in \cref{tab:headline}.  In
+particular, Level I costs
 \[
  2^{140.383995063}
 \]
@@ -1590,11 +1655,13 @@ Boolean gates, leaving $2.616004937$ bits below the category target.
 
 \begin{table}[ht]
 \centering
-\caption{Audited stress estimates.  ``Global split'' is the preceding split-before-lift bundle.}
+\caption{Estimated base-two logarithms of Boolean-gate costs.  ``All roots''
+requires the separator to distinguish every root.  ``Accepted root'' requires
+it only for a root that passes the forgery tests.}
 \label{tab:headline}
 \begin{tabular}{@{}lrrrrr@{}}
 \toprule
-Level & Parent & Global split & Local split & Target & Margin\\
+Level & Original & All roots & Accepted root & Target & Margin\\
 \midrule
 I   & 151.639 & 141.126 & 140.384 & 143 & $+2.616$\\
 III & 203.507 & 191.630 & 191.027 & 207 & $+15.973$\\
@@ -1603,487 +1670,248 @@ V   & 260.389 & 247.637 & 247.125 & 272 & $+24.875$\\
 \end{tabular}
 \end{table}
 
-The Level-I optimum in the main ledger uses $K'=\F_{127^8}$ with the Rabin-certified modulus
+The least expensive Level-I row uses $K'=\F_{127^8}$.  The Rabin
+irreducibility test certifies the following defining polynomial:
 \[
  X^8+X^4-1.
 \]
-Degree $9$, using $X^9+X^2+1$, gives total $140.418965$ and is retained as a nearby cross-check.
+The nearby degree-$9$ choice $X^9+X^2+1$ gives $140.418965$, which provides a
+cross-check on the optimization.
 
-\subsection{Dense-quadratic batching and flattened lifting}\label{sec:flat-lifting}
+\subsection{Batching equation evaluation and polynomial multiplication}\label{sec:flat-lifting}
 
-\subsubsection{Why the direct straight-line-program bound is not the last word}
-For dense quadrics, a direct straight-line program has size $L=O(V^3)$.  Substituting it into \eqref{eq:published-slp-specialization} gives
-\begin{equation}\label{eq:slp-asymptotic}
- \softO(V^5 4^V)
-\end{equation}
-operations in $K'$.  This is a valid generic specialization, but it repeatedly charges contractions that all use the same dense quadratic coefficient tensor.
-
-Write
-\begin{equation}\label{eq:dense-quad-form}
- f_i(X)=X^{\mathsf T}A_iX+b_i^{\mathsf T}X+c_i.
-\end{equation}
-At precision $k$, the lifted coordinates live in a coefficient algebra
-\begin{equation}\label{eq:coefficient-algebra}
- \mathcal A_k
- :=K'[T,U]/(T^k,Q_k(T,U)),
-\end{equation}
-where $Q_k$ is monic of $U$-degree at most $C$.  The $V$ coordinate vectors form a $V\times(Ck)$ coefficient matrix.  Flattening the matrices $A_i$ turns all Jacobian contractions into one rectangular matrix product over $K'$.  Quadratic values follow from the Jacobian and $X$, while the Newton solve uses matrix algebra over $\mathcal A_k$.
-
-\begin{proposition}[Dense-quadratic lifting ledger]\label{prop:dense-batched-ledger}
-Let $\omega$ be an admissible square-matrix multiplication exponent, and let $\mu(C,k)$ be the cost of one multiplication in $\mathcal A_k$.  The precision-$k$ work of the global Newton lift can be organized using
-\begin{equation}\label{eq:precision-k-ledger}
- \softO\bigl(V^3Ck+(V^\omega+V^2)\mu(C,k)\bigr)
-\end{equation}
-operations in $K'$.  Summed over precision doubling through $2C_0$, this gives
-\begin{equation}\label{eq:batched-general}
- \softO\bigl(V^3CC_0+(V^\omega+V^2)\mu(C,2C_0)\bigr).
-\end{equation}
-\end{proposition}
-
-\begin{proof}
-Stack the $V$ matrices $A_i$ into a $V^2\times V$ scalar matrix.  Multiplication by the $V\times(Ck)$ lifted-coordinate matrix forms every linear Jacobian contraction simultaneously in $O(V^3Ck)$ scalar operations.  This term is written explicitly rather than hidden inside the coefficient-algebra multiplication count.
-
-The identity
+The $V$ dense quadrics share one vector of quadratic monomials.  Evaluating
+that vector once and using it for all $V$ equations removes a redundant factor
+from the arithmetic-circuit cost.  To follow the roots, the solver stores
+truncated power series in a parameter $T$.  A second variable $U$ labels the
+roots through the separator.  At precision $k$, these coefficients lie in
 \[
- f_i(X)=\frac12X^{\mathsf T}\bigl(2A_iX+b_i\bigr)
-       +\frac12b_i^{\mathsf T}X+c_i
+ \mathcal A_k=K'[T,U]/(T^k,Q_k(U)),
+ \qquad \deg_U Q_k\le C.
 \]
-computes all values with $O(V^2)$ products in $\mathcal A_k$.  Newton matrix inversion or solving costs $O(V^\omega)$ such products, and primitive-element renormalization lies within the same envelope.  The terminal precision is $2C_0$; quasi-linear multiplication makes the last doubling stage dominate up to logarithmic factors.
-\end{proof}
-
-\subsubsection{One multiplication, not a product of two multiplication costs}\label{sec:flat-multiplication}
-
-The earlier stress analysis bounded multiplication in \eqref{eq:coefficient-algebra} by applying a quasi-linear polynomial-multiplication bound first in $U$ and then in $T$.  This gives a product $\Mmul(C)\Mmul(k)$.  A bivariate array can instead be flattened once.
-
-\begin{lemma}[Collision-free Kronecker flattening]\label{lem:kronecker-flat}
-Let
-$R_k=K'[T]/(T^k)$ and let $Q_k(U)\in R_k[U]$ be monic of degree $C$.  After precomputing the reciprocal of the reversed $Q_k$, one multiplication in
-$R_k[U]/(Q_k)$ can be performed using at most three ordinary polynomial multiplications whose input length is below $2Ck$, plus $O(Ck)$ additions.  The reciprocal precomputation costs
-$O(\Mmul(2Ck)\log C)$ operations in $K'$.
-\end{lemma}
-
-\begin{proof}
-For a polynomial
-\[
- A(U,T)=\sum_{0\le i<C,\ 0\le j<k}a_{i,j}U^iT^j,
-\]
-choose the radix $B=2C-1$ and encode
-\begin{equation}\label{eq:kronecker-map}
- U^iT^j\longmapsto Z^{i+Bj}.
-\end{equation}
-In a product, the $U$-exponent is at most $2C-2=B-1$.  It therefore never carries into the $T$ digit.  The largest input exponent is
-$(C-1)+B(k-1)<Bk<2Ck$, so one ordinary univariate multiplication recovers the complete bivariate product modulo $T^k$.
-
-To reduce the $U$-degree modulo the monic polynomial $Q_k$, use the standard reciprocal division algorithm over the coefficient ring $R_k$.  With the reciprocal precomputed, one product obtains the quotient estimate and one product forms the quotient times $Q_k$.  Together with the unreduced product, this is three products of the same padded length.  Newton inversion of the reversed monic polynomial gives the stated one-time reciprocal cost over any commutative coefficient ring.
-\end{proof}
-
-\begin{corollary}[Flattened lifting complexity]\label{cor:flattened-lifting}
-Let $\Mmul(n)$ denote a quasi-linear polynomial-multiplication cost.  The batched lift can be implemented in
-\begin{equation}\label{eq:flattened-asymptotic}
- \softO\bigl(V^3CC_0+(V^\omega+V^2)\Mmul(CC_0)\bigr)
- =\softO(V^{\omega+1}4^V)
-\end{equation}
-operations in $K'$.
-
-For the explicit stress function
-\begin{equation}\label{eq:M-explicit}
- \Mmul(n):=n\log_2n\log_2\log_2n,
-\end{equation}
-the entire precision-doubling schedule for one coefficient-algebra product is bounded by
+Here $Q_k$ is the monic polynomial whose roots encode the current root values.
+We encode the pair of exponents $(i,j)$ as one exponent, using radix $2C-1$.
+This converts multiplication in $\mathcal A_k$ into three ordinary polynomial
+products, including reduction modulo $Q_k$.  Let $\Mmul(t)$ denote the cost of
+multiplying polynomials of length $t$.  Across all stages that double the
+precision, one product in $\mathcal A_k$ is bounded by
 \begin{equation}\label{eq:flat-schedule-bound}
  3\Mmul(8CC_0).
 \end{equation}
-\end{corollary}
+The factor $8$ accounts for the final precision $2C_0$.  The technical
+supplement gives the batched circuit, the exponent encoding, reduction modulo
+$Q_k$, and the proof of the resulting asymptotic cost
+$\widetilde O(V^{\omega+1}4^V)$.
 
-\begin{proof}
-Apply \cref{lem:kronecker-flat} at precisions
-$2C_0,C_0,C_0/2,\ldots$.  At the terminal stage, each encoded input has length below $4CC_0$.  Monotonicity of the logarithmic factors gives
-\[
- \sum_{j\ge0}\Mmul\!\left(\frac{4CC_0}{2^j}\right)
- <2\Mmul(4CC_0)
- <\Mmul(8CC_0).
-\]
-There are three ordinary products per modular multiplication.  Reciprocal precomputation contributes an additional logarithmic factor but is dominated by the explicit $V^2$ outer allowance.  Finally, $CC_0=2^{2V-1}(V+2)$.
-\end{proof}
+\subsection{Sparse working fields}\label{sec:sparse-fields}
 
-\begin{remark}[What was improved and what was corrected]\label{rem:no-double-log-product}
-Flattening does not alter the exponential factor $4^V$; it replaces the product of two independent quasi-linear overheads by the overhead at the total coefficient-array length.  The factor $8$ in \eqref{eq:flat-schedule-bound} is important: an earlier draft stopped at precision $C_0$, whereas rational reconstruction requires $2C_0$.  All finite values in \cref{sec:security} use the corrected precision.
-\end{remark}
+The solver performs arithmetic in an extension of $\F_{127}$.  A sparse
+defining polynomial reduces the number of base-field operations needed after
+each multiplication.  The direct solver may use any extension degree.  The
+equivalent-key solver starts over $K=\F_{127^3}$, so its degree over
+$\F_{127}$ must be divisible by three.  Rabin tests certify sparse irreducible
+polynomials of degrees $15,22,30$ for direct forgery and $18,24,30$ for
+equivalent-key recovery.  The refined direct estimate separately selects
+degrees $8,12,16$.
 
-\subsection{Sparse working-field models}\label{sec:sparse-fields}
-Both solvers may choose any convenient representation of their finite working
-field.  The directional solver starts over $K=\F_{127^3}$, so its auxiliary
-fields must contain $K$; the direct solver starts over $\F_{127}$ and has no
-such divisibility requirement.  Projectivization lowers the Level-I direct
-working degree from $16$ to $15$.
-
-\begin{lemma}[Explicit sparse auxiliary fields]\label{lem:sparse-fields}
-The following polynomials are irreducible over $\F_{127}$:
-\begin{align*}
- \phi_{15}(X)&=X^{15}+X^{12}-X+1,
- &\phi_{18}(X)&=X^{18}+X^4+1,\\
- \phi_{22}(X)&=X^{22}+X+1,
- &\phi_{24}(X)&=X^{24}+X^5-X+1,\\
- \phi_{30}(X)&=X^{30}+X^7+1.
-\end{align*}
-The projective direct-forgery solver uses degrees $15,22,30$ at Levels I,
-III, and V.  The directional solver uses degrees $18,24,30$.
-\end{lemma}
-
-\begin{proof}
-The companion audit applies Rabin's irreducibility criterion~\cite{Rabin1980}.
-For every displayed degree $d$, it verifies
-\[
- X^{127^d}=X\pmod{\phi_d}
-\]
-and, for each prime divisor $e$ of $d$,
-\[
- \gcd\bigl(\phi_d,X^{127^{d/e}}-X\bigr)=1.
-\]
-All computations are exact over $\F_{127}$, and the machine-readable output
-records every gcd degree.  The same audit certifies the additional sparse
-fields used in the retuning table of \cref{tab:combined-retuning}, including
-$X^{26}+X^3-X+1$.
-\end{proof}
-
-Schoolbook convolution is unnecessary at these modest extension degrees.  The
-next statement freezes an explicit recursive circuit rather than invoking an
-asymptotic multiplication theorem.
-
-\begin{proposition}[Audited Karatsuba extension-multiplication envelope]\label{prop:sparse-extension-envelope}
-Let
-\[
- g_{\rm mul}=\Gmul(\log_2 127),
- \qquad g_{\rm add}=4\log_2 127.
-\]
-For length-$d$ coefficient vectors, let $(M_d,A_d)$ be chosen recursively as
-follows.  The schoolbook candidate is
-\[
- (d^2,(d-1)^2).
-\]
-For $d\ge2$, put $a=\lceil d/2\rceil$ and $b=\lfloor d/2\rfloor$.  The
-Karatsuba candidate is
-\begin{equation}\label{eq:karatsuba-recurrence}
- \bigl(2M_a+M_b,\;2A_a+A_b+4d-4\bigr).
-\end{equation}
-Choose whichever candidate has smaller value $Mg_{\rm mul}+Ag_{\rm add}$.
-If $s_d$ is the number of nonleading terms of $\phi_d$, one multiplication in
-$\F_{127^d}$ followed by sparse reduction is then charged by
+For an extension degree $d$, let $(M_d,A_d)$ be the audited counts of base-field
+multiplications and additions in the selected recursive Karatsuba circuit, and
+let $s_d$ count the nonleading terms of the sparse modulus.  One multiplication
+in the working field is charged by the following upper bound:
 \begin{equation}\label{eq:sparse-extension-envelope}
  \mathsf G^{\rm sparse}_{127^d}
- :=M_dg_{\rm mul}+\bigl(A_d+s_d(d-1)\bigr)g_{\rm add}.
+ =M_d\Gmul(\log_2 127)
+  +\bigl(A_d+s_d(d-1)\bigr)4\log_2 127.
 \end{equation}
-For the official working fields, the selected plans are:
-\begin{center}
-\begin{tabular}{@{}rrrr@{}}
-\toprule
-$d$ & $M_d$ & $A_d$ & $s_d$\\
-\midrule
-15&81&332&3\\
-18&153&404&2\\
-22&225&480&2\\
-24&243&512&3\\
-30&243&1112&2\\
-\bottomrule
-\end{tabular}
-\end{center}
-\end{proposition}
+Here $\Gmul(b)=2b^2+b$ is the specification's gate charge for multiplying two
+$b$-bit values.  The supplement gives every defining polynomial, its
+irreducibility certificate, the recursive operation count, and a direct
+multiplication cross-check.
 
-\begin{proof}
-The schoolbook counts are exact: $d^2$ coefficient products and
-$d^2-(2d-1)=(d-1)^2$ additions.  For the recursive candidate, write each
-operand as a low block of length $a$ plus $X^a$ times a high block of length
-$b$.  The products of the two low blocks and of their sums have length $a$;
-the high-block product has length $b$, giving $2M_a+M_b$ coefficient
-multiplications.  Forming the sums, subtracting the low and high products from
-the middle product, and combining the three shifted outputs uses at most
-$4d-4$ additional coefficient additions, giving
-\eqref{eq:karatsuba-recurrence}.  Recursion therefore realizes the displayed
-pair $(M_d,A_d)$.
+\subsection{Collisions among rejected roots do not raise the degree}
+\label{sec:charpoly}
 
-The unreduced product has only $d-1$ high coefficients.  Eliminating each one
-modulo $\phi_d$ uses $s_d$ additions or subtractions and no nontrivial constant
-multiplication because every nonleading coefficient is $+1$ or $-1$.  This
-proves \eqref{eq:sparse-extension-envelope}.  The companion audit executes the
-same recursive plan and compares $48$ random products against schoolbook
-convolution before certifying the gate counts.
-\end{proof}
+This subsection explains why only the root that eventually passes the forgery
+tests needs a unique scalar label.  Collisions among roots that will be
+rejected need not increase the solver's cost.
 
-\subsection{Characteristic polynomials without global separation}\label{sec:charpoly}
+As the connecting parameter $t$ changes, the solver represents all moving
+roots at once in a finite-dimensional algebra.  After removing components that never reach the
+target equations, the corresponding curve has degree at most $D=C_0$.
+Introduce formal coefficients $\Lambda_j$ and assign each root the value
+$\sum_j\Lambda_jx_j$.  The characteristic polynomial
+$\chi_\Lambda(t,U)$ has these values as its roots.  A concrete linear form
+$\lambda$ may assign the same value to two roots, but the following lemma
+shows that such a collision does not increase the degree in $t$.
 
-Let $\Gamma\subset\mathbb A^{1+a}$ be the union of the saturated homotopy-curve components that dominate the $t$-line, with degree at most $D=C_0$.  The Jacobian saturation removes the non-etale locus, so over $K'(t)$ its generic fiber is a finite product of separable field extensions,
+\begin{lemma}[A collision does not increase the degree]
+\label{lem:charpoly}
+For every $\lambda\in K'^a$, including a nonseparating choice,
 \[
- B=K'(t)[X_1,\ldots,X_a]/J,
- \qquad \dim_{K'(t)}B=C.
+ q_\lambda(t,U)=\chi_\Lambda(t,U)|_{\Lambda=\lambda}
 \]
-Write $x_j$ for the image of $X_j$ and $M_{x_j}$ for multiplication by $x_j$ on $B$.
-
-Introduce independent coefficients $\Lambda=(\Lambda_1,\ldots,\Lambda_a)$ and the generic linear element
-\[
- u_\Lambda=\sum_j\Lambda_jx_j.
-\]
-Its characteristic polynomial is
-\begin{equation}\label{eq:generic-characteristic}
- \chi_\Lambda(t,U)
- =\det\!\left(UI-\sum_j\Lambda_jM_{x_j}\right).
-\end{equation}
-Schost proves two facts that are exactly suited to the present use: specialization of $\Lambda$ gives the characteristic polynomial of the specialized linear element, and the generic characteristic polynomial can be written
-\[
- \chi_\Lambda=\frac{\Xi_\Lambda}{\Theta},
-\]
-where the $t$-degrees of $\Xi_\Lambda$ and $\Theta$ are at most $\deg\Gamma\le D$ and $\Theta$ is independent of $\Lambda$~\cite[Lemmas~2--3 and Proposition~2]{Schost2003}.  This is the characteristic-polynomial, or generic $u$-resultant, form of the parametric degree theorem.
-
-Schost phrases one corollary using a primitive element with coefficients in the ground field, together with a field-size hypothesis.  The generic characteristic polynomial itself does not require such an element.  After extending to an algebraic closure of $K'(t)$, the finite etale algebra has $C$ distinct geometric points.  For every distinct pair, the difference
-\[
- \Lambda\cdot(x_s-x_r)
-\]
-is a nonzero polynomial in the independent indeterminates $\Lambda$.  Hence $u_\Lambda$ separates the geometric points over the rational-function field $K'(t)(\Lambda)$ and is primitive there, irrespective of the size of $K'$.  Apply Schost's degree argument after this transcendental scalar extension.  The determinant in \eqref{eq:generic-characteristic} is formed from the original multiplication matrices, so its coefficients already lie in $K'(t)[\Lambda,U]$; scalar extension cannot lower a reduced $t$-degree and thereby hide a larger degree over $K'$.  Thus no $K'$-rational global separator, and in particular no $|K'|\gg C^2$ assumption, is used.
-
-\begin{lemma}[Nonseparating eliminant]\label{lem:charpoly}
-For every $\lambda\in K'^a$, including a colliding one,
-\[
- q_\lambda(t,U)
- :=\prod_{s=1}^{C}\bigl(U-\lambda(x_s(t))\bigr)
- =\chi_\Lambda(t,U)\big|_{\Lambda=\lambda}.
-\]
-Every coefficient of $q_\lambda$ has a common-denominator representation with numerator and denominator $t$-degrees at most $D$.
+has a common-denominator representation whose numerator and denominator have
+$t$-degree at most $D$.
 \end{lemma}
 
-\begin{proof}
-The first identity is the characteristic-polynomial product formula in the reduced generic fiber, with repeated factors allowed after specialization.  The second assertion follows by substituting $\Lambda=\lambda$ in $\Xi_\Lambda/\Theta$.  Since $\Theta$ is independent of $\Lambda$, a separator collision cannot create a new parameter denominator or increase its degree.
-\end{proof}
-
-The coordinate interpolation numerators are already encoded in the same generic characteristic polynomial.
-
-\begin{lemma}[Characteristic-polynomial polar]\label{lem:polar}
-Define
+\begin{lemma}[Recovering coordinates by differentiation]\label{lem:polar}
+The interpolation numerator for coordinate $x_j$ is
 \[
- v_j(t,U)=\sum_s x_{s,j}(t)
-       \prod_{r\ne s}\bigl(U-\lambda(x_r(t))\bigr).
+ v_j(t,U)=-
+ \left.\frac{\partial\chi_\Lambda(t,U)}{\partial\Lambda_j}
+ \right|_{\Lambda=\lambda}.
 \]
-Then
-\begin{equation}\label{eq:polar}
- v_j(t,U)
- =-\left.\frac{\partial\chi_\Lambda(t,U)}{\partial\Lambda_j}
-   \right|_{\Lambda=\lambda}.
-\end{equation}
-Consequently each $v_j$, and every fixed affine-linear combination of the $v_j$ and $q_U$, has numerator and denominator $t$-degrees at most $D$, without assuming that $\lambda$ separates the branches.
+It has the same degree bound.  The numerator for any fixed linear combination
+of the coordinates also has degree at most $D$.  The attack additionally uses
+the rational function $H_0/(\delta+\lambda)$ to test the final target equation.
+After adjoining this function as another coordinate, its numerator has degree
+at most $2D$.
 \end{lemma}
 
-\begin{proof}
-Over a splitting field, differentiate
-\[
- \chi_\Lambda(t,U)=\prod_s\left(U-\sum_i\Lambda_i x_{s,i}(t)\right)
-\]
-with respect to $\Lambda_j$ and then specialize $\Lambda=\lambda$.  This gives \eqref{eq:polar}.  Differentiating $\Xi_\Lambda$ in the linear-form coefficients does not increase its $t$-degree, while the denominator $\Theta$ is unchanged.
-\end{proof}
+Schost's parametric degree theorem gives these statements first for the generic
+linear form~\cite{Schost2003}.  Specializing $\Lambda$ can create repeated
+factors, but it cannot increase the degree in $t$ because the common
+denominator is independent of $\Lambda$.  The attack may therefore keep the
+full characteristic polynomial and require $\lambda$ to distinguish only the
+root it accepts.  The additional rational test gives reconstruction precision
+$4C_0+1$.  The concrete cost still assumes that Schost's degree theorem
+applies after removing the irrelevant components of the exact attack curve
+and after adding this rational test.
 
-This directly covers the sole linear sketch used later:
-\[
- b_1(P)=\lambda^{q^{d-1}}\!\cdot P.
-\]
-Its interpolation numerator is the corresponding fixed $K'$-linear combination of the $v_j$.
+\subsection{Only the accepted root needs a unique label}\label{sec:local}
 
-For the rational oil filter
-\[
- \psi(X)=\frac{H_0(X)}{c+\lambda(X)},
-\]
-the preceding split-before-lift note proves that the saturated graph curve has degree at most $2D$.  Apply the same construction to its generic linear element
-\[
- u_{\Lambda,\mu}=\Lambda\cdot X+\mu Y,
-\]
-where $Y=\psi(X)$ is the graph coordinate.  Specializing $(\Lambda,\mu)=(\lambda,0)$ gives $q_\lambda$, and
-\[
- -\left.\frac{\partial\chi_{\Lambda,\mu}}{\partial\mu}
- \right|_{(\lambda,0)}
- =v_\psi.
-\]
-The graph degree bound therefore gives numerator and denominator $t$-degrees at most $2D$ for the filter numerator.  Consequently the existing precision
-\[
- P=4C_0+1
-\]
-remains valid.
+When the connecting parameter reaches the target equations, the interpolated
+polynomials may share a power of that parameter.  Cancel this common power.
+Let $\bar q$ be the resulting univariate polynomial whose roots label target
+candidates, and let $\bar v_b$ be the corresponding numerator for a scalar
+value $b$.  The exponent of the lowest nonzero power of the connecting
+parameter is called its \emph{valuation}.  Some branches may diverge as the
+target is approached.  The linear form $\lambda$ must preserve the lowest
+nonzero power on those branches
+so that canceling the common power does not remove a finite target root.
 
-\begin{remark}
-Separation is needed only when one wants the linear element to be a primitive coordinate for every point.  The attack instead keeps the full characteristic polynomial and later accepts only a simple target factor.  Characteristic polynomials and their coefficient polars remain defined at colliding linear forms.
-\end{remark}
-
-\subsection{Local separation at the target point}\label{sec:local}
-
-At target specialization, normalize $q$ and each scalar numerator by the common $t$-valuation exactly as in Safey El Din--Schost Lemma~12~\cite{SafeySchost2018}.  Call $\lambda$ \emph{valuation-generic} if every branch escaping to infinity with minimum coordinate valuation $\mu_s<0$ satisfies
-\[
- \ord \lambda(x_s)=\mu_s.
-\]
-This condition, not pairwise branch separation, is what the specialization proof uses to remove the infinite factors from the specialized eliminant.
-
-\begin{lemma}[Simple-factor recovery]\label{lem:simple}
-Assume $\lambda$ is valuation-generic.  Let $\bar q(U)$ and $\bar v_b(U)$ be the normalized target specializations.  If $\tau\in K'$ is a simple root of $\bar q$, then there is exactly one finite represented target point $P$ with $\lambda(P)=\tau$, and
+\begin{lemma}[Recovering one uniquely labeled root]\label{lem:simple}
+If $\lambda$ preserves the minimum valuation of every branch escaping to
+infinity and $\tau$ is a simple root of $\bar q$, then exactly one finite
+represented point $P$ satisfies $\lambda(P)=\tau$, and
 \[
  b(P)=\frac{\bar v_b(\tau)}{\bar q'(\tau)}.
 \]
-No separation condition is needed away from that one fiber value.
+No separation condition is needed at any other root value.
 \end{lemma}
 
-\begin{proof}
-Let $S_\infty$ and $S_0$ index the escaping and finite branches.  With
-\[
- e=-\sum_{s\in S_\infty}\mu_s,
-\]
-valuation genericity gives
-\[
- (t^e q)(0,U)=\gamma\prod_{s\in S_0}
-   \bigl(U-\lambda(P_s)\bigr)
-\]
-for a nonzero scalar $\gamma$.  In the normalized numerator, the summand indexed by a finite branch $s$ specializes to
-\[
- \gamma b(P_s)\prod_{r\in S_0,\ r\ne s}
-   \bigl(U-\lambda(P_r)\bigr).
-\]
-A summand indexed by an escaping branch need not vanish term by term; rather, every such surviving summand is divisible by the full finite product $\prod_{r\in S_0}(U-\lambda(P_r))$.  It therefore vanishes modulo $\bar q$, and in particular at every finite root of $\bar q$.  Thus $\bar v_b$ modulo $\bar q$ is the ordinary interpolation numerator on the finite limits.  A simple root $\tau$ belongs to exactly one finite branch, and evaluation followed by division by $\bar q'(\tau)$ gives the claimed value.
-\end{proof}
-
-Condition on the existence of a canonical eligible nonsingular base-field target point $P_\star$; for example, choose the first under any fixed ordering.  Nonsingularity makes it an isolated multiplicity-one point.  Let $I$ generic branches escape to infinity and let $F$ have finite target limits, counted with branch multiplicity.  Then $I+F=C$.  There are at most $I$ valuation-cancellation hyperplanes and at most $F-1$ collision hyperplanes against $P_\star$.  Each bad equality
-\[
- \lambda(w)=0
- \quad\text{or}\quad
- \lambda(P-P_\star)=0
-\]
-cuts out at most $|K'|^{a-1}$ choices of $\lambda$ in $(K')^a$.  Thus a uniform $\lambda\in(K')^a$ fails valuation genericity or collides at $P_\star$ with probability at most
+For a fixed usable target point, at most $C-1$ linear conditions on a uniform
+$\lambda\in(K')^a$ can violate the valuation condition or collide with that
+point.  Hence
 \begin{equation}\label{eq:lambdafail}
- \frac{I+F-1}{|K'|}=\frac{C-1}{|K'|}.
+ \Pr[\text{bad target separator}]\le\frac{C-1}{|K'|}.
 \end{equation}
-The coefficient vector of the equation may lie only over an algebraic closure, so its solution set need not literally be a $K'$-defined hyperplane.  The count is still valid: choose a nonzero coordinate of that vector and fix all other coefficients of $\lambda$; the remaining equation has at most one solution in $K'$ (and may have none).
-
-For the filter denominator, first compute the $C$ known start values $\lambda(\xi_s)$ and sample $c$ uniformly from the complement of the forbidden set $\{-\lambda(\xi_s)\}_s$ in $K'$.  Rejection sampling costs an expected factor at most $(1-C/|K'|)^{-1}$ for a scan of the start values; this scan is negligible beside one length-$P$ filter lift and is included in the miscellaneous envelope.  Conditional on this choice, only the at most $F\le C$ finite target values remain forbidden.  Therefore
+The rational test $H_0/(\delta+\lambda)$ uses a random scalar $\delta$ in its denominator.
+After rejecting shifts that vanish at a known starting root, its remaining
+denominator failure probability is
 \begin{equation}\label{eq:cfail}
- \Pr[c+\lambda(P)=0\text{ for a finite target branch}]
- \le \frac{C}{|K'|-C}.
+ \Pr[\text{bad target denominator}]\le\frac{C}{|K'|-C}.
 \end{equation}
-The old $C^2/|K'|$ event has disappeared.
+The earlier analysis required one linear form to distinguish every pair among
+at most $C$ roots, which cost $C^2/|K'|$.  The supplement proves the weaker
+condition above and both failure bounds.
 
-\subsection{Exact one-sketch Frobenius descent}\label{sec:frob}
+\subsection{One power test identifies base-field roots}\label{sec:frob}
 
-Set
+The solver works over $K'=\F_{q^d}$, but a QR-UOV forgery needs coordinates
+in the base field $\F_q$.  For a candidate point $P$, set
+$b_1(P)=\lambda^{q^{d-1}}\cdot P$.
+
+\begin{lemma}[Exact base-field test for a simple root]\label{lem:exactfrob}
+If $\tau=\lambda(P)$ is a simple root of $\bar q$, then
 \[
- b_1(P)=\lambda^{q^{d-1}}\!\cdot P,
- \qquad K'=\F_{q^d}.
-\]
-The separator value $\tau=\lambda(P)$ is already available from the factor of $\bar q$, so no numerator for $\lambda\cdot P$ is needed.
-
-\begin{lemma}[Simple-root descent is exact]\label{lem:exactfrob}
-Let $\tau\in K'$ be a simple linear factor of the target eliminant, and let $P$ be its unique represented point.  Then
-\[
- b_1(P)^q=\tau
- \quad\Longleftrightarrow\quad
- P\in\F_q^a.
+ b_1(P)^q=\tau\quad\Longleftrightarrow\quad P\in\F_q^a.
 \]
 \end{lemma}
 
-\begin{proof}
-The forward identity for a base-field point is immediate.  Conversely,
-\[
- b_1(P)^q
- =\lambda\cdot P^q.
-\]
-If it equals $\tau=\lambda\cdot P$, then $P$ and $P^q$ have the same separator value.  The target equations and homotopy are defined over $\F_q$, so the represented finite target limits are stable under Frobenius.  If $P^q\ne P$, the two distinct represented points produce multiplicity at least two at $U=\tau$, contradicting simplicity.  Hence $P^q=P$.
-\end{proof}
-
-This eliminates the probabilistic $C/|K'|$ false-positive term.  It also eliminates the abort cap: every simple factor passing the Frobenius test and the nonzero-square oil filter is a genuine base-field target solution.  The algorithm reconstructs coordinates for the first such factor and stops, so exactly one coordinate re-lift is charged per successful forgery.
+Indeed, the equality says $\lambda(P^q)=\lambda(P)$.  Raising every coordinate
+to its $q$th power maps target roots to target roots.  If $P^q\ne P$, these two
+distinct roots would receive the same value under $\lambda$, making $\tau$ a
+repeated root.  The test therefore accepts exactly the candidates in
+$\F_q^a$ and needs no second linear combination of the coordinates.
 
 \subsection{Root success probability}\label{sec:rootbound}
 
-For completeness, this pass expands the probability calculation inherited from the split-before-lift note.  Let $M$ count all off-oil affine roots of the normalized residual system, and let $N$ count those with invertible affine Jacobian.  The parent manuscript proves, for an actual parameter $\mu\ge 1-q^{-1}$,
+Let $M$ count all off-oil affine roots and $N$ those with invertible Jacobian.
+The exact first and second moments, together with the pairing $z,-z$, give
 \[
- \mathbb E[M]=\mu,
- \qquad
- \mathbb E[M^2]=2\mu+\mu^2-(q-1)\mu q^{-r},
- \qquad
- \mathbb E[N]=\mu\pi,
+ \Pr[\text{usable projective root with full-rank Jacobian}]
+ \ge \frac{\mu\pi}{2}-\frac{\mu^2}{8}
+   +\frac{(q-1)\mu q^{-r}}8,
 \]
-where $\pi=\prod_{j=1}^{r-1}(1-q^{-j})$.  The roots occur in pairs $z,-z$, and each nonsingular normalized pair yields one eligible projective point.  Applying the second Bonferroni inequality to the projective-point events and bounding pairs of nonsingular roots by pairs of all roots gives
-\begin{align*}
- \Pr[\text{eligible nonsingular projective root}]
- &\ge \frac{\mathbb E[N]}2
-      -\mathbb E\!\left[\binom{M/2}{2}\right]\\
- &=\frac{\mu\pi}{2}-\frac{\mu^2}{8}
-   +\frac{(q-1)\mu q^{-r}}8.
-\end{align*}
-The right-hand side is increasing for $\mu\in[1-q^{-1},1]$, so substituting $\mu=1-q^{-1}$ yields
+where $\mu\ge1-q^{-1}$ and
+$\pi=\prod_{j=1}^{r-1}(1-q^{-j})$.  Substitution yields
 \[
  p_{\rm root}=0.3690869822\ldots.
 \]
-As a separate fallback, the ledger also substitutes the parent manuscript's already-proved lower bound $0.326336998767509\ldots$; the Level-I total then becomes $140.531461$, still $2.469$ bits below target.
+Using instead the earlier proved bound
+$0.326336998767509\ldots$ raises the Level-I total only to $140.531461$ bits,
+still $2.469$ bits below target.  The supplement retains the moment
+calculation.
 
-\subsection{Finite Level-I ledger}
+\subsection{Level-I cost calculation}
 
-At Level I the local variant has two scalar families, $b_1$ and $\psi$, instead of three.  The terminal product tree therefore uses
+At the selected extension degree $d=8$, one attempt succeeds with probability
+at least $0.353997$.  The cost therefore includes an expected $2.824886$
+attempts.  The failure probabilities for distinguishing the accepted root and
+for the denominator in its rational test are at most $0.016637$ and
+$0.016918$.  We charge the full power-series lifting schedule, two sets of
+scalar interpolation data, one coordinate reconstruction, factorization, and
+public verification.  We also add the cost of $64$ long polynomial products
+for lower-order work.  The total is
 \[
- \frac a2(1+2\cdot2)=125
+ 2^{140.383995063}
 \]
-long-product units.  Rational reconstruction contributes $99.885$ units.  Candidate coordinate evaluation is charged once over the complete Las Vegas execution, rather than per trial, and the $64$-unit miscellaneous cushion is retained.  This pass also charges the one-time formation of $u_s=\lambda\cdot x_s$ during that coordinate rerun.
-
-\begin{table}[ht]
-\centering
-\caption{Level-I component ledger for extension degree $d=8$.}
-\label{tab:components}
-\begin{tabularx}{0.88\textwidth}{@{}Xr@{}}
-\toprule
-Component & $\log_2$ gates\\
-\midrule
-Initial base-field branch lifts & 139.358\\
-Valuation-safe filter series & 132.120\\
-Terminal scalar recombination & 138.791\\
-One on-demand coordinate re-lift & 137.860\\
-Extension-valued leaf formation & 127.610\\
-Coordinate-rerun separator leaves & 124.898\\
-Factorization and exact verification envelope & 115.707\\
-Preprocessing & 63.365\\
-\midrule
-\textbf{Total} & \textbf{140.383995}\\
-\bottomrule
-\end{tabularx}
-\end{table}
-
-The one-trial success lower bound is $0.353997$, giving restart factor $2.824886$.  At $d=8$, the local-separator failure bound in \eqref{eq:lambdafail} is $0.016637$, and the conditional target-denominator bound in \eqref{eq:cfail} is $0.016918$.
-
-\begin{table}[ht]
-\centering
-\caption{Level-I sensitivity to the multiplier on $\M(n)\log n$ in rational reconstruction, retaining $d=8$.}
-\label{tab:sensitivity}
-\begin{tabular}{@{}lrrrrrr@{}}
-\toprule
-Multiplier & 8 & 10 & 16 & 32 & 64 & 128\\
-\midrule
-Total & 140.384 & 140.424 & 140.538 & 140.805 & 141.225 & 141.815\\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{table}[H]
-\centering
-\caption{Level-I cross-checks.  Each row reoptimizes the extension degree.}
-\label{tab:robustness}
-\begin{tabularx}{\textwidth}{@{}Xrrrrr@{}}
-\toprule
-Online-envelope multiplier & $1$ & $2$ & $4$ & $8$ & $16$\\
-\midrule
-Best extension degree & $8$ & $8$ & $9$ & $9$ & $9$\\
-Total & 140.384 & 141.117 & 141.952 & 142.856 & 143.806\\
-\bottomrule
-\end{tabularx}
-\end{table}
-
-Thus the candidate remains below $2^{143}$ throughout the rational-reconstruction sensitivity range.  It also remains below target after multiplying the entire claimed online-product envelope by eight, but not by sixteen; the finite margin therefore does not excuse the remaining obligation to provide a fully explicit schedule.  The aggregate Level-I margin corresponds to an overall multiplicative cushion of $2^{2.616}=6.13$ in the inherited gate model; this does not address memory traffic or a change of model.
+Boolean gates.  The result stays below $2^{143}$ when the
+cost assigned to rational reconstruction ranges from $8$ to $128$ times its
+baseline.  It also stays below target if the assumed cost of the long
+polynomial products is multiplied by eight, but not by sixteen.  The technical
+supplement gives every component and both sensitivity tables.
 
 
 \section{Evidence and limitations}\label{sec:evidence-limitations}
 
-The direct and directional reductions, the fixed-output scissors theorem, the determinant identities used by the local separators, and the exact Frobenius filter are algebraic results.  They do not depend on the final Boolean-gate convention.  Every reconstructed candidate is checked against the original public equations or the unchanged public verifier.  A failed solver invocation may therefore force a retry, but it cannot produce an accepted false signature or equivalent key.
+The two reductions and the fixed-output theorem are exact algebraic results.
+The same is true of the identities used to recover one distinguished root and
+to test whether its coordinates lie in the base field.  None of these
+statements depends on the Boolean-gate cost model.  The attack checks every
+candidate against the original equations or the unchanged public verifier.
+A failed solver call may force another attempt, but it cannot make the
+verifier accept an invalid signature or key.
 
+We implemented the direct-forgery attack on smaller parameters.  The program
+starts from expanded public matrices, a message, and a salt.  It produces a
+forged signature and verifies it using only public data.  Six instances over
+$\F_{13}$ and one over $\F_{29}$ completed successfully, and a separate public
+replay reproduced each result.  The program keeps the QR-UOV quadratic map but
+simplifies the conversion from seeds, the byte encoding, and the hash
+interface.  It also uses straightforward power-series arithmetic rather than
+the fast multiplication assumed by the full cost estimate.  The experiment
+therefore checks the attack from the expanded key through verification.  It
+does not test the official input encoding or the full-parameter running time
+(\cref{app:reduced-implementation}).
 
-The reduced implementation shows that the local-separator attack composes at toy scale.  It preserves the QR-UOV public quadratic relation but simplifies seed expansion, byte serialization, and the exact domain-separated hash interface.  Starting from expanded public matrices, a message, and a salt, it runs the complete attack and produces a signature accepted by the public verifier.  A public-only replay reproduces the result.  The canonical run and five separate regressions give six successful $q=13$ forgeries and replays.  One supplementary $q=29$ instance also forged and replayed successfully.  This closes the composability gap between the individual algebraic checks, but it does not establish the full-parameter Boolean-gate estimate.  The prototype uses naive truncated-series arithmetic at $a=2$, so it neither implements nor benchmarks the fast multiplication schedule used in that estimate.  The full experiment record appears in \cref{app:reduced-implementation}.
-
-That estimate remains conditional on four points.  First, the characteristic-polynomial degree theorem must apply to the exact saturated dominant homotopy algebra and its rational-filter graph with the stated degree bounds.  Second, the fast online-product envelope needs a line-by-line full-scale schedule.  Third, the public-random model must transfer to the seeded public-key expansion.  Finally, the gate ledger does not account for the astronomical memory traffic of the symbolic representation.  No defect is currently known in the determinant identities, but the Level-I margin is only $2.616$ bits, so these obligations are material.  The technical supplement retains the complete validation record and executable-audit inventory.
+The full-parameter cost estimate still depends on four unproved modeling
+steps:
+\begin{enumerate}
+\item Schost's degree theorem must apply to the exact attack curve after
+irrelevant components are removed and the rational target test is added.
+\item The long polynomial products must admit a complete implementation with
+the cost assumed in \cref{sec:flat-lifting}.
+\item The random expanded-key model must accurately describe the official
+seeded key expansion.
+\item The implementation must move and store its polynomial coefficients, a
+cost omitted by the Boolean-gate count and already prohibitive at the stated
+memory sizes.
+\end{enumerate}
+The Level-I margin is only $2.616$ bits, so each assumption can affect the
+headline conclusion.  The technical supplement gives the full validation
+record and the commands used to reproduce the smaller experiments.
 
 
 
@@ -2096,77 +1924,93 @@ That estimate remains conditional on four points.  First, the characteristic-pol
 \toprule
 Claim & Status \\
 \midrule
-Projective direct core $m-4$ & Exact for every nonzero target once a seed root is supplied; Chevalley--Warning guarantees such a root in every seven-dimensional seed, and homogeneity quotients the residual by scaling. \\
-Seed root is off oil & Fixed-key probability bound over public attack coins; no random-key assumption. \\
-Common-isotropic extension & Deterministic and finite after the seed, using linear algebra and exhaustive search in $\PP^6(\F_q)$. \\
-Eligible projective-root probability & Exact lower bound in the independent-graph public-random degree-three model. \\
-One regular direction determines an equivalent key & Exact for every expanded key satisfying the public rank and signing checks. \\
+Direct system in $m-4$ variables & Exact for every nonzero target once an
+initial common zero is supplied.  Chevalley--Warning guarantees this zero in
+every seven-dimensional starting subspace, and fixing the common scale removes
+one variable. \\
+Initial root lies outside the oil space & Probability bound for every fixed
+key over the attack's public randomness.  This statement does not average over
+key generation. \\
+Construction of the attack subspace & Deterministic and finite after the initial root, using linear algebra and exhaustive search in $\PP^6(\F_q)$. \\
+Probability of a usable direct root & Proved lower bound in the independent-graph random expanded-key model. \\
+A root with full-rank derivative determines another signing key & Exact for every expanded key that passes the public rank, graph, and signing checks. \\
 Returned signature or key is valid & Exact; every candidate is verified against the unchanged public map. \\
-Finite cost rows & Reproducible symbolic-algorithm diagnostics, not measured circuits. \\
-Full-parameter memory & Prohibitive for the direct representations analyzed here. \\
-Fixed SHAKE/AES expansion & Key-by-key verification is exact; density statements transfer only in the stated ideal-primitive models, with explicit buffer and seed-collision terms. \\
+Concrete cost rows & Calculations for symbolic algorithms, not measurements from implemented circuits. \\
+Full-parameter memory & Exceeds physical storage for the symbolic representations analyzed here. \\
+Fixed SHAKE or AES expansion & Verification is exact for every key.  The
+success probabilities transfer only under the stated random-function or
+ideal-cipher models, with explicit terms for finite output length and seed
+collisions. \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-\section{Combined cost, memory, and parameter implications}\label{sec:security}
+\section{Cost, memory, and parameter consequences}\label{sec:security}
 
 \subsection{Work unit and scope}
 The QR-UOV specification expresses classical attack costs as Boolean-gate
-exponents and charges multiplication of $b$-bit field elements by
+exponents.  A reported cost $c$ therefore means approximately $2^c$ Boolean
+gates.  The specification charges multiplication of two $b$-bit field
+elements by
 \begin{equation}\label{eq:spec-gmul-new}
  \Gmul(b)=2b^2+b
 \end{equation}
-Boolean gates~\cite{QRUOVSpec}.  We retain that broad unit.  Every
-extension-field operation is overcharged as one multiplication using the
-explicit Karatsuba circuit of \eqref{eq:sparse-extension-envelope}.
+Boolean gates~\cite{QRUOVSpec}.  We use the same unit.  We upper-bound every
+extension-field operation by one multiplication using the explicit
+divide-and-conquer Karatsuba circuit in \eqref{eq:sparse-extension-envelope}.
 
-The principal symbolic-homotopy term uses the corrected reconstruction
-precision $2C_0$.  For a square solver core of dimension $a$,
+The main solver cost comes from multiplying the truncated polynomials that
+represent the moving roots.  For a system with $a$ equations in $a$ variables,
 \[
  C=2^a,
  \qquad C_0=2^{a-1}(a+2),
 \]
-and the flattened lifting schedule is charged by
+the solver reconstructs through precision $2C_0$.  For the concrete numbers,
+we assume that multiplying polynomials of length $t$ costs
+\[
+ \Mmul(t)=t\log_2t\log_2\log_2t.
+\]
+The complete power-series calculation is then charged by
 \begin{equation}\label{eq:unified-flat-cost}
  3(a^3+a^2)\Mmul(8CC_0)
 \end{equation}
-operations in the chosen working field.  The projective direct row uses
-$a=m-4$ and includes the fixed-key seed bound, nonsingular-root factor, random
-chart, and finite-field separator.  The directional row uses $a=V$ and
-includes direction regularity and its separator.  Polynomial-time
-preprocessing, all-equation filtering, factorization, graph completion,
-square testing and rescaling, and public verification are included through
-explicit lower-stage envelopes; they do not change the displayed decimals.
+operations in the chosen working field.  The direct-forgery row uses
+$a=m-4$.  Its cost includes the probabilities that the initial subspace avoids
+the oil space, that a usable root exists, that the chosen chart contains it,
+and that the separator identifies it.  The equivalent-key row uses $a=V$ and
+includes the corresponding full-rank and separator probabilities.  The
+calculation also includes the lower-order costs of constructing the equations,
+filtering roots, factoring polynomials, completing the graph, restoring the
+scale, and verifying the final output.  These terms do not change the displayed
+decimals.
 
-These are reproducible diagnostics for symbolic algorithms, not measured
-circuits.  In particular, setting
-\[
- \Mmul(t)=t\log_2t\log_2\log_2t
-\]
-assigns unit coefficient to an asymptotic multiplication bound.  The exact
-reductions, Karatsuba circuits, sparse fields, and success probabilities do not
-depend on that convention; the final conversion to a practical implementation
-does.
+These are calculations for symbolic algorithms, not measurements from an
+implemented circuit.  In particular, the formula for $\Mmul$ assigns a unit
+constant to an asymptotic multiplication bound.  The algebraic reductions,
+field-multiplication circuits, chosen fields, and success probabilities do not
+depend on this convention.  A practical running time does.
 
 \subsection{The two attacks}
+The following table reports the estimated cost exponent and its distance from
+the category target for both attacks.
 \begin{table}[t]
 \centering
 \small
 \setlength{\tabcolsep}{5pt}
-\caption{Classical gate diagnostics, including the local-separator split-before-lift refinement and the audited Karatsuba field circuit.  A positive margin means that the attack row lies below the
-category target.}
+\caption{Estimated base-two logarithms of classical Boolean-gate costs.  A
+positive margin means that the estimated attack cost is below the category
+target.}
 \label{tab:combined-costs}
 \begin{tabular}{@{}lrrrrrr@{}}
 \toprule
 & \multicolumn{2}{c}{Level I} & \multicolumn{2}{c}{Level III} & \multicolumn{2}{c}{Level V}\\
 Attack & Cost & Margin & Cost & Margin & Cost & Margin\\
 \midrule
-Original projective forgery
+Direct forgery, original solver
  &151.639&$-8.639$&203.507&$3.493$&260.389&$11.611$\\
-Local-separator projective forgery
+Direct forgery, accepted-root solver
  &140.384&$2.616$&191.027&$15.973$&247.125&$24.875$\\
-Directional equivalent-key recovery
+Equivalent-key recovery
  &154.826&$-11.826$&206.177&$0.823$&260.857&$11.143$\\
 \midrule
 Best attack
@@ -2179,50 +2023,42 @@ Category target &143&&207&&272&\\
 \end{tabular}
 \end{table}
 
-The original direct rows use projective solver dimensions $50,74,101$.
-The local-separator refinement keeps those algebraic cores but lowers the
-working-field degrees and removes global branch separation, the second
-Frobenius numerator, probabilistic false candidates, and repeated coordinate
-recovery.  Its optimized field degrees are $8$, $12$, and $16$ in the supplied
-ledger.  The directional rows remain an independent equivalent-key route.
-The reduced implementation executes the local-separator route at toy scale;
-the full-parameter symbolic lift still dominates both time and memory.
+Both direct rows solve systems in $50,74,101$ variables.  The second row is
+lower because the separator needs to distinguish only an accepted root, one
+$q$th-power equality identifies base-field roots, and coordinates are reconstructed
+only after a candidate passes the scalar tests.  The selected extension
+degrees are $8$, $12$, and $16$.  The equivalent-key row uses the independent
+attack from \cref{sec:recovery}.  The smaller implementation executes the
+refined direct attack, but the full-parameter polynomial calculation still
+dominates both time and memory.
 
 For context, the QR-UOV team's January 2026 response reports classical
 Hashimoto estimates of $158,217,285$ bits for the same three public
 dimensions~\cite{QRUOVResponse2026}.  The new direct rows are lower by
-approximately $6.36,13.49,24.61$ bits.  This is not a claim that the
-implementations are identical: the team uses a semi-regular direct-MQ model,
-whereas our row uses the finite-characteristic nonsingular-root solver and its
-explicit success probability.
+approximately $6.36,13.49,24.61$ bits.  The estimates use different models.
+The team assumes the usual semi-regular behavior, a standard heuristic for
+the growth of Gr\"obner-basis computations on generic-looking equations.
+Our row instead uses the exact symbolic solver from
+\cref{sec:finite-char-solver} and its proved success probability.
 
 \subsection{What follows at each level}
-\paragraph{Level I.}
-The local-separator row is $140.384$, or $2.616$ bits below the $143$-bit
-target.  Thus the paper gives a candidate Level-I break in the stated
-Boolean-gate model.  This is not a practical attack claim: the symbolic state
-is physically unrealizable, and the full-scale online-product schedule and
-characteristic-polynomial degree transfer remain explicit obligations.  The
-reduced-parameter implementation establishes that the algebraic pipeline is a
-single executable attack, not that the Level-I extrapolation is practical.
-
-\paragraph{Level III.}
-The local-separator row is $191.027$, leaving $15.973$ bits below target.  The
-older projective and independent equivalent-key rows are also below target.
-The combined evidence strongly supports changing the Level-III parameters.
-
-\paragraph{Level V.}
-The local-separator row is $247.125$, leaving $24.875$ bits below target.  The
-older projective and independent equivalent-key rows are likewise below target.
-Level V should not be retained unchanged.
+The refined direct rows lie below the three targets by $2.616$, $15.973$, and
+$24.875$ bits.  At Level I this is a candidate break only under the stated
+model.  The polynomial representation cannot fit in physical memory, the fast
+multiplication schedule has not been implemented at full size, and the degree
+theorem has not been checked for every detail of the exact attack curve.  The
+larger Level-III and Level-V margins, together with the independent
+equivalent-key estimates, support changing those parameter sets.  The smaller
+implementation checks that the direct-attack steps work together.  It does not
+make any full-parameter row practical.
 
 \subsection{Why changing only the vinegar count is not a repair}
-The official parameter sets sit on the direct side of the projective scissors
-crossing:
+The official parameter sets sit on the direct side of the crossing between the
+two reductions:
 \begin{center}
 \begin{tabular}{@{}lrrrr@{}}
 \toprule
-Level & $V$ & $m-4$ & Directional core & Projective direct core\\
+Level & $V$ & $m-4$ & Key-recovery variables & Direct variables\\
 \midrule
 I&52&50&52&50\\
 III&76&74&76&74\\
@@ -2230,23 +2066,24 @@ V&102&101&102&101\\
 \bottomrule
 \end{tabular}
 \end{center}
-Increasing $V$ raises the directional core but leaves the projective direct
-core unchanged.  Decreasing $V$ eventually makes directional recovery no
-larger than $m-4$.  Consequently a fixed-$m$ vinegar retuning cannot move the
-combined algebraic bottleneck.
+Increasing $V$ raises the key-recovery dimension but leaves the direct-forgery
+dimension unchanged.  Decreasing $V$ eventually makes the
+equivalent-key system no larger than $m-4$.  Thus, with $m$ fixed, changing
+only $V$ always leaves at least one of the two systems at or below this size.
 
-The next table gives attack-specific thresholds under the same padded ledger.
-It is not a complete replacement proposal: every other attack, failure
-probability, key size, and implementation cost must be recomputed.  The point
-is that both columns must move.  Raising only $V$ leaves the direct attack
-unchanged; raising only $m$ leaves the directional attack unchanged.
+The next table applies the same conservative cost calculation to nearby
+parameters.  It is not a complete replacement proposal.  Any proposal must
+also recompute other attacks, failure probabilities, key sizes, and
+implementation costs.  The table isolates the consequence proved here:
+raising only $V$ leaves direct forgery unchanged, while raising only $m$
+leaves the equivalent-key system unchanged.
 
 \begin{table}[t]
 \centering
 \small
-\caption{Smallest quotient-compatible $(V,m)$ pairs found by the companion
-audit that put both displayed attack rows at the category target, or at the
-target plus a 16-bit attack-specific cushion.}
+\caption{Smallest $(V,m)$ pairs with $m$ divisible by three in the cost calculation
+that put both displayed attacks at the category target, or $16$ bits above the
+target.  This is not a complete parameter proposal.}
 \label{tab:combined-retuning}
 \begin{tabular}{@{}lrrrrrr@{}}
 \toprule
@@ -2260,62 +2097,60 @@ V&102&105&108&111&117&120\\
 \end{tabular}
 \end{table}
 
-The table enforces $m\equiv0\pmod3$ and the direct-side feasibility condition
-$V\ge m-3$.  Level I already exceeds its bare target in this model, but a
-16-bit cushion requires moving both dimensions.  At Levels III and V, even the
-target-only diagnostic requires increases in both $V$ and $m$; a 16-bit
-cushion requires substantially larger changes.  A structural redesign may be
-preferable to paying both costs.
+The table enforces $m\equiv0\pmod3$ and the condition $V\ge m-3$ needed by the
+direct reduction.  Level I already reaches its category target in this model,
+but placing the attack cost $16$ bits above the target requires increasing
+both dimensions.  At Levels III and V, even reaching the target requires
+increasing both $V$ and $m$.  A design change that invalidates one reduction
+may cost less than increasing both dimensions.
 
-\subsection{Memory remains the central practical limitation}\label{subsec:memory-new}
-The desired outputs are small: one direct attack needs a single vector in $\F_q^n$, and the equivalent-key attack ultimately needs a $V\times O$ graph.  The direct symbolic representations are not small.  One flattened coefficient
-array at terminal precision requires approximately
+\subsection{The symbolic representation does not fit in memory}\label{subsec:memory-new}
+The desired outputs are small.  Direct forgery needs one vector in $\F_q^n$,
+and equivalent-key recovery needs a $V\times O$ graph.  The solver, however,
+stores a large array of polynomial coefficients while following all candidate
+roots to the target equations.  One such array at the final precision requires
+approximately
 \[
  2^{49.41}\ \mathrm{EiB},
  \qquad2^{98.51}\ \mathrm{EiB},
  \qquad2^{153.40}\ \mathrm{EiB}
 \]
-for the projective direct cores.  The corresponding directional arrays require
-about $2^{53.73}$, $2^{102.68}$, and $2^{155.41}$ EiB.  A full-parameter
-execution using these representations is physically unrealistic.
+for the direct systems.  The corresponding equivalent-key arrays require
+about $2^{53.73}$, $2^{102.68}$, and $2^{155.41}$ EiB.  These quantities exceed
+physical storage by many orders of magnitude.
 
-This limitation prevents a claim of a practical full-parameter implementation.  No full-parameter forgery or equivalent-key recovery is reported, and the paper draws no conclusion from unimplemented attack variants.  The exact reductions and the fixed-output scissors theorem are algebraic results; time, storage, and correctness are reported as separate resources.
+No full-parameter forgery or equivalent-key recovery is reported.  The paper
+therefore treats the algebraic reductions, modeled running time, storage, and
+verification as separate claims.  The exact reductions remain relevant to
+parameter selection even though this symbolic representation is not a
+practical attack implementation.
 
 \section{Conclusion}\label{sec:conclusion}
-QR-UOV's projective direct-forgery and directional equivalent-key attacks obey
-a fixed-output algebraic ceiling.  For every vinegar count and every nonzero
-verification target, one of the two attacks has nonlinear solver core dimension
-at most $m-4$.  Changing only the vinegar count therefore cannot eliminate both
-low-dimensional attack surfaces.  A revision must also increase the output
-dimension or change the construction so that one of the reductions no longer
-applies.
+Changing only the number of vinegar variables cannot make both attacks harder.
+For every vinegar count and every nonzero verification target, either direct
+forgery or equivalent-key recovery produces at most $m-4$ nonlinear equations
+in the same number of variables.  At the recommended parameter sets, the
+direct systems have $50$, $74$, and $101$ variables.  When the vinegar count
+is smaller, the equivalent-key route supplies the smaller system.  This
+algebraic statement is exact and does not depend on
+the cost of a particular equation solver.
 
-The direct reduction gives square cores of dimensions $50,74,101$, while the
-directional attack recovers an equivalent signing key.  To estimate the cost of
-these cores, the local-separator refinement removes the need for global branch
-separation: characteristic-polynomial polars suffice for scalar recovery, and
-one exact Frobenius sketch identifies a base-field point on a simple target
-factor.  Under the stated symbolic Boolean-gate model, the resulting rows lie
-below all three NIST category targets, including Level I by $2.616$ bits.
+We also estimate the work needed to solve these systems.  The adapted symbolic
+solver needs its linear form to distinguish only a root that passes the
+forgery tests, and one exact field-membership test determines whether that
+root lies in the base field.  Under the stated Boolean-gate and polynomial-arithmetic model, the
+estimated costs lie below the three category targets.  The Level-I margin is
+$2.616$ bits.
 
-The reduced-parameter implementation now composes the complete attack and
-produces publicly accepted forgeries from public inputs alone.  Consequently,
-the result is no longer merely a collection of independently tested
-micro-lemmas.  What remains conditional is the full-parameter complexity
-projection: the exact characteristic-polynomial degree transfer to the
-saturated dominant algebra, the fast online-product schedule, seeded-instance
-transfer, and memory traffic all require further scrutiny.  The paper therefore
-claims a finite, executable structural attack and a model-based candidate
-full-parameter break, not a practical full-parameter computation.
+The smaller implementation produces forged signatures from expanded public
+keys and verifies them with public data.  It confirms the algebraic steps, but
+not the full-parameter cost.  The concrete estimates still rely on the stated
+degree theorem, polynomial multiplication cost, and random expanded-key model.
+They also require more memory than any physical system can provide.  The firm
+design conclusion is therefore narrower: a parameter revision must increase
+the output dimension as well as the vinegar dimension, or change the
+construction so that one of the two reductions no longer applies.
 
-The algebraic ceiling is exact, while the concrete bit-security estimates are
-conditional on the stated solver and cost model.  The reduced-parameter
-implementation establishes that the attack components compose.  Any QR-UOV
-revision should reconsider both dimensions and the underlying compressed
-structure rather than apply a vinegar-only retuning.
-
-\begin{multicols}{2}
-\raggedcolumns
 \begin{thebibliography}{99}
 \fontsize{8.5pt}{9.6pt}\selectfont
 \setlength{\itemsep}{0pt}
@@ -2543,6 +2378,5 @@ Y.~Jin, Y.~Pan, X.~He, B.~Gong, and J.~Ding.
 \newblock Cryptology ePrint Archive, Paper 2025/1137; in \emph{PKC 2026, Part I}, LNCS~16551, pp.~428--454, 2026.
 
 \end{thebibliography}
-\end{multicols}
 
 \end{document}
