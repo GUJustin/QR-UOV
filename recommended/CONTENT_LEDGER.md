@@ -36,7 +36,7 @@ refinement places the Level I cost below its category target.
 | From the expanded key to universal forgery | Keep the model, graph identity, public map, certificate chain, and bounds used later | Keep the full pull-back and random-matrix calculations in the new certificate appendix | The attacks need the exact interface and bounds, but not every derivation. |
 | Direct forgery in `m - 4` variables | Keep target normalization, the constructive isotropic-subspace reduction, the usable-root bound, the verified attack, and the fixed-output theorem | Keep the local distribution, dimension-count, Jacobian, second-moment, preprocessing, and toy-execution details in `Direct-forgery proofs and preprocessing` | This is one half of the central thesis. The main paper now follows the attack in execution order. |
 | Equivalent-key recovery from a planted root | Keep the public directional system, planted-root identity, exact graph completion, rank-density statement, and derivative-based oil-space recovery | Keep the multi-direction fallback, Wronskian proof, deterministic lists, exact list counts, and optimality argument in `Deterministic fallbacks for equivalent-key recovery` | This is the other half of the central thesis. The main paper now exposes the exact certificate chain from one root to a verified signing key. |
-| Jacobian localization | Keep the local condition and resulting solver hypothesis | Move the commutative algebra proof | The solver needs the result, not the full proof in the main paper. |
+| The solver needs only a full-rank Jacobian | Keep the localization polynomial, its planted-root value, and the resulting solver hypotheses | Keep the commutative-algebra proof in `Why the local Jacobian condition suffices` | The solver needs the exact local implication, not its proof in the main flow. |
 | Finite characteristic root recovery | Keep the solver interface, cost, success probability, and verified recovery theorem | Move the product start, separator, lifting identities, proof crosswalk, and proofs | The main paper uses the solver as an attack component. |
 | Dense quadratic batching and flattened lifting | Keep one cost consequence | Move the construction and proof | This supports the ledger but is not part of the structural attack. |
 | Sparse working field models | Keep the chosen field degrees in the cost table | Move the irreducibility and multiplication proofs | These details belong with the full ledger. |
@@ -142,3 +142,10 @@ No mathematical result has been deleted.
   numerical counts, and optimality argument now appear in `Deterministic
   fallbacks for equivalent-key recovery`. No mathematical result or numerical
   bound was deleted.
+- Slice 8 replaced the main-paper proof of the localization lemma with a short
+  proof map. The main paper still defines the localization polynomial, states
+  the exact regular-sequence and radical-prefix conclusion, evaluates the
+  determinant at the planted root, and identifies the two hypotheses of the
+  locally closed solver. The complete Jacobian-criterion and
+  Cohen--Macaulay proof now begins the finite-field solver appendix. No
+  mathematical statement was deleted.
