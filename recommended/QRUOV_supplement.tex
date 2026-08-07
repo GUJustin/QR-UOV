@@ -4,7 +4,7 @@
 \usepackage{lmodern,microtype}
 \usepackage{amsmath,amssymb,amsthm,mathtools}
 \usepackage{booktabs,array,tabularx,longtable,multirow,float}
-\usepackage{enumitem,xcolor,url,listings,needspace,multicol}
+\usepackage{enumitem,xcolor,url,listings,needspace}
 \usepackage[hidelinks]{hyperref}
 \usepackage{xr-hyper}
 \usepackage[nameinlink,noabbrev,capitalise]{cleveref}
@@ -79,7 +79,6 @@
 \and Kai Zhang\thanks{MIT.}
 \and Scott Kominers\thanks{Harvard University and a16z crypto research.}
 \and Quang Dao\thanks{Carnegie Mellon University and LayerZero Labs.}}
-\date{31 July 2026}
 
 \begin{document}
 \maketitle
@@ -877,7 +876,7 @@ Giusti--Lecerf--Salvy give the older arithmetic bound
 \begin{equation}\label{eq:classical-slp-scale}
  L_{\rm quad}\,\widetilde O(D^2)
 \end{equation}
-field operations under the same regularity conditions~\cite{GiustiLecerfSalvy2001,vdHL}.  We retain \eqref{eq:classical-slp-scale} only as an epsilon-free growth-rate cross-check.  We do \emph{not} transfer the explicit finite-field failure constants of Theorem~5.4 to this older bound: the literature cited here does not state that combined theorem.  Accordingly, the SLP line below has no proved one-invocation failure probability and is not used for the universal-forgery corollary.
+field operations under the same regularity conditions~\cite{vdHL,GiustiLecerfSalvy2001}.  We retain \eqref{eq:classical-slp-scale} only as an epsilon-free growth-rate cross-check.  We do \emph{not} transfer the explicit finite-field failure constants of Theorem~5.4 to this older bound: the literature cited here does not state that combined theorem.  Accordingly, the SLP line below has no proved one-invocation failure probability and is not used for the universal-forgery corollary.
 
 \Needspace{16\baselineskip}
 \begin{proposition}[Task-specific resolution checks]\label{prop:resolution-checks}
@@ -2363,6 +2362,151 @@ In the public-random model, outside the exceptional event of Corollary~\ref{cor:
 Every exact candidate defines a common isotropic $O$-space.  Uniqueness forces that space to be $\cO_0$, and its graph determines the expanded decomposition used by Proposition~\ref{prop:verified-key}.
 \end{proof}
 
+\section{Reconstructing the time and memory frontier}\label{app:memory-frontier}
+
+The main paper compares attack estimates in both time and storage.  This
+section gives the formulas behind that comparison.  The companion script
+\texttt{QRUOV\_memory\_audit.py} evaluates every binomial coefficient as an
+integer and checks that the resulting time estimates reproduce the published
+PXL, reconciliation, rectangular MinRank, and wedge rows to their stated
+precision.
+
+\subsection{WXL and matrix-free storage}
+
+Consider $m$ quadratic equations in $n$ variables over a field of size $q$.
+After guessing $k$ variables, the semi-regular WXL estimate defines
+$d_{\rm reg}$ as the first non-positive coefficient of
+\[
+ \frac{(1-z^2)^m}{(1-z)^{n-k+1}}.
+\]
+The square matrix used in the estimate has dimension
+\[
+ N=\binom{d_{\rm reg}+n-k}{d_{\rm reg}},
+ \qquad
+ \rho=\binom{n-k+2}{2}
+\]
+nonzero entries per row.  The published gate estimate is
+\[
+ q^k\,3\rho N^2\bigl(2(\log_2q)^2+\log_2q\bigr).
+\]
+A stored sparse matrix needs about
+$N\rho(\log_2N+\log_2q)$ bits.  If the entries are regenerated, Wiedemann
+linear algebra needs only a constant number of length-$N$ vectors.  We count
+three packed vectors in the prior-work comparison.  This favors the published
+attacks because it omits matrix-generation overhead and any implementation
+workspace beyond those vectors.
+
+For the updated Hashimoto rows, the generalized partition analysis gives
+dominant residual systems with $(n,m)=(49,51),(72,75),(99,102)$ before WXL's
+own inner guessing step~\cite{GeneralizedPartition}.  Optimizing the displayed
+formula gives
+\[
+ \log_2N=53.452,\quad76.525,\quad109.277.
+\]
+The reconciliation attack uses the same WXL solver over the QR-UOV quotient
+field $\F_{127^3}$.  Its residual system dimensions are
+$(n,m)=(52,54),(76,78),(102,105)$, and the same calculation gives
+\[
+ \log_2N=71.302,\quad104.121,\quad133.438.
+\]
+
+Our exact reduction gives square systems with $n=m=50,74,101$.  Optimizing
+WXL for time gives costs
+\[
+ 159.223,\quad218.144,\quad285.668
+\]
+and matrix dimensions with base-two logarithms
+\[
+ 52.953,\quad78.340,\quad104.670.
+\]
+These are not the minimum-memory choices.  Fixing the hybrid parameters to
+$k=27,45,70$ leaves respectively $23,29,31$ variables.  In all three cases
+$d_{\rm reg}=5$, and
+\[
+ N=98{,}280,\quad278{,}256,\quad376{,}992.
+\]
+Regenerating the matrices and storing three vectors plus the reduced equations
+in 64-bit words takes about $2.4$, $6.9$, and $9.5$ MiB.  The corresponding
+gate estimates are
+\[
+ 238.387,\quad367.819,\quad543.595.
+\]
+These are $19.613$, $31.181$, and $17.405$ bits below the current classical
+Just Guess estimates~\cite{JustGuess,GeneralizedPartition}.  This comparison
+does not make the attacks practical, since all three running times remain far
+beyond computation.  It shows that the new reduction also improves the
+low-memory end of the modeled frontier.
+
+\subsection{PXL storage}
+
+The PXL estimate in the QR-UOV specification uses
+\[
+ \alpha=\sum_{d=0}^{d_{\rm reg}}
+ \max\left\{[z^d](1-z)^{m-(n-k)}(1+z)^m,0\right\}
+\]
+and includes an $\alpha^\omega$ elimination term~\cite{QRUOVSpec}.  A usual
+dense realization of this step stores an $\alpha\times\alpha$ field matrix.  We
+therefore report $\alpha^2\lceil\log_2q\rceil$ bits.  This is an implementation
+model rather than a lower bound.  A lower-space dense elimination schedule can
+trade additional time for storage.
+
+After the Thomae--Wolf reduction used in the specification, PXL solves square
+systems of sizes $52,76,103$.  The optimized values satisfy
+\[
+ \log_2\alpha=36.220,\quad52.779,\quad71.908,
+\]
+which reproduce the published rounded gate estimates $150,211,279$.  Applying
+the same formula to our square cores of sizes $50,74,101$ gives
+\[
+ \begin{array}{c|ccc}
+  &\text{Level I}&\text{Level III}&\text{Level V}\\ \hline
+ k&7&10&13\\
+ d_{\rm reg}&16&22&29\\
+ \log_2\alpha&34.369&50.968&70.168\\
+ \log_2\text{gates}&143.643&204.845&272.975\\
+ \log_2\text{bytes}&68.546&101.742&140.144
+ \end{array}
+\]
+The structural reduction therefore saves $6.795,5.728,5.949$ time bits and
+$3.700,3.623,3.480$ dense-storage bits relative to the specification's PXL
+instances.  The resulting memories remain far beyond physical storage.
+
+\subsection{Support-minors, wedge, and depth-first search}
+
+The extended rectangular MinRank paper supplies the optimal ranks, expected
+solution dimensions, and Macaulay degrees for the current QR-UOV parameters
+over $\F_{127^3}$~\cite{Suzuki}.  Its support-minors matrix has
+\[
+ N=\binom{n-D+1+b-1}{b}\binom{m}{r},
+ \qquad
+ \rho=(r+1)(n-D+1).
+\]
+Substitution of the published tuples gives
+$\log_2N=68.597,97.298,126.153$.  Counting three regenerated-matrix vectors
+then gives $\log_2$ storage in bytes of $71.575,100.275,129.130$.
+
+For the odd-characteristic wedge attack, Ran's optimistic pruned matrix has
+\[
+ N=\frac{1}{V+1}
+ \binom{V+O'}{V}\binom{V+O'+1}{V},
+ \qquad \rho=(V+1)^2
+\]
+over $\F_{127^3}$~\cite{RanWedges}.  The published choices
+$O'=13,17,22$ give $\log_2N=84.310,117.280,156.166$.  Its explicitly stated
+regeneration option therefore needs vector storage with base-two byte
+logarithms $87.288,120.258,159.143$ under the same three-vector convention.
+
+Just Guess has a different profile.  Its search is depth first and does not
+construct a Macaulay matrix.  Storing the $m$ quadratic forms and the two
+change-of-basis matrices takes
+\[
+ m\binom{n+1}{2}+n^2+m^2
+\]
+field elements.  Using one 64-bit word per element gives about $9.8$, $30$,
+and $73$ MiB before language and data-structure overhead.  This is why the
+published Just Guess route occupies the low-memory end of the previous
+frontier even though its classical running times are much larger.
+
 \section{Alternative elimination and low-space directions}\label{app:alternatives}
 
 The main text uses complete univariate resolutions because they are the only route for which we have both a suitable theorem and full failure accounting.  This appendix records two exact ways to extract a root more compactly once a quotient algebra exists, and then explains why several natural attempts do not yet improve the proved exponent.
@@ -2688,37 +2832,15 @@ Coordinate directions and Wronskian condensers provide a deterministic outer fal
 Both wrappers have one-sided error: a solver failure may cause a retry, but exact public verification prevents an invalid equivalent key or invalid signature from being returned.  The output is a verified expanded signing decomposition and an inverse oil matrix, not the original seed or an official serialized private key.
 
 
-\begin{multicols}{2}
-\raggedcolumns
 \begin{thebibliography}{99}
-\fontsize{8.5pt}{9.6pt}\selectfont
+\fontsize{7.5pt}{8.2pt}\selectfont
 \setlength{\itemsep}{0pt}
 \setlength{\parsep}{0pt}
-
-\bibitem{QRUOVOriginal}
-H.~Furue, Y.~Ikematsu, Y.~Kiyomura, and T.~Takagi.
-\newblock A new variant of Unbalanced Oil and Vinegar using quotient ring: QR-UOV.
-\newblock Cryptology ePrint Archive, Paper 2020/1243, 2020.
 
 \bibitem{QRUOVSpec}
 H.~Furue, Y.~Ikematsu, F.~Hoshino, T.~Takagi, H.~Kosuge, K.~Yamakoshi, R.~Akiyama, S.~Nakamura, S.~Orihara, and K.~Kinjo.
 \newblock \emph{QR-UOV Specification Document (Round 2 submission)}.
 \newblock NIST Additional Digital Signatures Project, 5 February 2025.
-
-\bibitem{KPG1999}
-A.~Kipnis, J.~Patarin, and L.~Goubin.
-\newblock Unbalanced Oil and Vinegar signature schemes.
-\newblock In \emph{EUROCRYPT 1999}, pp.~206--222, 1999.
-
-\bibitem{NISTRound3}
-National Institute of Standards and Technology.
-\newblock Nine candidates advance to the third round of the Additional Digital Signatures for the PQC standardization process.
-\newblock NIST CSRC, 14 May 2026.
-
-\bibitem{NISTIR8610}
-G.~Alagic et al.
-\newblock Status report on the second round of the Additional Digital Signature Schemes for the NIST Post-Quantum Cryptography Standardization Process.
-\newblock NIST IR~8610, May 2026.
 
 \bibitem{Benoist}
 O.~Benoist.
@@ -2741,36 +2863,25 @@ N.~Gim\'enez, J.~Heintz, G.~Matera, L.~M.~Pardo, M.~P\'erez, and M.~Privitelli.
 \newblock A Kronecker algorithm for locally closed sets over a perfect field.
 \newblock arXiv:2512.14888v2, 5 June 2026.
 
-\bibitem{Beullens}
-W.~Beullens.
-\newblock Improved cryptanalysis of UOV and Rainbow.
-\newblock In \emph{EUROCRYPT 2021, Part I}, pp.~348--373, 2021.
-
-\bibitem{FurueIkematsu}
-H.~Furue and Y.~Ikematsu.
-\newblock A new security analysis against MAYO and QR-UOV using rectangular MinRank attack.
-\newblock In \emph{IWSEC 2023}, pp.~101--116, 2023.
-
 \bibitem{Suzuki}
 T.~Suzuki, H.~Furue, T.~Ito, S.~Nakamura, and S.~Uchiyama.
 \newblock An extended rectangular MinRank attack against UOV and its variants.
 \newblock In \emph{IWSEC 2025}, LNCS~16208, pp.~111--130, Springer, 2026.
-
-\bibitem{FurueIkematsu2026}
-H.~Furue and Y.~Ikematsu.
-\newblock Key recovery attacks on UOV using $p^\ell$-truncated polynomial rings.
-\newblock Cryptology ePrint Archive, Paper 2026/298, 2026.
 
 \bibitem{JustGuess}
 A.~May, M.~Ostuzzi, and H.~Ressler.
 \newblock Just Guess: Improved (quantum) algorithm for the underdetermined MQ problem.
 \newblock In \emph{EUROCRYPT 2026, Part IV}, LNCS~16544, pp.~334--362, 2026.
 
-\bibitem{Pebereau}
-P.~P\'ebereau.
-\newblock One vector to rule them all: Key recovery from one vector in UOV schemes.
-\newblock In \emph{PQCrypto 2024}, pp.~92--108, 2024; ePrint 2023/1131.
+\bibitem{GeneralizedPartition}
+H.~Asanuma, Y.~Chen, H.~Furue, K.~Sakata, and T.~Takagi.
+\newblock Improved complexity estimates for underdetermined MQ systems via generalized variable partitioning.
+\newblock Cryptology ePrint Archive, Paper 2026/1054, 2026.
 
+\bibitem{RanWedges}
+L.~Ran.
+\newblock Wedges, oil, and vinegar: An analysis of UOV in the exterior algebra.
+\newblock Cryptology ePrint Archive, Paper 2025/1143, 2025.
 
 \bibitem{BaurStrassen}
 W.~Baur and V.~Strassen.
@@ -2843,29 +2954,6 @@ E.~Schost.
 \newblock \emph{Applicable Algebra in Engineering, Communication and Computing}, 13(5), 2002.
 \newblock doi:10.1007/s00200-002-0109-x.
 
-\bibitem{QRUOVResponse2026}
-S.~Orihara, on behalf of the QR-UOV team.
-\newblock Round 2 (Additional Signatures) official comment: QR-UOV.
-\newblock NIST PQC Forum, 20 January 2026.
-
-\bibitem{Hashimoto2023}
-Y.~Hashimoto.
-\newblock An improvement of algorithms to solve under-defined systems of multivariate quadratic equations.
-\newblock \emph{JSIAM Letters}, 15:53--56, 2023.
-\newblock doi:10.14495/jsiaml.15.53.
-
-\bibitem{ThomaeWolf2012}
-E.~Thomae and C.~A.~Wolf.
-\newblock Solving underdetermined systems of multivariate quadratic equations revisited.
-\newblock In \emph{PKC 2012}, LNCS~7293, pp.~156--171, 2012.
-\newblock doi:10.1007/978-3-642-30057-8\_10.
-
-\bibitem{FurueUnderdetermined2021}
-H.~Furue, S.~Nakamura, and T.~Takagi.
-\newblock Improving Thomae--Wolf algorithm for solving underdetermined multivariate quadratic polynomial problem.
-\newblock In \emph{PQCrypto 2021}, LNCS~12841, pp.~65--78, 2021.
-\newblock doi:10.1007/978-3-030-81293-5\_4.
-
 \bibitem{Chevalley1935}
 C.~Chevalley.
 \newblock D\'emonstration d'une hypoth\`ese de M.~Artin.
@@ -2876,12 +2964,6 @@ E.~Warning.
 \newblock Bemerkung zur vorstehenden Arbeit von Herrn Chevalley.
 \newblock \emph{Abhandlungen aus dem Mathematischen Seminar der Universit\"at Hamburg}, 11:76--83, 1935.
 
-\bibitem{JinEtAl2026}
-Y.~Jin, Y.~Pan, X.~He, B.~Gong, and J.~Ding.
-\newblock Security analysis on UOV families with odd characteristics: Using symmetric algebra.
-\newblock Cryptology ePrint Archive, Paper 2025/1137; in \emph{PKC 2026, Part I}, LNCS~16551, pp.~428--454, 2026.
-
 \end{thebibliography}
-\end{multicols}
 
 \end{document}

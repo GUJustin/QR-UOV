@@ -78,40 +78,42 @@
 \and Kai Zhang\thanks{MIT.}
 \and Scott Kominers\thanks{Harvard University and a16z crypto research.}
 \and Quang Dao\thanks{Carnegie Mellon University and LayerZero Labs.}}
-\date{31 July 2026}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
 \QRUOV{} is a structured variant of Unbalanced Oil and Vinegar (UOV) in the
-third round of NIST's Additional Digital Signatures process.  It keeps UOV's
-short signatures and simple signing procedure, but compresses its large public
-key by representing blocks of the public quadratic equations over a
-degree-three extension field.  Previous analyses study forgery and key
-recovery separately.  This leaves open whether changing the number of vinegar
-variables can make both attacks harder.
+third round of NIST's Additional Digital Signatures process.  It retains UOV's
+short signatures and simple signing procedure while compressing its large
+public key through blocks over a degree-three extension field.  Its security
+must account for two attacks.  A direct forger solves the public equations for
+one valid signature.  A key-recovery attacker reconstructs a hidden oil space
+that permits signatures on every message.  The vinegar count affects these
+attacks in opposite directions.  Increasing it makes the hidden oil space
+harder to recover, but gives a direct forger more variables with which to
+solve the public equations.
 
-We prove that it cannot.  Let $m$ be the number of public equations and $\ell$
-the extension degree.  For every number $V$ of extension-field vinegar
-variables and every nonzero verification target, one attack reduces to solving
-at most $m-\ell-1$ nonlinear equations in the same number of variables.  When
-$V$ is small, this is an equivalent-key recovery system.  When $V$ is large,
-it is a direct-forgery system.  Changing $V$ therefore only shifts the system
-between key recovery and direct forgery.  In \QRUOV{},
-$\ell=3$, so the bound is $m-4$, or $50$, $74$, and $101$ variables for the
-three recommended parameter sets.
+In this paper, we analyze the two attacks together and prove one bound that
+holds for every vinegar count.  Let $m$ be the number of public equations and
+$\ell$ the extension degree.  For every vinegar count and every nonzero
+verification target, one of the two reductions produces a square system with
+at most $m-\ell-1$ equations and variables.  Changing the vinegar count can
+move the smaller system from one attack to the other, but cannot raise this
+bound.  In \QRUOV{}, $\ell=3$, so the bound is $m-4$, or $50$, $74$, and $101$
+variables for the three recommended parameter sets.  This bounds the system
+dimension, not total running time or memory.
 
-We estimate the work by adapting a symbolic equation solver to \QRUOV{}'s base
-field and applying an existing Boolean-gate cost model.  It gives work factors
-of $2^{140.384}$, $2^{191.027}$, and $2^{247.125}$ gates, below the claimed
-security levels of $143$, $207$, and $272$ bits.  On smaller examples, our
-direct-forgery implementation runs from public input to a forged signature
-accepted by the verifier.  This confirms that the attack steps work together,
-not that the full-parameter attacks are practical.  The estimates depend on
-extrapolating the solver's behavior, the assumed cost of its polynomial
-arithmetic, and a pseudorandomness model for the expanded public key.  They
-also require an impractical amount of memory.
+We estimate concrete attack costs under the Boolean-gate model used in the
+\QRUOV{} specification.  The fastest estimates fall below the three claimed
+category targets by $2.6$, $16.0$, and $24.9$ bits.  These estimates are
+conditional and require more memory than any physical system can provide, so
+they do not constitute practical full-parameter attacks.  The variable
+reduction is independent of the solver.  A low-memory matrix solver uses
+between $2.4$ and $9.5$ MiB, but its running times remain prohibitive.  It
+still improves the previous low-memory time estimates by $17$ to $31$ bits.
+On smaller parameters, our implementation produces forged signatures that the
+unchanged verifier accepts, confirming that the algebraic steps work together.
 \end{abstract}
 
 \section{Introduction}\label{sec:intro}
@@ -132,11 +134,314 @@ system for the oil variables.  A secret change of coordinates hides this
 division in the public equations.  Using more vinegar variables can make the
 hidden oil space harder to recover, but it also gives a direct forger more
 variables with which to solve the public equations
-~\cite{KipnisShamir1998,KPG1999,BraekenWolfPreneel2005}.
+~\cite{KPG1999,KipnisShamir1998,BraekenWolfPreneel2005}.
 
-We next describe \QRUOV{} in the notation used throughout the paper.  Fix an
-odd prime power $q$ and an irreducible polynomial $f\in\F_q[X]$ of degree
-$\ell$.  Write
+\QRUOV{} compresses the UOV public key by grouping base-field coordinates into
+blocks over a degree-$\ell$ extension field.  Let $V$ be the number of
+extension-field vinegar blocks and let $m$ be the number of public quadratic
+equations over the base field.  The current QR-UOV construction uses
+$\ell=3$.  This representation reduces the amount of public-key material, but
+the verifier still evaluates the same kind of dense quadratic map as in UOV
+~\cite{QRUOVOriginal,QRUOVSpec}.
+
+This structure gives an attacker two natural goals.  A direct forger needs
+only one input that maps to a chosen verification target.  A key-recovery
+attacker instead seeks any hidden oil space that reproduces the public map and
+therefore permits signatures on every target.  These goals respond oppositely
+to the vinegar dimension: increasing $V$ can make the hidden oil space harder
+to recover, but it also leaves more variables available to a direct forger.
+The exact QR-UOV equations and signing interface appear in \cref{sec:model}.
+
+The public key still represents $m$ dense quadratic forms, each with
+quadratically many coefficients.  Field lifting and block-anti-circulant UOV
+are earlier approaches to compressing these coefficients
+~\cite{FieldLifting,BACUOV}; the latter was broken by decomposing the reducible
+quotient ring behind its public blocks~\cite{BACUOVAttack}.  \QRUOV{} prevents
+that decomposition by using an irreducible polynomial, but the public map can
+still be viewed over the extension field.  This view underlies attacks that
+translate the map between the base and extension fields, as well as attacks
+that search a public linear space for low-rank matrices
+~\cite{QRUOVOriginal,FurueIkematsu}.
+
+Existing work studies both consequences of changing $V$, but mostly in
+separate attack families.  Direct attacks use the total number of variables:
+as $V$ grows, the public equations become more underdetermined and can be
+reduced to a smaller residual system
+~\cite{JustGuess,Hashimoto2023,ThomaeWolf2012,FurueUnderdetermined2021}.
+Structural attacks use the hidden oil space: as $V$ grows, finding enough oil
+vectors generally becomes harder
+~\cite{KipnisShamir1998,DingEtAl2008,Beullens,Pebereau}.  P\'ebereau states this
+tradeoff explicitly and proves that, in the usual parameter range, one suitable
+oil vector determines an equivalent UOV key~\cite{Pebereau}.  The original
+\QRUOV{} analysis likewise chooses the vinegar count mainly against structural
+attacks and the output count against direct forgery~\cite{QRUOVOriginal}.
+
+These are close precedents for the paper's motivation.  They do not, however,
+join the two sides in one statement quantified over every integer $V$.  The
+specification and the team's latest security response instead evaluate the
+attacks at fixed recommended parameter sets
+~\cite{QRUOVSpec,QRUOVResponse2026}.  We ask what can be guaranteed when $V$
+itself varies while $m$ and $\ell$ remain fixed.
+
+We call a nonlinear system \emph{square} when it has the same number of
+equations and variables.  We compare the two attack families by counting the
+variables in the square system that each attack must solve.  This brings us to
+the question that governs the paper:
+\begin{quote}
+\noindent\textbf{Question.}
+\emph{Can \QRUOV{} force both attack reductions to use square nonlinear
+systems with more than $m-\ell-1$ variables by changing only the vinegar
+count, while keeping the number of public equations $m$ and the extension
+degree $\ell$ fixed?}
+\end{quote}
+
+\subsection{Our results and technical overview}\label{sec:intro-results}
+
+We answer this question negatively.  Our main result is the following bound:
+\begin{quote}
+\centering
+\textbf{\emph{For every vinegar count and nonzero verification target,
+either the reduction for direct forgery or the reduction for equivalent-key
+recovery produces a square nonlinear system with at most $m-\ell-1$
+variables.}}
+\end{quote}
+For \QRUOV{}, $\ell=3$, so the bound is $m-4$ variables.  The statement,
+formalized in \cref{thm:security-scissors}, concerns the shared nonlinear
+system.  It does not assert that total running time or memory depends only on
+this dimension.
+
+\paragraph{Direct forgery.}
+For a fixed nonzero target, we first change the public output coordinates so
+that all but one target coordinate are zero.  We then use
+Chevalley--Warning to construct an $(m-3)$-dimensional subspace on which three
+of the corresponding quadratic forms vanish.  The remaining zero-target
+equations are homogeneous, so multiplying a solution by a nonzero scalar does
+not change them.  Fixing this common scale leaves the same number of equations
+and variables, namely $m-4$.  The dimensions are $50$, $74$, and $101$ for
+the three recommended parameter sets
+(Theorem~\ref{thm:verified-direct-forgery} and
+Remark~\ref{rem:direct-prior-art}).  The attack uses only public randomness,
+and the verifier checks every returned vector against the original public map
+(\cref{sec:direct}).
+
+\paragraph{Equivalent-key recovery.}
+In extension-field coordinates, the hidden oil space is the graph of a linear
+map $G$.  Fixing a public oil vector $c$ produces $m$ public quadratic
+equations in $V$ variables.  The secret graph guarantees that $Gc$ is a root,
+although the attacker does not know this root in advance.  If the matrix of
+first derivatives has full rank at a recovered root, public linear equations
+determine all of $G$.  The pull-back and signing checks then certify another
+secret key that signs every target accepted by the verifier
+(\cref{thm:verified-directional-recovery}).  P\'ebereau established the
+equivalent-key endpoint from one suitable oil vector~\cite{Pebereau}; our
+contribution is a public polynomial-system mechanism for finding and certifying
+the required information in \QRUOV{}.
+
+\paragraph{Why vinegar-only retuning cannot help.}
+The direct-forgery and key-recovery routes respond oppositely to $V$.  When
+$V\leq m-\ell-1$, key recovery uses at most $m-\ell-1$ variables.
+When $V\geq m-\ell$, the direct reduction and fixing the common scale use exactly
+$m-\ell-1$.  These cases cover every integer $V$, so
+\[
+ r_{\mathrm{attack}}(V)\leq m-\ell-1.
+\]
+For \QRUOV{}, $\ell=3$, so the ceiling is $m-4$
+(\cref{thm:security-scissors}).  Increasing only $V$ therefore cannot move the
+two attacks past their crossing point.  A parameter revision must also
+increase $m$, or change the construction so that one of the reductions no
+longer applies.
+
+\paragraph{Concrete estimates and executable evidence.}
+The reductions above still leave large nonlinear systems.  To estimate the
+work required to solve them, we adapt an exact symbolic equation solver to
+the base field of characteristic $127$.  The solver starts from equations
+whose roots are known, changes them gradually into the attack equations, and
+tracks the roots through this change.  We also account for its polynomial
+arithmetic over extension fields.  Under the specification's Boolean-gate
+cost convention, the resulting estimates are
+$\mathbf{2^{140.384}}$, $2^{191.027}$, and $2^{247.125}$ gates at Levels I,
+III, and V, respectively.  These rows lie $2.616$, $15.973$, and $24.875$ bits
+below their category targets (\cref{tab:combined-costs}).  The Level-I row is a
+candidate break only within this cost model.  It depends on extrapolating a
+degree bound to the exact attack equations and on an unimplemented fast
+polynomial multiplication schedule.  The symbolic representation also needs
+an impractical amount of memory.  Because the reduction is independent of the
+solver, we also apply polynomial XL (PXL) and Wiedemann XL (WXL), two standard
+methods for solving quadratic systems.  PXL gives
+$143.643,204.845,272.975$ bit estimates.  A low-memory WXL setting first
+guesses many variables and then uses sparse linear algebra.  It uses under
+$10$ MiB at every level and improves the running time of the previous
+low-memory route (\cref{sec:concrete-solver,sec:security}).
+
+On smaller examples, the direct-forgery implementation runs from public input
+to a forged signature accepted by the verifier over two small fields.  This
+checks that the attack steps work together, but it does not validate the
+full-parameter cost estimate (\cref{sec:evidence-limitations}).  The algebraic
+reductions and final verification are exact.  The success probabilities use
+the stated random-key models, and the gate counts remain model-based
+estimates.
+
+\paragraph{Organization.}
+\Cref{sec:related} positions the result against prior attacks, and
+\cref{sec:model} gives the exact QR-UOV notation and attack interface.
+\Cref{sec:direct,sec:recovery} prove the two reductions and the fixed-output
+bound.  The remaining sections give the root solver, concrete estimates,
+evidence, limitations, and parameter consequences.
+
+\section{Related work}\label{sec:related}
+
+\paragraph{From Oil and Vinegar to \QRUOV{}.}
+UOV was introduced after the balanced construction's hidden linear structure
+was recovered; its vinegar imbalance must be chosen against both structural
+attacks and an increasingly underdetermined public system
+~\cite{KPG1999,KipnisShamir1998,BraekenWolfPreneel2005}.  Field lifting and
+block-anti-circulant matrices compress the public key
+~\cite{FieldLifting,BACUOV}, but the latter construction was broken through
+its reducible quotient polynomial~\cite{BACUOVAttack}.  \QRUOV{} instead uses
+an irreducible quotient and analyzes the resulting pull-back and lifting
+attacks~\cite{QRUOVOriginal}.  We hold this construction fixed and vary only
+its vinegar dimension.
+
+\paragraph{Direct attacks on underdetermined quadratic systems.}
+Thomae and Wolf reduce an underdetermined quadratic system to a smaller square
+system before invoking a generic solver~\cite{ThomaeWolf2012}.  Write
+$\omega=n/m$.  Their main reduction leaves
+$m-\lfloor\omega\rfloor+1$ equations and variables; when
+$\lfloor\omega\rfloor$ divides $m$, their tighter analysis leaves
+$m-\lfloor\omega\rfloor$.  They prove this over even characteristic and
+outline an odd-characteristic adaptation for small $\omega$.  Thus the work
+already measures how extra variables make direct forgery easier, though only
+through the coarse ratio $n/m$.  Furue, Nakamura, and Takagi combine the
+reduction with guessed variables, and Hashimoto partitions the residual
+equations into smaller systems over general finite fields
+~\cite{Hashimoto2023,FurueUnderdetermined2021}.  These works optimize a direct
+attack for one fixed pair $(n,m)$; they do not compare that attack with key
+recovery as the vinegar count varies.
+
+For the present $q=127$ parameter sets, the Round-2 specification estimates
+generic equation solving with Wiedemann XL (WXL), which uses sparse linear
+algebra, and polynomial XL (PXL), which first eliminates over a polynomial
+ring.  It reports classical costs of $160,222,288$ bits for Hashimoto with WXL
+and $150,211,279$ bits for PXL~\cite{QRUOVSpec}.  The team's January 2026 response
+updates the Hashimoto row to $158,217,285$ bits
+~\cite{QRUOVResponse2026}.  The affine residual dimensions $51,75,102$ are
+therefore prior art.  The later ``Just Guess'' algorithm has classical costs
+$258,399,561$ bits on the same $q=127$ systems; its main gain there is quantum
+~\cite{JustGuess,GeneralizedPartition}.  Our direct attack starts from the prior affine dimensions.
+We make the residual equations homogeneous after changing the output
+coordinates, so solutions are defined only up to a common nonzero scale.
+Fixing that scale removes one further variable and gives systems in
+$50,74,101$ variables.
+
+\paragraph{Time and memory of the direct attacks.}
+The published numbers above are time estimates, not complete time and memory
+points.  We reconstruct the missing storage from the matrix dimensions in the
+published formulas.  Even when entries are regenerated, the Level-I
+Hashimoto matrix needs about $29$ PiB for three vectors, while the usual PXL
+state needs about $4.8$ ZiB.  Just Guess is different.  It walks its search
+tree depth first and needs only the quadratic coefficients, its change of
+basis, and one search path.  This is on the order of tens of MiB
+~\cite{JustGuess}.
+
+Our fastest solver stores much more because it follows every algebraic branch
+at once.  The exact reduction does not require this choice.  Applying PXL to
+our $50,74,101$ variable systems saves about six time bits and about four
+storage bits over the specification's PXL instances.  Applying WXL and
+regenerating its matrix entries yields estimates of $238.387,367.819,543.595$
+bits with $2.4,6.9,9.5$ MiB.  These rows are respectively
+$19.613,31.181,17.405$ bits faster than Just Guess.  Thus the reduction shifts
+both the fast end and the low-memory end of the modeled frontier
+(\cref{tab:prior-time-memory,tab:our-time-memory}).
+
+\paragraph{Recovering the hidden oil space.}
+The Kipnis--Shamir attack searches directly for the secret linear structure
+~\cite{KipnisShamir1998}.  Reconciliation expresses membership in the oil
+space as quadratic equations.  Beullens' intersection attack instead compares
+several transformed copies of the oil space and uses their intersections to
+reduce the search
+~\cite{DingEtAl2008,Beullens}.  P\'ebereau makes the dependence on the vinegar
+dimension precise.  Writing $n=v+m$, the Kipnis--Shamir route costs polynomial
+time at $n=2m$ and about $q^{n-2m}n^\omega=q^{v-m}n^\omega$ when $n>2m$.
+One recovered oil vector determines an equivalent key in $O(mn^\omega)$
+operations when $n\leq3m$; for $n>3m$, more oil vectors are needed
+~\cite{Pebereau}.  Beullens' basic intersection attack likewise applies in the
+regime $n<3m$, or $v<2m$, with stronger multiway variants in narrower ranges
+~\cite{Beullens}.  These results show explicitly that structural recovery
+becomes harder as $v$ grows.  We do not claim this tradeoff or the one-vector
+endpoint.  Our contribution is a public QR-UOV mechanism for finding and
+certifying the required information.  A chosen extension-field direction
+exposes a planted root $Gc$, the derivative test certifies when that root
+determines the hidden graph, and exact signing checks certify the recovered
+equivalent key (\cref{sec:recovery}).
+
+\paragraph{QR-UOV-specific key recovery.}
+The original QR-UOV analysis applies reconciliation and intersection after
+pulling the block matrices back to the quotient field or lifting the public
+map to an extension field~\cite{QRUOVOriginal}.  Furue and Ikematsu instead
+encode the same structure as the problem of finding a low-rank matrix in a
+public linear space
+~\cite{FurueIkematsu}.  Suzuki et al. extend the admissible target ranks and
+connect this method to the singular points used by other UOV attacks
+~\cite{Suzuki}.  More recent methods derive higher-degree algebraic relations
+using symmetric powers or truncated polynomial rings.  These relations
+improve key recovery for some UOV parameter sets
+~\cite{FurueIkematsu2026,JinEtAl2026}.  For the recommended QR-UOV sets, the
+truncated-ring calculation gives no improvement because the characteristic
+$127$ already exceeds the relevant solving degree, and the reported
+odd-characteristic symmetric-algebra costs do not beat reconciliation.  Ran's
+wedge attack gives one of the few explicit memory analyses: if its sparse
+$N\times N$ matrix has $\rho$ nonzero entries per row, storing the matrix costs
+$O(\rho N(\log N+\log q))$ bits, while regenerating entries reduces working
+memory to $O(N\log q)$ bits at additional non-field overhead~\cite{RanWedges}.
+For QR-UOV it costs $2^{182}$, $2^{249}$, and $2^{328}$ field operations and
+does not improve the security estimates.  These works sharpen individual
+key-recovery costs at fixed parameters.  They use the vinegar count inside
+their matrix dimensions or applicability conditions, but do not optimize over
+every integer $V$ or join key recovery to direct forgery.
+
+\paragraph{Parameter tradeoffs and common UOV frameworks.}
+P\'ebereau and the original QR-UOV parameter analysis already state the
+qualitative tension between key recovery and forgery
+~\cite{QRUOVOriginal,Pebereau}.  Li, Guo, and Ding describe QR-UOV, MAYO, and
+SNOVA in one algebraic framework and show that QR-UOV key-recovery costs can
+be analyzed as UOV over the extension field~\cite{LiGuoDing2025}.  We claim neither the
+tradeoff nor the extension-field view.  Our result is the exact two-case bound:
+every integer $V$ leaves either the direct or equivalent-key reduction with at
+most $m-\ell-1$ variables, and the direct reduction reaches this bound only
+after fixing the common scale (\cref{thm:security-scissors}).
+
+\paragraph{Polynomial-system solving.}
+We estimate root-finding costs with the exact symbolic algorithm of Safey El
+Din and Schost~\cite{SafeySchost2018}.  It connects an easy system with known
+roots to the target system and follows those roots as the connecting parameter
+changes~\cite{GiustiLecerfSalvy2001,Schost2003}.  We change the easy starting
+system and the linear form used to distinguish roots so that the algorithm
+works in characteristic $127$.  The supplement checks the result against two
+other exact solvers~\cite{vdHL,Gimenez2026}.  These solvers estimate the cost
+of the systems produced by our attacks.  They do not produce either QR-UOV
+reduction or the fixed-output theorem.
+
+\paragraph{Chevalley--Warning.}
+The direct reduction uses the classical fact that, when the sum of the degrees
+is smaller than the number of variables, the number of common zeros over a
+finite field is divisible by the characteristic~\cite{Chevalley1935,Warning1935}.
+Applied to three quadrics in seven variables, it guarantees a nonzero extension
+vector.  Exhaustive search over nonzero vectors up to scalar multiplication
+makes the theorem constructive, so the preprocessing does not assume that a
+common zero is available for free.  Our use of this classical theorem is
+therefore algorithmic rather than a new finite-field existence result.
+
+\section{QR-UOV and the attack interface}\label{sec:model}
+
+This section gives the exact QR-UOV notation used by both attacks.  We first
+define the secret and public quadratic maps and the signing equation.  We then
+state the random expanded-key models used only for success probabilities and
+give the public checks that turn a recovered oil space into a signing key.
+
+\subsection{Parameters, public map, and signing}
+
+Fix an odd prime power $q$ and an irreducible polynomial $f\in\F_q[X]$ of
+degree $\ell$.  Write
 \begin{equation}\label{eq:parameter-stack}
  K:=\F_q[X]/(f)\cong\F_{q^\ell},\qquad
  v=\ell V,\qquad m=\ell O,\qquad
@@ -247,245 +552,13 @@ with $x=\widehat S_G^{-1}(a,o)$.  The verifier's acceptance condition is
 \end{equation}
 
 The verifier equation exposes the two attack goals studied here.  Direct
-forgery fixes
-a nonzero target $y$ and finds one $x$ satisfying $\widehat P(x)=y$.
-Equivalent-key recovery finds any $G'$ satisfying \eqref{eq:graphid}, pulls
-the resulting central forms back to $\F_q$, and finds an $a$ for which
-$\mathsf L_{\widehat F}(a)$ is invertible.  The same linear system then signs
-every verification target.  Increasing the vinegar count can frustrate the
-second goal, but it makes the public system more underdetermined and can help
-the first.
+forgery fixes a nonzero target $y$ and finds one $x$ satisfying
+$\widehat P(x)=y$.  Equivalent-key recovery finds any $G'$ satisfying
+\eqref{eq:graphid}, pulls the resulting central forms back to $\F_q$, and
+finds an $a$ for which $\mathsf L_{\widehat F}(a)$ is invertible.  The same
+linear system then signs every verification target.
 
-The public key still represents $m$ dense quadratic forms, each with
-quadratically many coefficients.  Field lifting and block-anti-circulant UOV
-are earlier approaches to compressing these coefficients
-~\cite{FieldLifting,BACUOV}; the latter was broken by decomposing the reducible
-quotient ring behind its public blocks~\cite{BACUOVAttack}.  \QRUOV{} avoids
-that decomposition by choosing $f$ irreducible, but the extension-field tuple
-$(P_1,\ldots,P_m)$ remains public after expansion.  This tuple underlies the
-QR-UOV pull-back and lifting attacks, as well as attacks that search a public
-linear space for low-rank matrices
-~\cite{QRUOVOriginal,FurueIkematsu}.
-
-Existing work studies the two consequences of changing $V$ separately.
-Direct attacks reduce the underdetermined public equations before invoking a
-polynomial solver
-~\cite{ThomaeWolf2012,FurueUnderdetermined2021,Hashimoto2023,JustGuess}.
-Structural attacks instead search for the hidden oil space through
-reconciliation, intersection, or MinRank equations
-~\cite{DingEtAl2008,Beullens,FurueIkematsu,Suzuki}.  P\'ebereau showed that one
-suitable oil vector can determine an equivalent UOV key and made the parameter
-tension explicit: more variables can impede key recovery while helping
-forgery~\cite{Pebereau}.  The original \QRUOV{} analysis similarly chooses the
-vinegar count mainly against structural attacks and the output count against
-direct forgery~\cite{QRUOVOriginal}.  The specification and the team's latest
-security response evaluate these attacks at fixed recommended parameter sets
-~\cite{QRUOVSpec,QRUOVResponse2026}.  They do not give one bound covering every
-integer $V$ while $m$ and $\ell$ remain fixed.
-
-We call a nonlinear system \emph{square} when it has the same number of
-equations and variables.  We compare the two attack families by counting the
-variables in the square system passed to the root solver.  This brings us to
-the question that governs the paper:
-\begin{quote}
-\noindent\textbf{Question.}
-\emph{Can \QRUOV{} force both attack reductions to use square nonlinear
-systems with more than $m-4$ variables by changing only the vinegar count
-while keeping the output dimension and quotient degree fixed?}
-\end{quote}
-
-\subsection{Our results and technical overview}\label{sec:intro-results}
-
-We answer this question negatively.  Our main result is the following bound
-for a fixed number $m$ of public equations:
-\begin{quote}
-\centering
-\textbf{\emph{For every vinegar count and nonzero verification target,
-either direct forgery or equivalent-key recovery reduces to a square nonlinear
-system in \mbox{at most~$m-4$ variables}.}}
-\end{quote}
-The statement, formalized in \cref{thm:security-scissors}, concerns the
-shared nonlinear system.  It does not assert that total running time or
-memory depends only on this dimension.
-
-\paragraph{Direct forgery.}
-For a fixed nonzero target, we first change the public output coordinates so
-that all but one target coordinate are zero.  We then use
-Chevalley--Warning to construct an $(m-3)$-dimensional subspace on which three
-of the corresponding quadratic forms vanish.  The remaining zero-target
-equations are homogeneous, so multiplying a solution by a nonzero scalar does
-not change them.  Fixing this common scale leaves the same number of equations
-and variables, namely $m-4$.  The dimensions are $50$, $74$, and $101$ for
-the three recommended parameter sets
-(Theorem~\ref{thm:verified-direct-forgery} and
-Remark~\ref{rem:direct-prior-art}).  The attack uses only public randomness,
-and the verifier checks every returned vector against the original public map
-(\cref{sec:direct}).
-
-\paragraph{Equivalent-key recovery.}
-In extension-field coordinates, the hidden oil space is the graph of a linear
-map $G$.  Fixing a public oil vector $c$ produces $m$ public quadratic
-equations in $V$ variables.  The secret graph guarantees that $Gc$ is a root,
-although the attacker does not know this root in advance.  If the matrix of
-first derivatives has full rank at a recovered root, public linear equations
-determine all of $G$.  The pull-back and signing checks then certify another
-secret key that signs every target accepted by the verifier
-(\cref{thm:verified-directional-recovery}).  P\'ebereau established the
-equivalent-key endpoint from one suitable oil vector~\cite{Pebereau}; our
-contribution is a public polynomial-system mechanism for finding and certifying
-the required information in \QRUOV{}.
-
-\paragraph{Why vinegar-only retuning cannot help.}
-The direct-forgery and key-recovery routes respond oppositely to $V$.  When
-$V\leq m-\ell-1$, key recovery uses at most $m-\ell-1$ variables.
-When $V\geq m-\ell$, the direct reduction and fixing the common scale use exactly
-$m-\ell-1$.  These cases cover every integer $V$, so
-\[
- r_{\mathrm{attack}}(V)\leq m-\ell-1.
-\]
-For \QRUOV{}, $\ell=3$, so the ceiling is $m-4$
-(\cref{thm:security-scissors}).  Increasing only $V$ therefore cannot move the
-two attacks past their crossing point.  A parameter revision must also
-increase $m$, or change the construction so that one of the reductions no
-longer applies.
-
-\paragraph{Concrete estimates and executable evidence.}
-The reductions above still leave large nonlinear systems.  To estimate the
-work required to solve them, we adapt an exact symbolic equation solver to
-the base field of characteristic $127$.  The solver starts from equations
-whose roots are known, changes them gradually into the attack equations, and
-tracks the roots through this change.  We also account for its polynomial
-arithmetic over extension fields.  Under the specification's Boolean-gate
-cost convention, the resulting estimates are
-$\mathbf{2^{140.384}}$, $2^{191.027}$, and $2^{247.125}$ gates at Levels I,
-III, and V, respectively.  These rows lie $2.616$, $15.973$, and $24.875$ bits
-below their category targets (\cref{tab:combined-costs}).  The Level-I row is a
-candidate break only within this cost model.  It depends on extrapolating a
-degree bound to the exact attack equations and on an unimplemented fast
-polynomial multiplication schedule.  The symbolic representation also needs
-an impractical amount of memory (\cref{sec:concrete-solver,sec:security}).
-
-On smaller examples, the direct-forgery implementation runs from public input
-to a forged signature accepted by the verifier over two small fields.  This
-checks that the attack steps work together, but it does not validate the
-full-parameter cost estimate (\cref{sec:evidence-limitations}).  The algebraic
-reductions and final verification are exact.  The success probabilities use
-the stated random-key models, and the gate counts remain model-based
-estimates.
-
-\paragraph{Organization.}
-\Cref{sec:related,sec:model} give the prior-work and specification context.
-\Cref{sec:direct,sec:recovery} prove the two reductions and the fixed-output
-bound.  The remaining sections give the root solver, concrete estimates,
-evidence, limitations, and parameter consequences.
-
-\section{Related work}\label{sec:related}
-
-\paragraph{From Oil and Vinegar to \QRUOV{}.}
-UOV was introduced after the balanced construction's hidden linear structure
-was recovered; its vinegar imbalance must be chosen against both structural
-attacks and an increasingly underdetermined public system
-~\cite{KipnisShamir1998,KPG1999,BraekenWolfPreneel2005}.  Field lifting and
-block-anti-circulant matrices compress the public key
-~\cite{FieldLifting,BACUOV}, but the latter construction was broken through
-its reducible quotient polynomial~\cite{BACUOVAttack}.  \QRUOV{} instead uses
-an irreducible quotient and analyzes the resulting pull-back and lifting
-attacks~\cite{QRUOVOriginal}.  We hold this construction fixed and vary only
-its vinegar dimension.
-
-\paragraph{Direct attacks on underdetermined quadratic systems.}
-Thomae and Wolf reduce an underdetermined quadratic system to a smaller square
-system before invoking a generic solver~\cite{ThomaeWolf2012}.  Furue,
-Nakamura, and Takagi improve the range in which this reduction applies, and
-Hashimoto divides the residual equations into smaller blocks
-~\cite{FurueUnderdetermined2021,Hashimoto2023}.  Hashimoto's method is the
-classical benchmark used by the QR-UOV team.  Its January 2026 response gives
-costs of $158$, $217$, and $285$ bits for the recommended parameter sets
-~\cite{QRUOVResponse2026}.  The resulting affine residual dimensions
-$51,75,102$ are therefore prior art.  The later ``Just Guess'' algorithm
-pushes more of the computation into exhaustive search.  It improves the
-quantum estimates for QR-UOV, but it does not improve the team's classical
-Hashimoto estimates~\cite{JustGuess,QRUOVResponse2026}.  Our direct attack
-starts from the same dimensions.  We change the output coordinates so that
-the remaining target equations are homogeneous, which means that solutions
-are defined only up to a common nonzero scale.  Fixing that scale removes one
-variable and gives systems in $50,74,101$ variables.
-
-\paragraph{Recovering the hidden oil space.}
-The Kipnis--Shamir attack searches directly for the secret linear structure
-~\cite{KipnisShamir1998}.  Reconciliation expresses membership in the oil
-space as quadratic equations.  Beullens' intersection attack instead compares
-several transformed copies of the oil space and uses their intersections to
-reduce the search
-~\cite{DingEtAl2008,Beullens}.  P\'ebereau strengthens the endpoint: for the
-practical UOV parameters he analyzes, one suitable oil vector is enough to
-recover an equivalent key in polynomial time~\cite{Pebereau}.  We do not claim this
-one-vector endpoint.  Our contribution is a public QR-UOV mechanism for
-finding the required information.  A chosen extension-field direction exposes
-a planted root $Gc$, the derivative test certifies when that root determines
-the hidden graph, and exact signing checks certify the recovered equivalent
-key (\cref{sec:recovery}).
-
-\paragraph{QR-UOV-specific key recovery.}
-The original QR-UOV analysis applies reconciliation and intersection after
-pulling the block matrices back to the quotient field or lifting the public
-map to an extension field~\cite{QRUOVOriginal}.  Furue and Ikematsu instead
-encode the same structure as the problem of finding a low-rank matrix in a
-public linear space
-~\cite{FurueIkematsu}.  Suzuki et al. extend the admissible target ranks and
-connect this method to the singular points used by other UOV attacks
-~\cite{Suzuki}.  More recent methods derive higher-degree algebraic relations
-using symmetric powers or truncated polynomial rings.  These relations
-improve key recovery for some UOV parameter sets
-~\cite{JinEtAl2026,FurueIkematsu2026}.  For the recommended QR-UOV sets, the
-truncated-ring calculation gives no improvement because the characteristic
-$127$ already exceeds the relevant solving degree, and the reported
-odd-characteristic symmetric-algebra costs do not beat reconciliation.  These
-works sharpen individual key-recovery costs at fixed parameters.  None gives a
-bound that joins key recovery to direct forgery for every vinegar dimension.
-
-\paragraph{Parameter tradeoffs and common UOV frameworks.}
-P\'ebereau and the original QR-UOV parameter analysis already state the
-qualitative tension between key recovery and forgery
-~\cite{Pebereau,QRUOVOriginal}.  Li, Guo, and Ding describe QR-UOV, MAYO, and
-SNOVA in one algebraic framework and show that QR-UOV key-recovery costs can
-be analyzed as UOV over the extension field~\cite{LiGuoDing2025}.  We claim neither the
-tradeoff nor the extension-field view.  Our result is the exact two-case bound:
-every integer $V$ leaves either the direct or equivalent-key reduction with at
-most $m-\ell-1$ variables, and the direct reduction reaches this bound only
-after fixing the common scale (\cref{thm:security-scissors}).
-
-\paragraph{Polynomial-system solving.}
-We estimate root-finding costs with the exact symbolic algorithm of Safey El
-Din and Schost~\cite{SafeySchost2018}.  It connects an easy system with known
-roots to the target system and follows those roots as the connecting parameter
-changes~\cite{Schost2003,GiustiLecerfSalvy2001}.  We change the easy starting
-system and the linear form used to distinguish roots so that the algorithm
-works in characteristic $127$.  The supplement checks the result against two
-other exact solvers~\cite{vdHL,Gimenez2026}.  These solvers estimate the cost
-of the systems produced by our attacks.  They do not produce either QR-UOV
-reduction or the fixed-output theorem.
-
-\paragraph{Chevalley--Warning.}
-The direct reduction uses the classical fact that, when the sum of the degrees
-is smaller than the number of variables, the number of common zeros over a
-finite field is divisible by the characteristic~\cite{Chevalley1935,Warning1935}.
-Applied to three quadrics in seven variables, it guarantees a nonzero extension
-vector.  Exhaustive search over nonzero vectors up to scalar multiplication
-makes the theorem constructive, so the preprocessing does not assume that a
-common zero is available for free.  Our use of this classical theorem is
-therefore algorithmic rather than a new finite-field existence result.
-
-\section{From a recovered graph to signatures on any message}\label{sec:model}
-
-The direct attack can check a proposed signature by evaluating the public map
-$\widehat P$.  Key recovery has two additional obligations.  A recovered
-graph must reproduce the same public map, and its oil system must let the
-attacker solve for every verification target.  This section states the random
-key models used only for success probabilities, then gives public checks for
-both obligations.
-
-\subsection{Parameters and expansion models}
+\subsection{Recommended parameters and expansion models}
 
 The Round-2 parameter sets specialize \eqref{eq:parameter-stack} to $q=127$
 and $\ell=3$.  Thus
@@ -703,7 +776,7 @@ for Levels I, III, and V.
 \begin{remark}[Relation to Hashimoto and the specification]\label{rem:direct-prior-art}
 The affine reduction to $m-3$ variables is prior art.  Hashimoto's
 underdetermined quadratic-system method and the QR-UOV specification already analyze these
-residual dimensions~\cite{Hashimoto2023,QRUOVSpec}.  Our additional reduction
+residual dimensions~\cite{QRUOVSpec,Hashimoto2023}.  Our additional reduction
 uses full target normalization and solves the homogeneous zero-target
 equations modulo scaling.  This removes one more variable, giving systems of
 dimension $m-4$.  We also give a finite construction of the required
@@ -2032,14 +2105,95 @@ attack from \cref{sec:recovery}.  The smaller implementation executes the
 refined direct attack, but the full-parameter polynomial calculation still
 dominates both time and memory.
 
-For context, the QR-UOV team's January 2026 response reports classical
-Hashimoto estimates of $158,217,285$ bits for the same three public
-dimensions~\cite{QRUOVResponse2026}.  The new direct rows are lower by
-approximately $6.36,13.49,24.61$ bits.  The estimates use different models.
-The team assumes the usual semi-regular behavior, a standard heuristic for
-the growth of Gr\"obner-basis computations on generic-looking equations.
-Our row instead uses the exact symbolic solver from
-\cref{sec:finite-char-solver} and its proved success probability.
+For context, \cref{tab:prior-time-memory} reconstructs the dominant storage in
+the published attacks.  We use the most favorable standard model for each
+attack.  For sparse linear algebra, we count three field vectors and assume that
+matrix entries are generated when they are needed.  For PXL, we count the dense
+$\alpha\times\alpha$ state in the usual realization of its
+$\alpha^\omega$ elimination step.  For Just Guess, we count the quadratic
+coefficients and its two change-of-basis matrices using one machine word per
+field element.  Thus the table should be read as an order-of-magnitude
+comparison, not as measured peak memory.  The memory entries are base-two
+logarithms of bytes: $20$ is one MiB, $40$ is one TiB, and $60$ is one EiB.
+
+\begin{table}[t]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3.5pt}
+\caption{Time and storage for prior attacks.  Each entry is
+$(\log_2\text{time},\log_2\text{bytes})$.  Wedge time counts field operations;
+all other times count gates.  Storage uses a dense state for PXL and
+regenerated matrix entries for the sparse solvers.}
+\label{tab:prior-time-memory}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Attack & Level I & Level III & Level V \\
+\midrule
+PXL direct~\cite{QRUOVSpec} & $(150.44,72.25)$ & $(210.57,105.36)$ & $(278.92,143.62)$ \\
+Hashimoto with WXL~\cite{QRUOVResponse2026} & $(158,54.84)$ & $(217,77.92)$ & $(285,110.67)$ \\
+Just Guess~\cite{JustGuess,GeneralizedPartition} & $(258,23.25)$ & $(399,24.84)$ & $(561,26.11)$ \\
+\midrule
+Reconciliation~\cite{QRUOVSpec} & $(164,74.28)$ & $(231,107.10)$ & $(291,136.42)$ \\
+Rectangular MinRank~\cite{QRUOVSpec,Suzuki} & $(158,71.57)$ & $(219,100.28)$ & $(277,129.13)$ \\
+Wedge~\cite{RanWedges} & $(182,87.29)$ & $(249,120.26)$ & $(328,159.14)$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+These estimates show that most earlier algebraic attacks also have enormous
+linear-algebra states.  At Level I, even the matrix-free Hashimoto estimate
+needs about $2^{54.84}$ bytes, or $29$ PiB.  Rectangular MinRank needs about
+$3$ ZiB, and the usual PXL state needs about $4.8$ ZiB.  Just Guess is the
+exception.  Its depth-first search can run with tens of MiB, but its running
+time is much larger.
+
+Our reduction is independent of the solver used after it.  The accepted-root
+solver gives the smallest time estimate, but it stores all $2^a$ branches to a
+precision proportional to $a2^a$.  Its main array therefore has order
+$a4^a$ extension-field elements.  This is a property of that solver, not of the
+$a=m-4$ variable reduction.  \Cref{tab:our-time-memory} applies two standard
+solvers to the same reduced system and exposes the resulting tradeoff.
+
+\begin{table}[t]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3.8pt}
+\caption{Time and storage choices after our exact reduction.  Each entry is
+$(\log_2\text{gates},\log_2\text{bytes})$.  The low-memory WXL rows regenerate
+matrix entries and count three vectors plus the reduced equations, using one
+64-bit word per field element.}
+\label{tab:our-time-memory}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Solver after reduction & Level I & Level III & Level V \\
+\midrule
+Accepted-root solver & $(140.38,\ge109.41)$ & $(191.03,\ge158.51)$ & $(247.13,\ge213.40)$ \\
+PXL & $(143.64,68.55)$ & $(204.84,101.74)$ & $(272.98,140.14)$ \\
+Fastest WXL point & $(159.22,54.35)$ & $(218.14,79.73)$ & $(285.67,106.06)$ \\
+Low-memory WXL point & $(238.39,21.24)$ & $(367.82,22.73)$ & $(543.60,23.18)$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The PXL row is only $3.26$ bits slower than the accepted-root estimate at
+Level I and reduces the displayed storage by more than $40$ bits.  It still
+needs roughly $374$ EiB, so this is not a practical implementation.  The
+low-memory WXL row makes the opposite choice.  It guesses $27,45,70$
+variables, leaves Macaulay matrices of dimensions about $2^{16.58}$,
+$2^{18.09}$, and $2^{18.52}$, and uses about $2.4$, $6.9$, and $9.5$ MiB.
+Its estimated times are respectively $19.61$, $31.18$, and $17.40$ bits below
+the current Just Guess estimates.  Thus our reduction improves both ends of
+the modeled frontier: it gives the smallest time estimates with the
+accepted-root solver, and it gives a faster route at the MiB storage scale than
+the previous depth-first method.
+
+The low-memory comparison is conditional in two ways.  It assumes that the
+reduced equations follow the semi-regular degree model used in the published
+WXL estimates.  It also omits the ordinary integer work needed to regenerate
+matrix entries, just as the explicit low-memory option in the wedge analysis
+does.  These calculations are reproducible from the published formulas with
+\texttt{QRUOV\_memory\_audit.py}; they are estimates, not full-parameter
+measurements.
 
 \subsection{What follows at each level}
 The refined direct rows lie below the three targets by $2.616$, $15.973$, and
@@ -2078,7 +2232,7 @@ implementation costs.  The table isolates the consequence proved here:
 raising only $V$ leaves direct forgery unchanged, while raising only $m$
 leaves the equivalent-key system unchanged.
 
-\begin{table}[t]
+\begin{table}[H]
 \centering
 \small
 \caption{Smallest $(V,m)$ pairs with $m$ divisible by three in the cost calculation
@@ -2104,11 +2258,15 @@ both dimensions.  At Levels III and V, even reaching the target requires
 increasing both $V$ and $m$.  A design change that invalidates one reduction
 may cost less than increasing both dimensions.
 
-\subsection{The symbolic representation does not fit in memory}\label{subsec:memory-new}
+\subsection{Why the fastest estimate uses so much memory}\label{subsec:memory-new}
 The desired outputs are small.  Direct forgery needs one vector in $\F_q^n$,
 and equivalent-key recovery needs a $V\times O$ graph.  The solver, however,
-stores a large array of polynomial coefficients while following all candidate
-roots to the target equations.  One such array at the final precision requires
+stores all $C=2^a$ candidate branches while following them to the target
+equations.  The parameter degree is bounded by
+$C_0=2^{a-1}(a+2)$, so rational reconstruction uses precision proportional to
+$a2^a$.  Storing one coefficient series for every branch therefore takes
+$\Theta(a4^a)$ extension-field elements.  One such array at the final
+precision already requires
 approximately
 \[
  2^{49.41}\ \mathrm{EiB},
@@ -2119,37 +2277,43 @@ for the direct systems.  The corresponding equivalent-key arrays require
 about $2^{53.73}$, $2^{102.68}$, and $2^{155.41}$ EiB.  These quantities exceed
 physical storage by many orders of magnitude.
 
-No full-parameter forgery or equivalent-key recovery is reported.  The paper
-therefore treats the algebraic reductions, modeled running time, storage, and
-verification as separate claims.  The exact reductions remain relevant to
-parameter selection even though this symbolic representation is not a
-practical attack implementation.
+The direct reduction itself does not require this representation.  PXL and WXL
+can solve the same $50,74,101$ variable cores with the time and storage choices
+in \cref{tab:our-time-memory}.  In particular, the low-memory WXL
+choice uses ordinary MiB-scale storage by regenerating matrix entries.  Its
+running time remains prohibitive.  Thus no full-parameter forgery or
+equivalent-key recovery is reported.  The paper treats the exact reduction,
+each solver estimate, working storage, and end-to-end verification as separate
+claims.
 
 \section{Conclusion}\label{sec:conclusion}
 Changing only the number of vinegar variables cannot make both attacks harder.
-For every vinegar count and every nonzero verification target, either direct
-forgery or equivalent-key recovery produces at most $m-4$ nonlinear equations
-in the same number of variables.  At the recommended parameter sets, the
-direct systems have $50$, $74$, and $101$ variables.  When the vinegar count
-is smaller, the equivalent-key route supplies the smaller system.  This
-algebraic statement is exact and does not depend on
-the cost of a particular equation solver.
+For every vinegar count and every nonzero verification target, one of the two
+attack reductions produces a square nonlinear system with at most
+$m-\ell-1$ variables.  For \QRUOV{}, $\ell=3$, so the bound is $m-4$.  At the
+recommended parameter sets, the direct systems have $50$, $74$, and $101$
+variables.  When the vinegar count is smaller, the equivalent-key route
+supplies the smaller system.  This algebraic statement is exact and does not
+depend on the cost of a particular equation solver.
 
-We also estimate the work needed to solve these systems.  The adapted symbolic
-solver needs its linear form to distinguish only a root that passes the
-forgery tests, and one exact field-membership test determines whether that
-root lies in the base field.  Under the stated Boolean-gate and polynomial-arithmetic model, the
-estimated costs lie below the three category targets.  The Level-I margin is
-$2.616$ bits.
+We also estimate the work needed to solve these systems.  With the adapted
+accepted-root solver, the estimates lie below all three category targets and
+the Level-I margin is $2.616$ bits.  Applying PXL to the same cores gives a
+second set of estimates, and low-memory WXL gives a route with only MiB-scale
+storage.  These different points all come from the same exact reduction.  The
+structural result is therefore not tied to one unusually memory-intensive
+solver.
 
 The smaller implementation produces forged signatures from expanded public
 keys and verifies them with public data.  It confirms the algebraic steps, but
 not the full-parameter cost.  The concrete estimates still rely on the stated
-degree theorem, polynomial multiplication cost, and random expanded-key model.
-They also require more memory than any physical system can provide.  The firm
-design conclusion is therefore narrower: a parameter revision must increase
-the output dimension as well as the vinegar dimension, or change the
-construction so that one of the two reductions no longer applies.
+degree theorem, polynomial multiplication cost, semi-regularity where WXL or
+PXL is used, and the random expanded-key model.  The fastest rows require more
+memory than any physical system can provide.  The MiB-scale rows have
+prohibitive running time.  The firm design conclusion is independent of these
+tradeoffs: a parameter revision must increase the output dimension as well as
+the vinegar dimension, or change the construction so that one of the two
+reductions no longer applies.
 
 \begin{thebibliography}{99}
 \fontsize{8.5pt}{9.6pt}\selectfont
@@ -2216,11 +2380,6 @@ G.~Alagic et al.
 \newblock Status report on the second round of the Additional Digital Signature Schemes for the NIST Post-Quantum Cryptography Standardization Process.
 \newblock NIST IR~8610, May 2026.
 
-\bibitem{Benoist}
-O.~Benoist.
-\newblock Degr\'es d'homog\'en\'eit\'e de l'ensemble des intersections compl\`etes singuli\`eres.
-\newblock \emph{Annales de l'Institut Fourier}, 62(3):1189--1214, 2012.
-
 \bibitem{vdHL}
 J.~van der Hoeven and G.~Lecerf.
 \newblock On the complexity exponent of polynomial system solving.
@@ -2262,71 +2421,21 @@ A.~May, M.~Ostuzzi, and H.~Ressler.
 \newblock Just Guess: Improved (quantum) algorithm for the underdetermined MQ problem.
 \newblock In \emph{EUROCRYPT 2026, Part IV}, LNCS~16544, pp.~334--362, 2026.
 
+\bibitem{GeneralizedPartition}
+H.~Asanuma, Y.~Chen, H.~Furue, K.~Sakata, and T.~Takagi.
+\newblock Improved complexity estimates for underdetermined MQ systems via generalized variable partitioning.
+\newblock Cryptology ePrint Archive, Paper 2026/1054, 2026.
+
+\bibitem{RanWedges}
+L.~Ran.
+\newblock Wedges, oil, and vinegar: An analysis of UOV in the exterior algebra.
+\newblock Cryptology ePrint Archive, Paper 2025/1143, 2025.
+
 \bibitem{Pebereau}
 P.~P\'ebereau.
 \newblock One vector to rule them all: Key recovery from one vector in UOV schemes.
 \newblock In \emph{PQCrypto 2024}, pp.~92--108, 2024; ePrint 2023/1131.
 
-
-\bibitem{BaurStrassen}
-W.~Baur and V.~Strassen.
-\newblock The complexity of partial derivatives.
-\newblock \emph{Theoretical Computer Science}, 22(3):317--330, 1983.
-\newblock doi:10.1016/0304-3975(83)90110-X.
-
-\bibitem{DAndreaDickenstein}
-C.~D'Andrea and A.~Dickenstein.
-\newblock Explicit formulas for the multivariate resultant.
-\newblock \emph{Journal of Pure and Applied Algebra}, 164(1--2):59--86, 2001.
-\newblock doi:10.1016/S0022-4049(00)00145-6.
-
-\bibitem{JeronimoEtAl}
-G.~Jeronimo, T.~Krick, J.~Sabia, and M.~Sombra.
-\newblock The computational complexity of the Chow form.
-\newblock \emph{Foundations of Computational Mathematics}, 4(1):41--117, 2004.
-\newblock doi:10.1007/s10208-002-0078-2.
-
-\bibitem{NeigerEtAl}
-V.~Neiger, B.~Salvy, E.~Schost, and G.~Villard.
-\newblock Faster modular composition using two relation matrices.
-\newblock In \emph{ISSAC 2026}, pp.~315--324, 2026; arXiv:2601.17422.
-
-\bibitem{DegreeSmoothing}
-S.~Jaques, L.~Ran, S.~Samardjiska, and M.~Seitner.
-\newblock Smoothing the degree of regularity for polynomial systems.
-\newblock Cryptology ePrint Archive, Paper 2026/408, 2026.
-
-\bibitem{F4Tracer}
-R.~Kouba, V.~Neiger, and M.~Safey El Din.
-\newblock A complexity analysis of the F4 Gr\"obner basis algorithm with tracer data.
-\newblock arXiv:2603.16378, 2026.
-
-\bibitem{KaltofenShoup}
-E.~Kaltofen and V.~Shoup.
-\newblock Subquadratic-time factoring of polynomials over finite fields.
-\newblock \emph{Mathematics of Computation}, 67(223):1179--1197, 1998.
-
-\bibitem{Wiedemann}
-D.~Wiedemann.
-\newblock Solving sparse linear equations over finite fields.
-\newblock \emph{IEEE Transactions on Information Theory}, 32(1):54--62, 1986.
-
-\bibitem{Heintz}
-J.~Heintz.
-\newblock Definability and fast quantifier elimination in algebraically closed fields.
-\newblock \emph{Theoretical Computer Science}, 24:239--277, 1983.
-
-\bibitem{LachaudRolland}
-G.~Lachaud and R.~Rolland.
-\newblock On the number of points of algebraic sets over finite fields.
-\newblock \emph{Journal of Pure and Applied Algebra}, 219(11):5117--5136, 2015.
-
-
-\bibitem{Rabin1980}
-M.~O.~Rabin.
-\newblock Probabilistic algorithms in finite fields.
-\newblock \emph{SIAM Journal on Computing}, 9(2):273--280, 1980.
-\newblock doi:10.1137/0209024.
 
 \bibitem{SafeySchost2018}
 M.~Safey El Din and E.~Schost.
